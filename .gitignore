@@ -133,3 +133,6 @@ test_coverage_report.json
 Gemma_3n_Example.ipynb
 gemma.ipynb
 *.ipynb_checkpoints/
+venv
+venv_gemma
+
