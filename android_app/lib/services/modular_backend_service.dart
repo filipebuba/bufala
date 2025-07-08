@@ -27,6 +27,27 @@ class ModularBackendService {
     _initializeDio();
     _startConnectivityMonitoring();
   }
+
+  /// Inicializar o serviço
+  Future<void> initialize() async {
+    // Implementação da inicialização
+    await _performInitialHealthCheck();
+  }
+
+  /// Iniciar monitoramento de conectividade
+  void startMonitoring() {
+    _startConnectivityMonitoring();
+  }
+
+  /// Parar monitoramento
+  void stopMonitoring() {
+    _connectivityTimer?.cancel();
+  }
+
+  /// Stream do estado da conexão
+  Stream<conn_state.ConnectionState> get connectionStream {
+    return Stream.periodic(Duration(seconds: 5), (_) => _connectionState);
+  }
   
   void _initializeDio() {
     _dio = Dio(BaseOptions(
@@ -216,6 +237,46 @@ class ModularBackendService {
   }
   
   void _startConnectivityMonitoring() {
+    _connectivityTimer = Timer.periodic(Duration(seconds: 30), (_) async {
+      await _checkConnectivity();
+    });
+  }
+
+  Future<void> _performInitialHealthCheck() async {
+    try {
+      final result = await healthCheck();
+      if (result.success) {
+        _updateConnectionState(true, result.responseTime ?? 0.0);
+      } else {
+        _updateConnectionState(false, 0.0, result.error);
+      }
+    } catch (e) {
+      _updateConnectionState(false, 0.0, e.toString());
+    }
+  }
+
+  Future<void> _checkConnectivity() async {
+    try {
+      final result = await healthCheck();
+      if (result.success) {
+        _updateConnectionState(true, result.responseTime ?? 0.0);
+      } else {
+        _updateConnectionState(false, 0.0, result.error);
+      }
+    } catch (e) {
+      _updateConnectionState(false, 0.0, e.toString());
+    }
+  }
+
+  void _updateConnectionState(bool isConnected, double responseTime, [String? error]) {
+    _connectionState = conn_state.ConnectionState(
+      isConnected: isConnected,
+      lastCheck: DateTime.now(),
+      responseTime: responseTime,
+      lastError: error,
+      consecutiveFailures: isConnected ? 0 : _connectionState.consecutiveFailures + 1,
+    );
+  }
     _connectivityTimer = Timer.periodic(
       BackendConnectionConfig.connectivityCheckInterval,
       (_) => _checkConnectivity(),

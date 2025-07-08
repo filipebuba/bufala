@@ -21,14 +21,17 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
     try {
       final response = await _apiService.askMedicalQuestion(
-        question: 'dor de cabeça forte',
+        'dor de cabeça forte',
       );
 
       setState(() {
-        if (response.success && response.data != null) {
-          _result = 'SUCESSO: ${response.data!}';
+        if (response != null &&
+            response['success'] == true &&
+            response['data'] != null) {
+          _result = 'SUCESSO: ${response['data']}';
         } else {
-          _result = 'ERRO (mas com fallback): ${response.error}';
+          _result =
+              'ERRO (mas com fallback): ${response?['error'] ?? 'Sem resposta'}';
         }
       });
     } catch (e) {
@@ -50,14 +53,17 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
     try {
       final response = await _apiService.askEducationQuestion(
-        question: 'matemática básica',
+        'matemática básica',
       );
 
       setState(() {
-        if (response.success && response.data != null) {
-          _result = 'SUCESSO: ${response.data!}';
+        if (response != null &&
+            response['success'] == true &&
+            response['data'] != null) {
+          _result = 'SUCESSO: ${response['data']}';
         } else {
-          _result = 'ERRO (mas com fallback): ${response.error}';
+          _result =
+              'ERRO (mas com fallback): ${response?['error'] ?? 'Sem resposta'}';
         }
       });
     } catch (e) {
@@ -79,14 +85,17 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
     try {
       final response = await _apiService.askAgricultureQuestion(
-        question: 'como plantar arroz',
+        'como plantar arroz',
       );
 
       setState(() {
-        if (response.success && response.data != null) {
-          _result = 'SUCESSO: ${response.data!}';
+        if (response != null &&
+            response['success'] == true &&
+            response['data'] != null) {
+          _result = 'SUCESSO: ${response['data']}';
         } else {
-          _result = 'ERRO (mas com fallback): ${response.error}';
+          _result =
+              'ERRO (mas com fallback): ${response?['error'] ?? 'Sem resposta'}';
         }
       });
     } catch (e) {

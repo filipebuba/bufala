@@ -15,7 +15,8 @@ class ApiService {
 
   /// Health check do backend
   Future<bool> healthCheck() async {
-    return await _smartService.healthCheck();
+    final result = await _smartService.healthCheck();
+    return result.success;
   }
 
   /// Fazer pergunta médica
@@ -23,10 +24,15 @@ class ApiService {
     String question, {
     String language = 'pt-BR',
   }) async {
-    return await _smartService.askMedicalQuestion(
-      question,
+    final result = await _smartService.askMedicalQuestion(
+      question: question,
       language: language,
     );
+    return {
+      'success': result.success,
+      'data': result.data,
+      'error': result.error
+    };
   }
 
   /// Fazer pergunta educacional
@@ -34,10 +40,15 @@ class ApiService {
     String question, {
     String language = 'pt-BR',
   }) async {
-    return await _smartService.askEducationQuestion(
-      question,
+    final result = await _smartService.askEducationQuestion(
+      question: question,
       language: language,
     );
+    return {
+      'success': result.success,
+      'data': result.data,
+      'error': result.error
+    };
   }
 
   /// Fazer pergunta agrícola
@@ -45,20 +56,30 @@ class ApiService {
     String question, {
     String language = 'pt-BR',
   }) async {
-    return await _smartService.askAgricultureQuestion(
-      question,
+    final result = await _smartService.askAgricultureQuestion(
+      question: question,
       language: language,
     );
+    return {
+      'success': result.success,
+      'data': result.data,
+      'error': result.error
+    };
   }
 
   /// Descrever ambiente (para deficientes visuais)
   Future<Map<String, dynamic>?> describeEnvironment(
-    String imagePath, {
+    String imageBase64, {
     String language = 'pt-BR',
   }) async {
-    return await _smartService.describeEnvironment(
-      imagePath,
+    final result = await _smartService.describeEnvironment(
+      imageBase64: imageBase64,
       language: language,
     );
+    return {
+      'success': result.success,
+      'data': result.data,
+      'error': result.error
+    };
   }
 }

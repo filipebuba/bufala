@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/material.dart';
 import '../models/international_teaching_models.dart';
 import '../models/collaborative_learning_models.dart';
 import '../services/gemma3_backend_service.dart';
@@ -15,6 +13,7 @@ class InternationalTeachingServiceSimple {
 
   // Estado do sistema
   late InternationalTeachingSystem _system;
+  InternationalTeachingSystem get system => _system;
   final List<InternationalTeachingSession> _activeSessions = [];
   final Map<String, InternationalLearningProgress> _userProgress = {};
 
@@ -24,24 +23,33 @@ class InternationalTeachingServiceSimple {
       code: 'pt',
       name: 'Português',
       nativeName: 'Português',
-      flag: '🇵🇹',
+      region: 'Guiné-Bissau',
       isLocal: false,
+      proficiency: LanguageProficiency.native,
+      status: LanguageStatus.active,
+      flag: '🇵🇹',
       culturalNotes: 'Língua oficial da Guiné-Bissau',
     ),
     const SupportedLanguage(
       code: 'crioulo',
       name: 'Crioulo',
       nativeName: 'Kriol',
-      flag: '🇬🇼',
+      region: 'Guiné-Bissau',
       isLocal: true,
+      proficiency: LanguageProficiency.native,
+      status: LanguageStatus.active,
+      flag: '🇬🇼',
       culturalNotes: 'Língua crioula da Guiné-Bissau',
     ),
     const SupportedLanguage(
       code: 'fr',
       name: 'Francês',
       nativeName: 'Français',
-      flag: '🇫🇷',
+      region: 'África Ocidental',
       isLocal: false,
+      proficiency: LanguageProficiency.advanced,
+      status: LanguageStatus.active,
+      flag: '🇫🇷',
       culturalNotes: 'Língua regional importante',
     ),
   ];
@@ -52,18 +60,22 @@ class InternationalTeachingServiceSimple {
 
   void _initializeSystem() {
     _system = InternationalTeachingSystem(
+      id: 'bufala_system',
+      name: 'Bufala Ensino Internacional',
+      description: 'Sistema de ensino internacional integrado',
       supportedLanguages: _supportedLanguages,
       teachingMethods: _getAvailableTeachingMethods(),
-      culturalContexts: _getAvailableCulturalContexts(),
       targetAudiences: _getAvailableTargetAudiences(),
-      aiCapabilities: InternationalAICapabilities(
+      aiCapabilities: AICapabilities(
+        canTranslate: true,
+        canGenerateContent: true,
+        canAdaptToContext: true,
+        canLearnFromInteraction: true,
         supportedFeatures: [
-          'translation',
-          'cultural_adaptation',
-          'difficulty_adjustment',
+          AIFeature.realTimeTranslation,
+          AIFeature.culturalAdaptation
         ],
-        maxLanguages: _supportedLanguages.length,
-        offlineCapable: true,
+        limitations: ['offline only for básico'],
       ),
     );
   }
@@ -73,37 +85,32 @@ class InternationalTeachingServiceSimple {
           id: 'vocab',
           name: 'Vocabulário',
           description: 'Aprendizado de palavras e expressões',
+          type: MethodType.translation,
+          interactivity: InteractivityLevel.passive,
+          aiAssisted: true,
         ),
         const TeachingMethod(
           id: 'grammar',
           name: 'Gramática',
           description: 'Estruturas e regras da língua',
+          type: MethodType.cultural,
+          interactivity: InteractivityLevel.interactive,
+          aiAssisted: true,
         ),
         const TeachingMethod(
           id: 'conversation',
           name: 'Conversação',
           description: 'Prática de diálogo e comunicação',
-        ),
-      ];
-
-  List<CulturalContext> _getAvailableCulturalContexts() => [
-        const CulturalContext(
-          id: 'gb_rural',
-          name: 'Rural Guiné-Bissau',
-          description: 'Contexto rural da Guiné-Bissau',
-          region: 'Guiné-Bissau',
-        ),
-        const CulturalContext(
-          id: 'gb_urban',
-          name: 'Urbano Guiné-Bissau',
-          description: 'Contexto urbano da Guiné-Bissau',
-          region: 'Guiné-Bissau',
+          type: MethodType.conversation,
+          interactivity: InteractivityLevel.immersive,
+          aiAssisted: true,
         ),
       ];
 
   List<TargetAudience> _getAvailableTargetAudiences() => [
         const TargetAudience(
           id: 'adults',
+          name: 'Adultos trabalhadores',
           description: 'Adultos trabalhadores',
           ageRange: AgeRange.adults,
           educationLevel: EducationLevel.primary,
@@ -112,6 +119,7 @@ class InternationalTeachingServiceSimple {
         ),
         const TargetAudience(
           id: 'students',
+          name: 'Estudantes jovens',
           description: 'Estudantes jovens',
           ageRange: AgeRange.teenagers,
           educationLevel: EducationLevel.secondary,
@@ -134,11 +142,13 @@ class InternationalTeachingServiceSimple {
     final session = InternationalTeachingSession(
       id: sessionId,
       teacherId: userId,
-      targetLanguage: targetLanguage,
-      sourceLanguage: sourceLanguage,
-      startTime: DateTime.now(),
+      targetAudience:
+          _getAvailableTargetAudiences().first, // Ajuste conforme lógica real
+      languages: [sourceLanguage, targetLanguage],
+      method:
+          _getAvailableTeachingMethods().first, // Ajuste conforme lógica real
       topic: topic ?? 'Conversação básica',
-      difficulty: difficulty ?? DifficultyLevel.beginner,
+      startTime: DateTime.now(),
     );
 
     _activeSessions.add(session);
@@ -155,11 +165,9 @@ class InternationalTeachingServiceSimple {
     try {
       final response = await _gemmaService.translateText(
         text: text,
-        sourceLanguage: sourceLanguage.code,
-        targetLanguage: targetLanguage.code,
-        context: context,
+        fromLanguage: sourceLanguage.code,
+        toLanguage: targetLanguage.code,
       );
-
       return {
         'original': text,
         'translation': response,
@@ -228,12 +236,10 @@ class InternationalTeachingServiceSimple {
   }) async {
     try {
       final response = await _gemmaService.getEducationalContent(
-        topic: topic,
+        question: topic,
         language: targetLanguage.code,
-        difficulty: difficulty.name,
-        culturalContext: culturalContext?.description,
+        // subject, level, ageGroup podem ser passados se necessário
       );
-
       return response;
     } catch (e) {
       return _createFallbackContent(topic, targetLanguage, difficulty);
@@ -365,11 +371,12 @@ class InternationalTeachingServiceSimple {
         .where((session) => session.teacherId == userId)
         .map((session) => {
               'id': session.id,
-              'targetLanguage': session.targetLanguage.name,
-              'sourceLanguage': session.sourceLanguage.name,
+              'targetAudience': session.targetAudience.name,
+              'languages': session.languages.map((l) => l.name).toList(),
+              'method': session.method.name,
               'topic': session.topic,
-              'difficulty': session.difficulty.name,
               'startTime': session.startTime.toIso8601String(),
+              'endTime': session.endTime?.toIso8601String(),
             })
         .toList();
   }

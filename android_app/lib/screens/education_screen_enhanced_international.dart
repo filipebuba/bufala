@@ -321,7 +321,7 @@ class _EducationScreenEnhancedFixedState
             children: [
               // Texto original
               Card(
-                color: AppColors.primaryGreen.withOpacity(0.1),
+                color: AppColors.primaryGreen.withAlpha((0.1 * 255).toInt()),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
@@ -502,7 +502,7 @@ class _EducationScreenEnhancedFixedState
           gradient: LinearGradient(
             colors: [
               AppColors.primaryGreen,
-              AppColors.primaryGreen.withOpacity(0.8)
+              AppColors.primaryGreen.withAlpha((0.8 * 255).toInt())
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -546,7 +546,7 @@ class _EducationScreenEnhancedFixedState
             ),
             CircularProgressIndicator(
               value: _completedLessons / _totalLessons,
-              backgroundColor: Colors.white.withOpacity(0.3),
+              backgroundColor: Colors.white.withAlpha((0.3 * 255).toInt()),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
               strokeWidth: 6,
             ),
@@ -565,8 +565,8 @@ class _EducationScreenEnhancedFixedState
   Widget _buildConnectionStatus() => Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: _isBackendConnected && _isGemmaConnected
-            ? Colors.green.withOpacity(0.1)
-            : Colors.orange.withOpacity(0.1),
+            ? Colors.green.withAlpha((0.1 * 255).toInt())
+            : Colors.orange.withAlpha((0.1 * 255).toInt()),
         child: Row(
           children: [
             Icon(
@@ -685,14 +685,14 @@ class _EducationScreenEnhancedFixedState
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.8)],
+            colors: [color, color.withAlpha((0.8 * 255).toInt())],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
+              color: color.withAlpha((0.3 * 255).toInt()),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -732,7 +732,7 @@ class _EducationScreenEnhancedFixedState
               Text(
                 subject['subtitle'] as String,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withAlpha((0.8 * 255).toInt()),
                   fontSize: 12,
                 ),
               ),
@@ -746,7 +746,7 @@ class _EducationScreenEnhancedFixedState
                       Text(
                         _useCreole ? 'Progresu' : 'Progresso',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withAlpha((0.8 * 255).toInt()),
                           fontSize: 12,
                         ),
                       ),
@@ -763,7 +763,8 @@ class _EducationScreenEnhancedFixedState
                   const SizedBox(height: 4),
                   LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: Colors.white.withOpacity(0.3),
+                    backgroundColor:
+                        Colors.white.withAlpha((0.3 * 255).toInt()),
                     valueColor:
                         const AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
@@ -788,7 +789,10 @@ class _EducationScreenEnhancedFixedState
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.indigo, Colors.indigo.withOpacity(0.8)],
+                    colors: [
+                      Colors.indigo,
+                      Colors.indigo.withAlpha((0.8 * 255).toInt())
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -820,7 +824,8 @@ class _EducationScreenEnhancedFixedState
                                     ? 'Ensina lingua di Guiné-Bissau pa mundu sabi'
                                     : 'Ensine as línguas da Guiné-Bissau para o mundo',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white
+                                      .withAlpha((0.9 * 255).toInt()),
                                   fontSize: 14,
                                 ),
                               ),
@@ -939,7 +944,8 @@ class _EducationScreenEnhancedFixedState
                       : null,
                   onTap: () => _selectTargetAudience(audience),
                   selected: isSelected,
-                  selectedTileColor: Colors.indigo.withOpacity(0.1),
+                  selectedTileColor:
+                      Colors.indigo.withAlpha((0.1 * 255).toInt()),
                 ),
               );
             })),
@@ -1020,7 +1026,7 @@ class _EducationScreenEnhancedFixedState
   Widget _buildStatChip(String value, String label) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withAlpha((0.2 * 255).toInt()),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -1036,7 +1042,7 @@ class _EducationScreenEnhancedFixedState
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withAlpha((0.8 * 255).toInt()),
                 fontSize: 12,
               ),
             ),
