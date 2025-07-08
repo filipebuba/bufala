@@ -1,0 +1,36 @@
+# Bu Fala - Dependências do Backend Gemma 3n
+# Sistema de IA para comunidades da Guiné-Bissau
+
+# Framework web
+flask==2.3.3
+flask-cors==4.0.0
+
+# Machine Learning e IA
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.35.0
+kagglehub>=0.2.0
+accelerate>=0.24.0
+
+# Processamento multimodal (CRÍTICO para hackathon)
+pillow>=10.0.0
+librosa>=0.10.0
+opencv-python>=4.8.0
+scipy>=1.11.0
+soundfile>=0.12.0
+
+# Processamento de dados
+numpy>=1.24.0
+requests>=2.31.0
+
+# Utilitários
+python-dotenv>=1.0.0
+logging>=0.4.9.6
+datetime
+pathlib
+typing-extensions>=4.8.0
+
+# Desenvolvimento (opcional)
+ipython>=8.15.0
+jupyter>=1.0.0
+librosa>=0.10.0

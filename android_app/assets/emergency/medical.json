@@ -1,0 +1,56 @@
+{
+  "id": "emergency_medical",
+  "type": "medical",
+  "title": "Emergência Médica",
+  "title_creole": "Emerjénsia Médiku",
+  "scenarios": [
+    {
+      "id": "unconscious",
+      "title": "Pessoa Inconsciente",
+      "title_creole": "Pesoa Sin Konsiénsia",
+      "steps": [
+        "Verificar se a pessoa responde",
+        "Verificar respiração",
+        "Posicionar em recuperação",
+        "Chamar ajuda médica"
+      ],
+      "steps_creole": [
+        "Odja si pesoa ta responde",
+        "Odja respirason",
+        "Pune na posison di rekuperason",
+        "Xama djuda médiku"
+      ],
+      "warnings": [
+        "Não mover se houver suspeita de lesão na coluna",
+        "Manter vias aéreas desobstruídas"
+      ],
+      "resources": [
+        "Telefone para emergência",
+        "Cobertor",
+        "Espaço ventilado"
+      ]
+    },
+    {
+      "id": "bleeding",
+      "title": "Sangramento",
+      "title_creole": "Sangramentu",
+      "steps": [
+        "Aplicar pressão direta",
+        "Elevar membro ferido",
+        "Aplicar bandagem",
+        "Buscar ajuda médica"
+      ],
+      "steps_creole": [
+        "Pune preson diretu",
+        "Alsa parti magoadu",
+        "Pune bandajen",
+        "Buska djuda médiku"
+      ]
+    }
+  ],
+  "contacts": {
+    "emergency": "113",
+    "hospital": "Local",
+    "red_cross": "199"
+  }
+}

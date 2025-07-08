@@ -1,0 +1,53 @@
+{
+  "subjects": {
+    "literacy": {
+      "title": "Alfabetização",
+      "title_creole": "Alfabetizason",
+      "description": "Aprenda a ler e escrever em português e crioulo",
+      "description_creole": "Aprende lei i skirbi na portugés i kriolu",
+      "levels": {
+        "beginner": {
+          "lessons": [
+            {
+              "id": "lesson_1",
+              "title": "Alfabeto Português",
+              "title_creole": "Alfabetu Portugés",
+              "content": "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",
+              "exercises": [
+                {
+                  "type": "recognition",
+                  "question": "Qual é a primeira letra do alfabeto?",
+                  "question_creole": "Kuma ki é primera letra di alfabetu?",
+                  "options": ["A", "B", "C"],
+                  "correct": 0
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "health": {
+      "title": "Saúde",
+      "title_creole": "Saúdi",
+      "description": "Cuidados básicos de saúde e higiene",
+      "description_creole": "Kuidadu básiku di saúdi i ijiéni",
+      "topics": {
+        "hygiene": {
+          "title": "Higiene Pessoal",
+          "title_creole": "Ijiéni Pesual",
+          "practices": [
+            "Lavar as mãos regularmente",
+            "Escovar os dentes",
+            "Tomar banho diariamente"
+          ],
+          "practices_creole": [
+            "Laba mon regularimenti",
+            "Skova denti",
+            "Toma banhu kada dia"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "literacy_creole_basic",
+  "title": "Alfabetizason na Kriolu - Básiku",
+  "lessons": [
+    {
+      "id": "vowels",
+      "title": "Vogal",
+      "content": "Sinku vogal nan: A, E, I, O, U",
+      "exercises": [
+        {
+          "type": "identification",
+          "question": "Kual di es e vogal?",
+          "options": ["A", "B", "C", "D"],
+          "correct": 0
+        },
+        {
+          "type": "writing",
+          "question": "Skirbi vogal ki ta ben dipus di 'A'",
+          "answer": "E"
+        }
+      ]
+    },
+    {
+      "id": "simple_words",
+      "title": "Palavra Símples",
+      "content": "Na aprende palavra ku vogal: AVO, EVA, IVO, OVO, UVA",
+      "exercises": [
+        {
+          "type": "reading",
+          "question": "Lei na bos altu: AVO",
+          "audio": "assets/audio/creole/avo.mp3"
+        }
+      ]
+    }
+  ],
+  "vocabulary": [
+    {"word": "AVO", "meaning": "Avô", "pronunciation": "a-vo"},
+    {"word": "EVA", "meaning": "Nomi di minina", "pronunciation": "e-va"},
+    {"word": "IVO", "meaning": "Nomi di mininu", "pronunciation": "i-vo"},
+    {"word": "OVO", "meaning": "Ovu di galinha", "pronunciation": "o-vo"},
+    {"word": "UVA", "meaning": "Fruta", "pronunciation": "u-va"}
+  ]
+}

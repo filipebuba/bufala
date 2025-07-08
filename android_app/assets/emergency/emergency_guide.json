@@ -1,0 +1,58 @@
+{
+  "emergencies": {
+    "medical": {
+      "title": "Emergências Médicas",
+      "title_creole": "Emerjénsia Médiku",
+      "categories": {
+        "heart_attack": {
+          "name": "Ataque Cardíaco",
+          "name_creole": "Ataki di korason",
+          "symptoms": [
+            "Dor no peito",
+            "Falta de ar",
+            "Náusea",
+            "Suor frio"
+          ],
+          "symptoms_creole": [
+            "Dur na petu",
+            "Falta di respirason",
+            "Vumita",
+            "Suor friu"
+          ],
+          "actions": [
+            "Chamar ambulância imediatamente",
+            "Manter pessoa calma e sentada",
+            "Afrouxar roupas apertadas",
+            "Dar aspirina se disponível"
+          ],
+          "actions_creole": [
+            "djoma ambulansia rapidu",
+            "Mantén pesua kalma i sintadu",
+            "Afruxa ropa apertadu",
+            "Da aspirina si tén"
+          ]
+        }
+      }
+    },
+    "natural_disasters": {
+      "title": "Desastres Naturais",
+      "title_creole": "Dizastri Natural",
+      "categories": {
+        "flood": {
+          "name": "Inundação",
+          "name_creole": "Inundason",
+          "preparation": [
+            "Mover para terreno elevado",
+            "Preparar kit de emergência",
+            "Identificar rotas de evacuação"
+          ],
+          "preparation_creole": [
+            "Bai pa lokal mas altu",
+            "Prepara kit di emerjénsia",
+            "Konhisi kaminho di evakuason"
+          ]
+        }
+      }
+    }
+  }
+}

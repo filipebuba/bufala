@@ -1,0 +1,59 @@
+{
+  "creole_portuguese": {
+    "basic_greetings": {
+      "bom dia": "bon dia",
+      "boa tarde": "bo tardi", 
+      "boa noite": "bo noiti",
+      "olá": "i kuma",
+      "tchau": "tchau",
+      "obrigado": "obrigadu",
+      "obrigada": "obrigadu",
+      "por favor": "tempasensa",
+      "desculpa": "diskulpa",
+      "com licença": "dan lisensa"
+    },
+    "family": {
+      "pai": "papa",
+      "mãe": "mama", 
+      "filho": "fidju",
+      "filha": "fidju femia",
+      "irmão": "ermon",
+      "irmã": "ermon",
+      "avô": "dona matchu",
+      "avó": "dona femia",
+      "tio": "titiu",
+      "tia": "titia"
+    },
+    "numbers": {
+      "um": "un",
+      "dois": "dus", 
+      "três": "tris",
+      "quatro": "kuatru",
+      "cinco": "sinku",
+      "seis": "seis",
+      "sete": "seti",
+      "oito": "oitu",
+      "nove": "novi",
+      "dez": "des"
+    },
+    "emergency_phrases": {
+      "ajuda": "djudanu",
+      "emergência": "emergência",
+      "médico": "mediku",
+      "hospital": "ospital", 
+      "polícia": "pulisia",
+      "bombeiros": "bumbeiru",
+      "dor": "dur",
+      "doente": "duenti",
+      "acidente": "asidenti",
+      "perigo": "pirigu"
+    }
+  },
+  "portuguese_creole": {
+    "djudanu": "ajuda",
+    "emergência": "emergência", 
+    "mediku": "médico",
+    "ospital": "hospital",
+    "pulisia": "polícia"
+  }
+}

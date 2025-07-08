@@ -1,0 +1,10 @@
+{
+    "model_name": "google/gemma-3-2b-it",
+    "display_name": "Bu Fala Gemma-3n",
+    "max_length": 512,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "do_sample": true,
+    "offline_mode": true,
+    "local_model_path": null
+}

@@ -1,0 +1,147 @@
+{
+  "name": "Dicionário Português-Crioulo",
+  "description": "Dicionário básico para comunicação em Guiné-Bissau",
+  "version": "1.0",
+  "entries": [
+    {
+      "portuguese": "olá",
+      "creole": "bom dia",
+      "pronunciation": "bõ día",
+      "category": "greeting",
+      "examples": [
+        {
+          "pt": "Olá, como está?",
+          "creole": "Bom dia, kuma bu sta?",
+          "context": "formal_greeting"
+        }
+      ]
+    },
+    {
+      "portuguese": "obrigado",
+      "creole": "obrigadu",
+      "pronunciation": "obrigádu",
+      "category": "politeness",
+      "examples": [
+        {
+          "pt": "Obrigado pela ajuda",
+          "creole": "Obrigadu pa djuda",
+          "context": "gratitude"
+        }
+      ]
+    },
+    {
+      "portuguese": "água",
+      "creole": "agu",
+      "pronunciation": "águ",
+      "category": "basic_needs",
+      "examples": [
+        {
+          "pt": "Preciso de água",
+          "creole": "N misti agu",
+          "context": "necessity"
+        }
+      ]
+    },
+    {
+      "portuguese": "comida",
+      "creole": "kusa di kume",
+      "pronunciation": "kussa di kumé",
+      "category": "basic_needs",
+      "examples": [
+        {
+          "pt": "A comida está boa",
+          "creole": "Kusa di kume sabi",
+          "context": "food_appreciation"
+        }
+      ]
+    },
+    {
+      "portuguese": "casa",
+      "creole": "kasa",
+      "pronunciation": "kássa",
+      "category": "home",
+      "examples": [
+        {
+          "pt": "Vou para casa",
+          "creole": "N ta bai kasa",
+          "context": "movement"
+        }
+      ]
+    },
+    {
+      "portuguese": "escola",
+      "creole": "skola",
+      "pronunciation": "iskóla",
+      "category": "education",
+      "examples": [
+        {
+          "pt": "As crianças vão à escola",
+          "creole": "mininus na bai skola",
+          "context": "education"
+        }
+      ]
+    },
+    {
+      "portuguese": "hospital",
+      "creole": "ospital",
+      "pronunciation": "ospitál",
+      "category": "health",
+      "examples": [
+        {
+          "pt": "Preciso ir ao hospital",
+          "creole": "N'misti bai ospital",
+          "context": "emergency"
+        }
+      ]
+    },
+    {
+      "portuguese": "dinheiro",
+      "creole": "dinheru",
+      "pronunciation": "dinhéru",
+      "category": "economy",
+      "examples": [
+        {
+          "pt": "Não tenho dinheiro",
+          "creole": "N'ka tene dinheru",
+          "context": "financial"
+        }
+      ]
+    },
+    {
+      "portuguese": "sim",
+      "creole": "sin",
+      "pronunciation": "sim",
+      "category": "response",
+      "examples": [
+        {
+          "pt": "Sim, concordo",
+          "creole": "Sin, n'konkorda",
+          "context": "agreement"
+        }
+      ]
+    },
+    {
+      "portuguese": "não",
+      "creole": "nau",
+      "pronunciation": "não",
+      "category": "response",
+      "examples": [
+        {
+          "pt": "Não entendo",
+          "creole": "N'ka n'ntindi",
+          "context": "comprehension"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {"id": "greeting", "name": "Cumprimentos", "name_creole": "Nha mantenhas"},
+    {"id": "politeness", "name": "Cortesia", "name_creole": "Gardisimentu"},
+    {"id": "basic_needs", "name": "Necessidades Básicas", "name_creole": "Nesesidad Básiku"},
+    {"id": "home", "name": "Casa", "name_creole": "Kasa"},
+    {"id": "education", "name": "Educação", "name_creole": "skola"},
+    {"id": "health", "name": "Saúde", "name_creole": "Saudi"},
+    {"id": "economy", "name": "Economia", "name_creole": "Ekonomia"},
+    {"id": "response", "name": "Respostas", "name_creole": "Rasposta"}
+  ]
+}

@@ -1,0 +1,23 @@
+# Bu Fala Backend Modularizado - Dependências
+# Versão 2.0.0 com melhorias Gemma-3n
+
+# Framework web
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Machine Learning e IA
+torch>=2.0.0
+transformers>=4.53.0
+accelerate>=0.20.0
+
+# Utilitários
+numpy>=1.21.0
+requests>=2.25.0
+python-dateutil>=2.8.0
+
+# Desenvolvimento e debugging
+logging>=0.4.9.6
+
+# Otimizações opcionais (instalar se disponível)
+# flash-attn>=2.0.0  # Para Flash Attention 2
+# bitsandbytes>=0.41.0  # Para quantização

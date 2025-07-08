@@ -1,0 +1,961 @@
+import 'package:flutter/material.dart';
+import '../models/collaborative_learning_models.dart' as models;
+import '../services/collaborative_learning_service.dart';
+
+/// Tela principal do sistema "Ensine o Bu Fala"
+class TeachLanguageScreen extends StatefulWidget {
+  const TeachLanguageScreen({super.key});
+
+  @override
+  State<TeachLanguageScreen> createState() => _TeachLanguageScreenState();
+}
+
+class _TeachLanguageScreenState extends State<TeachLanguageScreen>
+    with SingleTickerProviderStateMixin {
+  final CollaborativeLearningService _service = CollaborativeLearningService();
+  late TabController _tabController;
+
+  models.TeacherProfile? _teacherProfile;
+  bool _isLoading = true;
+  String _selectedLanguage = 'Fula';
+  String _selectedCategory = 'medical';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _loadTeacherProfile();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTeacherProfile() async {
+    setState(() => _isLoading = true);
+
+    // TODO: Obter ID do usuário logado do sistema de autenticação
+    final teacherId = 'user_${DateTime.now().millisecondsSinceEpoch}';
+
+    final response = await _service.getTeacherProfile(teacherId);
+
+    if (response.success && response.data != null) {
+      setState(() {
+        _teacherProfile = response.data;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      // Mostrar erro se não conseguir carregar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message ?? 'Erro ao carregar perfil'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+  }
+      await _createTeacherProfile();
+    }
+  }
+
+  Future<void> _createTeacherProfile() async {
+    final response = await _service.createTeacherProfile(
+      name: 'Usuário Professor', // TODO: Nome real do usuário
+      languagesTeaching: [_selectedLanguage],
+    );
+
+    if (response.success && response.data != null) {
+      setState(() {
+        _teacherProfile = response.data;
+        _isLoading = false;
+      });
+    } else {
+      setState(() => _isLoading = false);
+      _showErrorSnackBar('Erro ao criar perfil de professor');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).primaryColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Carregando perfil de professor...',
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('🎓 Ensine o Bu Fala'),
+        backgroundColor: Colors.orange,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.school), text: 'Ensinar'),
+            Tab(icon: Icon(Icons.check_circle), text: 'Validar'),
+            Tab(icon: Icon(Icons.leaderboard), text: 'Ranking'),
+            Tab(icon: Icon(Icons.person), text: 'Perfil'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildTeachTab(),
+          _buildValidateTab(),
+          _buildRankingTab(),
+          _buildProfileTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeachTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header com pontos e progresso
+          _buildProgressHeader(),
+          const SizedBox(height: 24),
+
+          // Seleção de idioma e categoria
+          _buildLanguageSelection(),
+          const SizedBox(height: 24),
+
+          // Botão principal para ensinar
+          _buildTeachButton(),
+          const SizedBox(height: 24),
+
+          // Estatísticas rápidas
+          _buildQuickStats(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressHeader() {
+    final profile = _teacherProfile;
+    if (profile == null) return const SizedBox();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange.shade400, Colors.orange.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Olá, ${profile.name}! 👋',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Nível ${profile.level}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.stars, color: Colors.yellow, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '${profile.points} pontos',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${profile.totalPhrasesTaught} frases ensinadas',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Que idioma você quer ensinar?',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            'Fula',
+            'Mandinka',
+            'Balanta',
+            'Papel',
+            'Wolof',
+            'Bijagó',
+            'Crioulo GB',
+          ].map((language) => _buildLanguageChip(language)).toList(),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Categoria de frases:',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            {'id': 'medical', 'name': '🏥 Saúde', 'color': Colors.red},
+            {
+              'id': 'agriculture',
+              'name': '🌱 Agricultura',
+              'color': Colors.green
+            },
+            {'id': 'daily', 'name': '🏠 Cotidiano', 'color': Colors.blue},
+            {'id': 'education', 'name': '📚 Educação', 'color': Colors.purple},
+          ].map((category) => _buildCategoryChip(category)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLanguageChip(String language) {
+    final isSelected = _selectedLanguage == language;
+    return FilterChip(
+      label: Text(language),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() => _selectedLanguage = language);
+      },
+      selectedColor: Colors.orange.shade200,
+      checkmarkColor: Colors.orange.shade700,
+    );
+  }
+
+  Widget _buildCategoryChip(Map<String, dynamic> category) {
+    final isSelected = _selectedCategory == category['id'];
+    return FilterChip(
+      label: Text(category['name'] as String),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() => _selectedCategory = category['id'] as String);
+      },
+      selectedColor: (category['color'] as Color).withValues(alpha: 0.2),
+      checkmarkColor: category['color'] as Color,
+    );
+  }
+
+  Widget _buildTeachButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: () => _startTeaching(),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.orange,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.school, size: 24, color: Colors.white),
+            SizedBox(width: 12),
+            Text(
+              'Começar a Ensinar!',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickStats() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '📊 Estatísticas Rápidas',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem('🎯', 'Meta Diária', '5/10 frases'),
+              _buildStatItem('⚡', 'Sequência', '7 dias'),
+              _buildStatItem('🏆', 'Ranking', '#12'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String emoji, String label, String value) {
+    return Column(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 24)),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildValidateTab() {
+    return const Center(
+      child: Text(
+        '✅ Tela de Validação\n(Em desenvolvimento)',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 16),
+      ),
+    );
+  }
+
+  Widget _buildRankingTab() {
+    return const Center(
+      child: Text(
+        '🏆 Tela de Ranking\n(Em desenvolvimento)',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 16),
+      ),
+    );
+  }
+
+  Widget _buildProfileTab() {
+    final profile = _teacherProfile;
+    if (profile == null) {
+      return const Center(
+        child: Text('Erro ao carregar perfil'),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar e info básica
+          Center(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.orange.shade200,
+                  child: Text(
+                    profile.name.substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  profile.name,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Professor de ${profile.languagesTeaching.join(", ")}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Estatísticas detalhadas
+          _buildDetailedStats(profile),
+          const SizedBox(height: 24),
+
+          // Badges/Conquistas
+          _buildBadgesSection(profile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailedStats(models.TeacherProfile profile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '📊 Estatísticas Detalhadas',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildStatRow('🏆 Pontos Total', '${profile.points}'),
+                _buildStatRow(
+                    '📝 Frases Ensinadas', '${profile.totalPhrasesTaught}'),
+                _buildStatRow('⭐ Taxa de Precisão',
+                    '${(profile.accuracyRate * 100).toStringAsFixed(1)}%'),
+                _buildStatRow('🎯 Nível Atual', '${profile.level}'),
+                _buildStatRow('📅 Membro desde',
+                    '${profile.joinedDate.day}/${profile.joinedDate.month}/${profile.joinedDate.year}'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadgesSection(models.TeacherProfile profile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '🏅 Conquistas',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (profile.badges.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Text(
+                  'Nenhuma conquista ainda.\nComece a ensinar para ganhar badges!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children:
+                profile.badges.map((badge) => _buildBadgeChip(badge)).toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBadgeChip(models.Badge badge) {
+    return Chip(
+      avatar: const Icon(Icons.star, color: Colors.yellow),
+      label: Text(badge.name),
+      backgroundColor: Colors.orange.shade100,
+    );
+  }
+
+  void _startTeaching() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => TeachPhraseScreen(
+          teacherId: _teacherProfile?.id ?? '',
+          targetLanguage: _selectedLanguage,
+          category: _selectedCategory,
+        ),
+      ),
+    );
+  }
+}
+
+/// Tela para ensinar uma frase específica
+class TeachPhraseScreen extends StatefulWidget {
+  final String teacherId;
+  final String targetLanguage;
+  final String category;
+
+  const TeachPhraseScreen({
+    super.key,
+    required this.teacherId,
+    required this.targetLanguage,
+    required this.category,
+  });
+
+  @override
+  State<TeachPhraseScreen> createState() => _TeachPhraseScreenState();
+}
+
+class _TeachPhraseScreenState extends State<TeachPhraseScreen> {
+  final CollaborativeLearningService _service = CollaborativeLearningService();
+  final TextEditingController _translationController = TextEditingController();
+  final TextEditingController _pronunciationController =
+      TextEditingController();
+
+  models.TeachingPhrase? _currentPhrase;
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNextPhrase();
+  }
+
+  @override
+  void dispose() {
+    _translationController.dispose();
+    _pronunciationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadNextPhrase() async {
+    setState(() => _isLoading = true);
+
+    final response = await _service.getPhraseToTeach(
+      targetLanguage: widget.targetLanguage,
+      category: widget.category,
+      teacherId: widget.teacherId,
+    );
+
+    if (response.success && response.data != null) {
+      setState(() {
+        _currentPhrase = response.data;
+        _isLoading = false;
+      });
+      _translationController.clear();
+      _pronunciationController.clear();
+    } else {
+      setState(() => _isLoading = false);
+      _showErrorSnackBar('Nenhuma frase disponível para ensinar');
+    }
+  }
+
+  Future<void> _submitTranslation() async {
+    final phrase = _currentPhrase;
+    if (phrase == null || _translationController.text.trim().isEmpty) return;
+
+    setState(() => _isSubmitting = true);
+
+    // Usar o novo método do serviço
+    final response = await _service.teachPhrase(
+      teacherId: widget.teacherId,
+      portugueseText: phrase.text, // Assumindo que phrase tem um campo text
+      translatedText: _translationController.text.trim(),
+      targetLanguage: widget.targetLanguage,
+      category: widget.category,
+      pronunciationGuide: _pronunciationController.text.trim().isEmpty 
+          ? null 
+          : _pronunciationController.text.trim(),
+    );
+
+    setState(() => _isSubmitting = false);
+
+    if (response.success) {
+      _showSuccessSnackBar('Tradução ensinada com sucesso! +10 pontos 🎉');
+      
+      // Mostrar provocação se houver
+      if (response.data?.provocation != null) {
+        _showProvocationDialog(response.data!.provocation!);
+      }
+      
+      await _loadNextPhrase();
+    } else {
+      _showErrorSnackBar(response.message ?? 'Erro ao enviar tradução');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Ensinar ${widget.targetLanguage}'),
+        backgroundColor: Colors.orange,
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _currentPhrase == null
+              ? const Center(child: Text('Nenhuma frase disponível'))
+              : _buildTeachingInterface(),
+    );
+  }
+
+  Widget _buildTeachingInterface() {
+    final phrase = _currentPhrase!;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Progresso e categoria
+          _buildProgressIndicator(),
+          const SizedBox(height: 24),
+
+          // Frase original
+          _buildSourcePhrase(phrase),
+          const SizedBox(height: 24),
+
+          // Campo de tradução
+          _buildTranslationField(),
+          const SizedBox(height: 16),
+
+          // Campo de pronúncia (opcional)
+          _buildPronunciationField(),
+          const SizedBox(height: 24),
+
+          // Dicas e contexto
+          _buildHelpSection(phrase),
+          const SizedBox(height: 24),
+
+          // Botões de ação
+          _buildActionButtons(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.translate, color: Colors.blue.shade700),
+          const SizedBox(width: 8),
+          Text(
+            'Categoria: ${widget.category}',
+            style: TextStyle(
+              color: Colors.blue.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            '+10 pontos',
+            style: TextStyle(
+              color: Colors.green.shade700,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourcePhrase(models.TeachingPhrase phrase) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Como você diria isto em ${widget.targetLanguage}?',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.orange.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '"${phrase.sourceText}"',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (phrase.context.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Contexto: ${phrase.context}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTranslationField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Sua tradução:',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _translationController,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Digite a tradução em ${widget.targetLanguage}...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            prefixIcon: const Icon(Icons.translate),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPronunciationField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Guia de pronúncia (opcional):',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _pronunciationController,
+          decoration: InputDecoration(
+            hintText: 'Ex: "a-ba-ra-ka" ou "pronuncia como..."',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            prefixIcon: const Icon(Icons.record_voice_over),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHelpSection(models.TeachingPhrase phrase) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lightbulb, color: Colors.blue.shade700),
+              const SizedBox(width: 8),
+              Text(
+                'Dicas',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '• Pense em como você explicaria para uma criança\n'
+            '• Use palavras que você realmente falaria\n'
+            '• Se houver variações regionais, escolha a mais comum\n'
+            '• Outros falantes vão validar sua tradução',
+            style: TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _isSubmitting
+                ? null
+                : (_translationController.text.trim().isEmpty
+                    ? null
+                    : _submitTranslation),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'Ensinar esta Tradução',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _loadNextPhrase,
+          child: const Text('Pular esta frase'),
+        ),
+      ],
+    );
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "literacy_pt_basic",
+  "title": "Alfabetização em Português - Básico",
+  "lessons": [
+    {
+      "id": "vowels",
+      "title": "Vogais",
+      "content": "As cinco vogais são: A, E, I, O, U",
+      "exercises": [
+        {
+          "type": "identification",
+          "question": "Qual destas é uma vogal?",
+          "options": ["A", "B", "C", "D"],
+          "correct": 0
+        },
+        {
+          "type": "writing",
+          "question": "Escreva a vogal que vem depois de 'A'",
+          "answer": "E"
+        }
+      ]
+    },
+    {
+      "id": "simple_words",
+      "title": "Palavras Simples",
+      "content": "Vamos aprender palavras com vogais: AVO, EVA, IVO, OVO, UVA",
+      "exercises": [
+        {
+          "type": "reading",
+          "question": "Leia em voz alta: AVO",
+          "audio": "assets/audio/pt/avo.mp3"
+        }
+      ]
+    }
+  ],
+  "vocabulary": [
+    {"word": "AVO", "meaning": "Avô", "pronunciation": "a-vo"},
+    {"word": "EVA", "meaning": "Nome próprio", "pronunciation": "e-va"},
+    {"word": "IVO", "meaning": "Nome próprio", "pronunciation": "i-vo"},
+    {"word": "OVO", "meaning": "Ovo de galinha", "pronunciation": "o-vo"},
+    {"word": "UVA", "meaning": "Fruta", "pronunciation": "u-va"}
+  ]
+}

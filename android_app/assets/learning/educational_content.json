@@ -1,0 +1,78 @@
+{
+  "subjects": {
+    "literacy": {
+      "title": "Alfabetização",
+      "title_creole": "Alfabetizason",
+      "description": "Aprender a ler e escrever em português e crioulo",
+      "description_creole": "Aprende lei i skirbi na portugés i kriolu",
+      "levels": ["iniciante", "básico", "intermediário"],
+      "lessons": [
+        {
+          "id": "alphabet_pt",
+          "title": "Alfabeto Português",
+          "title_creole": "Alfabetu Portugés",
+          "content": "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",
+          "exercises": [
+            {
+              "type": "recognition",
+              "question": "Qual é a primeira letra do alfabeto?",
+              "question_creole": "Kuali i primeiru letra di alfabetu?",
+              "answer": "A"
+            }
+          ]
+        },
+        {
+          "id": "numbers",
+          "title": "Números",
+          "title_creole": "Númeru",
+          "content": "1-Um/Un, 2-Dois/Dus, 3-Três/Tres, 4-Quatro/Kuatru, 5-Cinco/Sinku",
+          "exercises": []
+        }
+      ]
+    },
+    "health": {
+      "title": "Saúde",
+      "title_creole": "Saúdi",
+      "description": "Cuidados básicos de saúde e prevenção",
+      "description_creole": "Kuidadu básiku di saúdi i prevenson",
+      "lessons": [
+        {
+          "id": "hygiene",
+          "title": "Higiene Básica",
+          "title_creole": "Ijiéni Básiku",
+          "content": "Lavar as mãos frequentemente, escovar os dentes, tomar banho",
+          "content_creole": "Laba mon konstantimenti, skoba denti, tuma banhu"
+        },
+        {
+          "id": "nutrition",
+          "title": "Nutrição",
+          "title_creole": "Nutrision",
+          "content": "Importância de uma alimentação balanceada",
+          "content_creole": "Importánsia di alimentason balansiadu"
+        }
+      ]
+    },
+    "agriculture": {
+      "title": "Agricultura",
+      "title_creole": "Agrikultura",
+      "description": "Técnicas de cultivo e manejo de culturas",
+      "description_creole": "Téknika di kultivo i maneju di kultura",
+      "lessons": [
+        {
+          "id": "rice_cultivation",
+          "title": "Cultivo de Arroz",
+          "title_creole": "Kultivo di Aros",
+          "content": "O arroz é o alimento base na Guiné-Bissau",
+          "content_creole": "Aros i alimentu basi na Guiné-Bissau"
+        },
+        {
+          "id": "cashew_management",
+          "title": "Manejo do Caju",
+          "title_creole": "Maneju di Kaju",
+          "content": "Técnicas para melhorar a produção de caju",
+          "content_creole": "Téknika pa melhora produson di kaju"
+        }
+      ]
+    }
+  }
+}

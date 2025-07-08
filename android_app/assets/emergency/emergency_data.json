@@ -1,0 +1,50 @@
+{
+  "emergency_types": {
+    "medical": {
+      "title": "Emergência Médica",
+      "title_creole": "Emerjénsia Médiku",
+      "description": "Situações que requerem atenção médica imediata",
+      "description_creole": "Situason ki ta misti atenson médiku imediatamenti",
+      "urgency_levels": ["baixa", "média", "alta", "crítica"]
+    },
+    "natural_disaster": {
+      "title": "Desastre Natural",
+      "title_creole": "Dizastri Natural",
+      "description": "Enchentes, tempestades, secas e outros eventos naturais",
+      "description_creole": "Inundason, tempestadi, seka i outru eventu natural"
+    },
+    "fire": {
+      "title": "Incêndio",
+      "title_creole": "Fugu",
+      "description": "Incêndios em casas, mato ou estabelecimentos",
+      "description_creole": "Fugu na kasa, matu o estabelesimentu"
+    },
+    "accident": {
+      "title": "Acidente",
+      "title_creole": "Asidenti",
+      "description": "Acidentes de trânsito ou acidentes de trabalho",
+      "description_creole": "Asidenti di tránsitu o asidenti di trabalhu"
+    }
+  },
+  "contact_numbers": {
+    "emergency_general": "113",
+    "police": "117",
+    "fire_department": "118",
+    "medical_emergency": "112",
+    "red_cross_bissau": "+245 320 2345"
+  },
+  "common_responses": {
+    "stay_calm": {
+      "pt": "Mantenha a calma e avalie a situação",
+      "creole": "Mantén kalma i odja situason"
+    },
+    "call_help": {
+      "pt": "Ligue para o número de emergência",
+      "creole": "Toka pa númeru di emerjénsia"
+    },
+    "move_to_safety": {
+      "pt": "Mova-se para um local seguro",
+      "creole": "Bai pa lokal siguru"
+    }
+  }
+}

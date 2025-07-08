@@ -1,0 +1,115 @@
+name: bufala
+description: "Bufala - Aplicativo Comunitário Offline para Guiné-Bissau"
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI e Material Design
+  cupertino_icons: ^1.0.6
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Local Storage (Offline)
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.2
+  
+  # Network & Connectivity
+  dio: ^5.4.0
+  connectivity_plus: ^5.0.2
+  
+  # Localização e Idiomas
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0
+  
+  # Utilitários
+  path_provider: ^2.1.1
+  
+  # AI e Machine Learning
+  # tflite_flutter: ^0.9.0  # Comentado para build offline sem TFLite
+  
+  # Processamento de Áudio
+  # speech_to_text: ^7.1.0  # Removido temporariamente devido a problemas de compatibilidade
+  flutter_tts: ^3.8.5     # Versão estável
+  audioplayers: ^5.2.1    # Versão estável
+  # record: ^5.0.4  # Mantido comentado até próxima atualização
+  
+  # Processamento de Imagem e Câmera
+  camera: ^0.10.5+5
+  image: ^3.0.2
+  image_picker: ^1.0.4
+  
+  # Video Player
+  video_player: ^2.8.1
+  
+  # Geolocalização
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
+  
+  # Informações do Dispositivo
+  device_info_plus: ^9.1.1
+  package_info_plus: ^4.2.0
+  
+  # Permissões
+  permission_handler: ^11.1.0
+  
+  # Criptografia e Segurança
+  crypto: ^3.0.3
+  
+  # Logging
+  logger: ^2.0.2+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Testes
+  mockito: ^5.4.4
+  build_runner: ^2.4.7
+  integration_test:
+    sdk: flutter
+  
+  # Análise de Código
+  flutter_lints: ^3.0.1
+  
+  # Cobertura de Testes
+  coverage: ^1.7.1
+  
+  # Testes de Performance
+  test: ^1.24.9
+  
+  # Geradores
+  hive_generator: ^2.0.1
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/audio/
+    - assets/data/
+    - assets/models/
+    - assets/dictionaries/
+    - assets/audio/pt/
+    - assets/audio/creole/
+    - assets/audio/mandinka/
+    - assets/audio/fula/
+    - assets/emergency/
+    - assets/learning/
+  
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700

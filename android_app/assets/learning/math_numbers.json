@@ -1,0 +1,73 @@
+{
+  "id": "math_numbers",
+  "title": "Números e Contagem",
+  "title_creole": "Númeru i Kontajen",
+  "modules": [
+    {
+      "id": "numbers_1_10",
+      "title": "Números de 1 a 10",
+      "title_creole": "Númeru di 1 até 10",
+      "content": {
+        "portuguese": [
+          {"number": 1, "word": "um", "pronunciation": "ũ"},
+          {"number": 2, "word": "dois", "pronunciation": "dois"},
+          {"number": 3, "word": "três", "pronunciation": "trêis"},
+          {"number": 4, "word": "quatro", "pronunciation": "kuátru"},
+          {"number": 5, "word": "cinco", "pronunciation": "sĩku"},
+          {"number": 6, "word": "seis", "pronunciation": "sêis"},
+          {"number": 7, "word": "sete", "pronunciation": "séti"},
+          {"number": 8, "word": "oito", "pronunciation": "óitu"},
+          {"number": 9, "word": "nove", "pronunciation": "nóvi"},
+          {"number": 10, "word": "dez", "pronunciation": "dés"}
+        ],
+        "creole": [
+          {"number": 1, "word": "un", "pronunciation": "ũ"},
+          {"number": 2, "word": "dos", "pronunciation": "dós"},
+          {"number": 3, "word": "tres", "pronunciation": "trés"},
+          {"number": 4, "word": "kuatu", "pronunciation": "kuátu"},
+          {"number": 5, "word": "sinku", "pronunciation": "sĩku"},
+          {"number": 6, "word": "seis", "pronunciation": "séis"},
+          {"number": 7, "word": "seti", "pronunciation": "séti"},
+          {"number": 8, "word": "oitu", "pronunciation": "óitu"},
+          {"number": 9, "word": "novi", "pronunciation": "nóvi"},
+          {"number": 10, "word": "des", "pronunciation": "dés"}
+        ]
+      },
+      "exercises": [
+        {
+          "type": "identification",
+          "question": "Qual número representa 'cinco'?",
+          "question_creole": "Kual númeru ki ta representa 'sinku'?",
+          "options": [3, 4, 5, 6],
+          "correct": 2
+        },
+        {
+          "type": "counting",
+          "question": "Conte quantas frutas há na imagem",
+          "question_creole": "Konta kuantu fruta na imajen",
+          "image": "assets/images/fruits_counting.png",
+          "answer": 7
+        }
+      ]
+    },
+    {
+      "id": "basic_operations",
+      "title": "Operações Básicas",
+      "title_creole": "Operason Básiku",
+      "content": {
+        "addition": {
+          "symbol": "+",
+          "name": "soma",
+          "name_creole": "suma",
+          "examples": ["2 + 3 = 5", "1 + 4 = 5", "5 + 2 = 7"]
+        },
+        "subtraction": {
+          "symbol": "-", 
+          "name": "subtração",
+          "name_creole": "subtarason",
+          "examples": ["5 - 2 = 3", "8 - 3 = 5", "10 - 4 = 6"]
+        }
+      }
+    }
+  ]
+}
