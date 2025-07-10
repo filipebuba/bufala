@@ -20,19 +20,21 @@ class TranscriptionItem {
     this.translatedText,
   });
 
-  factory TranscriptionItem.fromJson(Map<String, dynamic> json) => TranscriptionItem(
-    timestamp: json['timestamp']?.toString() ?? '',
-    originalText: json['original_text']?.toString() ?? '',
-    language: json['language']?.toString() ?? 'pt-BR',
-    translatedText: json['translated_text']?.toString(),
-  );
+  factory TranscriptionItem.fromJson(Map<String, dynamic> json) =>
+      TranscriptionItem(
+        timestamp: json['timestamp']?.toString() ?? '',
+        originalText: json['original_text']?.toString() ?? '',
+        language: json['language']?.toString() ?? 'pt-BR',
+        translatedText: json['translated_text']?.toString(),
+      );
 }
 
 class VoiceGuideNavigationScreen extends StatefulWidget {
   const VoiceGuideNavigationScreen({super.key});
 
   @override
-  State<VoiceGuideNavigationScreen> createState() => _VoiceGuideNavigationScreenState();
+  State<VoiceGuideNavigationScreen> createState() =>
+      _VoiceGuideNavigationScreenState();
 }
 
 class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
@@ -59,7 +61,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   String _currentLanguage = 'pt-BR';
   String _currentMode = 'navigation'; // navigation, accessibility, emergency
   String _visualDescription = '';
-  
+
   Map<String, String> _supportedLanguages = {
     'pt-BR': 'Português (Brasil)',
     'en-US': 'English (US)',
@@ -103,7 +105,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
+
     _emergencyController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -127,13 +129,13 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
     await _flutterTts.setSpeechRate(0.6);
     await _flutterTts.setVolume(1.0);
     await _flutterTts.setPitch(1.0);
-    
+
     _flutterTts.setStartHandler(() {
       setState(() {
         _isSpeaking = true;
       });
     });
-    
+
     _flutterTts.setCompletionHandler(() {
       setState(() {
         _isSpeaking = false;
@@ -143,13 +145,15 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
   Future<void> _announceWelcome() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    await _speak('Bu Fala VoiceGuide ativado. Diga "ajuda" para ouvir todos os comandos disponíveis. Você está no modo navegação.');
+    await _speak(
+        'Bu Fala VoiceGuide ativado. Diga "ajuda" para ouvir todos os comandos disponíveis. Você está no modo navegação.');
   }
 
   Future<void> _checkServiceHealth() async {
     final isAvailable = await _voiceGuideService.isServiceAvailable();
     if (!isAvailable) {
-      await _speak('Atenção: Serviço VoiceGuide não disponível. Funcionando em modo offline.');
+      await _speak(
+          'Atenção: Serviço VoiceGuide não disponível. Funcionando em modo offline.');
     }
   }
 
@@ -170,7 +174,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
   Future<void> _processVoiceCommand(String command) async {
     final lowerCommand = command.toLowerCase().trim();
-    
+
     setState(() {
       _lastCommand = command;
       _isLoading = true;
@@ -222,7 +226,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
     _voiceCommands.forEach((command, description) {
       helpText += '$command, ';
     });
-    helpText += 'Para navegar, diga "navegar para" seguido do destino. Para emergência, diga "emergência".';
+    helpText +=
+        'Para navegar, diga "navegar para" seguido do destino. Para emergência, diga "emergência".';
     await _speak(helpText);
   }
 
@@ -230,21 +235,24 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
     setState(() {
       _currentMode = 'navigation';
     });
-    _speak('Modo navegação ativado. Diga "analisar ambiente" ou "navegar para" seguido do destino.');
+    _speak(
+        'Modo navegação ativado. Diga "analisar ambiente" ou "navegar para" seguido do destino.');
   }
 
   void _switchToAccessibilityMode() {
     setState(() {
       _currentMode = 'accessibility';
     });
-    _speak('Modo acessibilidade ativado. Diga "descrever ambiente" para descrição visual ou "traduzir texto" para tradução.');
+    _speak(
+        'Modo acessibilidade ativado. Diga "descrever ambiente" para descrição visual ou "traduzir texto" para tradução.');
   }
 
   Future<void> _repeatLastInstructions() async {
     if (_currentInstructions != null) {
       await _speak(_currentInstructions!.instructions);
     } else {
-      await _speak('Nenhuma instrução de navegação disponível. Diga "navegar para" seguido do destino.');
+      await _speak(
+          'Nenhuma instrução de navegação disponível. Diga "navegar para" seguido do destino.');
     }
   }
 
@@ -253,11 +261,12 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   // ==========================================
 
   Future<void> _analyzeEnvironment() async {
-    await _speak('Analisando ambiente. Posicione a câmera para o local que deseja analisar.');
-    
+    await _speak(
+        'Analisando ambiente. Posicione a câmera para o local que deseja analisar.');
+
     // Capturar imagem automaticamente
     await _pickImage();
-    
+
     if (_selectedImage == null) {
       await _speak('Não foi possível capturar imagem. Tente novamente.');
       return;
@@ -293,14 +302,17 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
   Future<void> _generateNavigation() async {
     if (_destinationController.text.trim().isEmpty) {
-      await _speak('Destino não especificado. Diga "navegar para" seguido do destino.');
+      await _speak(
+          'Destino não especificado. Diga "navegar para" seguido do destino.');
       return;
     }
 
-    await _speak('Gerando instruções de navegação para ${_destinationController.text}');
+    await _speak(
+        'Gerando instruções de navegação para ${_destinationController.text}');
 
     try {
-      final instructions = await _voiceGuideService.generateNavigationInstructions(
+      final instructions =
+          await _voiceGuideService.generateNavigationInstructions(
         destination: _destinationController.text.trim(),
         currentAnalysis: _currentAnalysis?.analysis ?? '',
       );
@@ -311,9 +323,10 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         });
 
         await _speak('Instruções de navegação: ${instructions.instructions}');
-        
+
         if (instructions.safetyAlerts.isNotEmpty) {
-          await _speak('Alertas de segurança: ${instructions.safetyAlerts.join(", ")}');
+          await _speak(
+              'Alertas de segurança: ${instructions.safetyAlerts.join(", ")}');
         }
       } else {
         await _speak('Erro ao gerar instruções de navegação. Tente novamente.');
@@ -329,9 +342,9 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
   Future<void> _describeEnvironment() async {
     await _speak('Capturando imagem para descrição visual do ambiente.');
-    
+
     await _pickImage();
-    
+
     if (_selectedImage == null) {
       await _speak('Não foi possível capturar imagem. Tente novamente.');
       return;
@@ -341,17 +354,17 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
       final bytes = await _selectedImage!.readAsBytes();
       final imageBase64 = VoiceGuideService.imageToBase64(bytes);
 
-      final response = await _smartApiService.describeImage(
-        imageBase64,
-        'Descreva detalhadamente este ambiente para uma pessoa com deficiência visual, incluindo objetos, pessoas, obstáculos e características importantes.',
+      final response = await _smartApiService.describeEnvironment(
+        imageBase64: imageBase64,
+        language: 'pt-BR',
       );
 
-      if (response['success'] == true) {
-        final description = response['description'] ?? 'Descrição não disponível';
+      if (response.success && response.data != null) {
+        final description = response.data!;
         setState(() {
           _visualDescription = description;
         });
-        
+
         await _speak('Descrição do ambiente: $description');
       } else {
         await _speak('Erro ao descrever ambiente. Tente novamente.');
@@ -369,15 +382,15 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
     try {
       final response = await _smartApiService.translateText(
-        text,
-        _currentLanguage,
-        'pt-BR', // Traduzir sempre para português
+        text: text,
+        sourceLanguage: _currentLanguage,
+        targetLanguage: 'pt-BR', // Traduzir sempre para português
       );
 
-      if (response['success'] == true) {
-        final translatedText = response['translated_text'] ?? 'Tradução não disponível';
+      if (response.success && response.data != null) {
+        final translatedText = response.data!;
         await _speak('Texto original: $text. Tradução: $translatedText');
-        
+
         // Adicionar à lista de transcrições
         final transcription = TranscriptionItem(
           timestamp: DateTime.now().toString().substring(11, 19),
@@ -385,7 +398,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
           language: _currentLanguage,
           translatedText: translatedText,
         );
-        
+
         setState(() {
           _transcriptions.insert(0, transcription);
         });
@@ -409,44 +422,46 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
     _emergencyController.repeat(reverse: true);
     HapticFeedback.vibrate();
-    
+
     await _speak('MODO EMERGÊNCIA ATIVADO! Analisando situação...');
 
     try {
       final emergency = await _voiceGuideService.activateEmergencyMode(
         context: 'Emergência ativada por comando de voz do usuário',
       );
-      
+
       if (emergency != null) {
         await _speak('EMERGÊNCIA: ${emergency.emergencyInstructions}');
-        
+
         // Anunciar contatos de emergência
         String contacts = 'Contatos de emergência: ';
         emergency.emergencyContacts.forEach((key, value) {
           contacts += '$key: $value. ';
         });
         await _speak(contacts);
-        
       } else {
-        await _speak('EMERGÊNCIA ATIVADA: Pare onde está e peça ajuda! Ligue 190 para polícia ou 192 para emergência médica!');
+        await _speak(
+            'EMERGÊNCIA ATIVADA: Pare onde está e peça ajuda! Ligue 190 para polícia ou 192 para emergência médica!');
       }
     } catch (e) {
-      await _speak('EMERGÊNCIA: Erro no sistema. Ligue imediatamente 190 ou 192!');
+      await _speak(
+          'EMERGÊNCIA: Erro no sistema. Ligue imediatamente 190 ou 192!');
     }
   }
 
   Future<void> _deactivateEmergency() async {
     final success = await _voiceGuideService.deactivateEmergencyMode();
-    
+
     setState(() {
       _isEmergencyMode = false;
       _currentMode = 'navigation';
     });
-    
+
     _emergencyController.stop();
-    
+
     if (success) {
-      await _speak('Modo emergência desativado. Sistema voltou ao modo navegação normal.');
+      await _speak(
+          'Modo emergência desativado. Sistema voltou ao modo navegação normal.');
     }
   }
 
@@ -457,16 +472,17 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   Future<void> _processGenericCommand(String command) async {
     try {
       final response = await _voiceGuideService.processVoiceCommand(command);
-      
+
       if (response != null) {
         await _speak(response.response);
-        
+
         if (response.type == 'navigation' && response.destination != null) {
           _destinationController.text = response.destination!;
           await _generateNavigation();
         }
       } else {
-        await _speak('Comando não reconhecido. Diga "ajuda" para ouvir os comandos disponíveis.');
+        await _speak(
+            'Comando não reconhecido. Diga "ajuda" para ouvir os comandos disponíveis.');
       }
     } catch (e) {
       await _speak('Erro ao processar comando: $e');
@@ -479,7 +495,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         source: ImageSource.camera,
         imageQuality: 70,
       );
-      
+
       if (image != null) {
         setState(() {
           _selectedImage = File(image.path);
@@ -520,8 +536,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isEmergencyMode 
-              ? '🚨 EMERGÊNCIA ATIVA' 
+          _isEmergencyMode
+              ? '🚨 EMERGÊNCIA ATIVA'
               : 'Bu Fala VoiceGuide - ${_currentMode == 'navigation' ? 'Navegação' : 'Acessibilidade'}',
         ),
         backgroundColor: _isEmergencyMode ? Colors.red : Colors.blue,
@@ -545,7 +561,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: _isEmergencyMode 
+            colors: _isEmergencyMode
                 ? [Colors.red[100]!, Colors.red[50]!]
                 : [Colors.blue[50]!, Colors.white],
           ),
@@ -558,16 +574,16 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
                 // Indicador de status
                 _buildStatusIndicator(),
                 const SizedBox(height: 20),
-                
+
                 // Área de comando de voz
                 _buildVoiceCommandArea(),
                 const SizedBox(height: 20),
-                
+
                 // Conteúdo baseado no modo atual
                 Expanded(
                   child: _buildModeContent(),
                 ),
-                
+
                 // Instruções de uso
                 _buildUsageInstructions(),
               ],
@@ -597,10 +613,10 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
               return Transform.scale(
                 scale: _isLoading ? _pulseAnimation.value : 1.0,
                 child: Icon(
-                  _isEmergencyMode 
-                      ? Icons.warning 
-                      : _currentMode == 'navigation' 
-                          ? Icons.navigation 
+                  _isEmergencyMode
+                      ? Icons.warning
+                      : _currentMode == 'navigation'
+                          ? Icons.navigation
                           : Icons.accessibility,
                   color: _isEmergencyMode ? Colors.red : Colors.blue,
                   size: 32,
@@ -614,7 +630,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _isEmergencyMode 
+                  _isEmergencyMode
                       ? 'MODO EMERGÊNCIA ATIVO'
                       : 'Modo ${_currentMode == 'navigation' ? 'Navegação' : 'Acessibilidade'}',
                   style: TextStyle(
@@ -624,10 +640,10 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
                   ),
                 ),
                 Text(
-                  _isSpeaking 
-                      ? 'Falando...' 
-                      : _isLoading 
-                          ? 'Processando...' 
+                  _isSpeaking
+                      ? 'Falando...'
+                      : _isLoading
+                          ? 'Processando...'
                           : 'Aguardando comando de voz',
                   style: TextStyle(
                     fontSize: 14,
@@ -749,9 +765,10 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Análise do ambiente
-           if (_currentAnalysis != null) ...[Container(
+          if (_currentAnalysis != null) ...[
+            Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.green[50],
@@ -776,11 +793,12 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
                 ],
               ),
             ),
-             const SizedBox(height: 16),
-           ],
-          
+            const SizedBox(height: 16),
+          ],
+
           // Instruções de navegação
-           if (_currentInstructions != null) ...[Container(
+          if (_currentInstructions != null) ...[
+            Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
@@ -806,7 +824,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
                     const SizedBox(height: 12),
                     const Text(
                       'Alertas de Segurança:',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.orange),
                     ),
                     ...(_currentInstructions!.safetyAlerts.map(
                       (alert) => Padding(
@@ -829,7 +848,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
       child: Column(
         children: [
           // Descrição visual
-          if (_visualDescription.isNotEmpty) ..[
+          if (_visualDescription.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -855,11 +874,10 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-          ],
-          
+          if (_visualDescription.isNotEmpty) const SizedBox(height: 16),
+
           // Transcrições e traduções
-          if (_transcriptions.isNotEmpty) ..[
+          if (_transcriptions.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -882,33 +900,33 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
                   ),
                   const SizedBox(height: 12),
                   ...(_transcriptions.take(3).map(
-                    (item) => Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Original: ${item.originalText}',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+                        (item) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          if (item.translatedText != null)
-                            Text(
-                              'Tradução: ${item.translatedText}',
-                              style: TextStyle(color: Colors.purple[700]),
-                            ),
-                        ],
-                      ),
-                    ),
-                  )),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Original: ${item.originalText}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              ),
+                              if (item.translatedText != null)
+                                Text(
+                                  'Tradução: ${item.translatedText}',
+                                  style: TextStyle(color: Colors.purple[700]),
+                                ),
+                            ],
+                          ),
+                        ),
+                      )),
                 ],
               ),
             ),
-          ],
         ],
       ),
     );
