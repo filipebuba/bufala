@@ -9,6 +9,7 @@ Flask-CORS==4.0.0
 torch>=2.0.0
 transformers>=4.53.0
 accelerate>=0.20.0
+librosa>=0.10.0
 
 # Utilitários
 numpy>=1.21.0

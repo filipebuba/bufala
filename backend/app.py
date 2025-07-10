@@ -19,6 +19,7 @@ from routes.medical_routes import medical_bp
 from routes.education_routes import education_bp
 from routes.agriculture_routes import agriculture_bp
 from routes.accessibility_routes import accessibility_bp  # NOVO: Sistema de acessibilidade
+from routes.voice_guide_routes import voice_guide_bp  # NOVO: VoiceGuide AI
 from routes.wellness_routes import wellness_bp
 from routes.translation_routes import translation_bp
 from routes.environmental_routes import environmental_bp
@@ -64,12 +65,19 @@ def create_app():
     accessibility_service = AccessibilityService(gemma_service)
     app.accessibility_service = accessibility_service
     
+    # Inicializar VoiceGuide Service integrado
+    logger.info("🧭 Iniciando VoiceGuide Service - Navegação Assistiva")
+    from services.voice_guide_service import VoiceGuideService
+    voice_guide_service = VoiceGuideService(gemma_service)
+    app.voice_guide_service = voice_guide_service
+    
     # Registrar blueprints (rotas)
     app.register_blueprint(health_bp)
     app.register_blueprint(medical_bp)
     app.register_blueprint(education_bp)
     app.register_blueprint(agriculture_bp)
     app.register_blueprint(accessibility_bp)  # NOVO: Rotas de acessibilidade
+    app.register_blueprint(voice_guide_bp)  # NOVO: VoiceGuide AI
     app.register_blueprint(wellness_bp)
     app.register_blueprint(translation_bp)
     app.register_blueprint(environmental_bp)
@@ -83,6 +91,7 @@ def create_app():
         from flask import g
         g.gemma_service = gemma_service
         g.accessibility_service = accessibility_service  # NOVO: Injetar serviço de acessibilidade
+        g.voice_guide_service = voice_guide_service  # NOVO: Injetar VoiceGuide Service
     
     logger.info("🚀 Bu Fala Backend iniciado com sucesso!")
     return app

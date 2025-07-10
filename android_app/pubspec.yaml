@@ -37,7 +37,7 @@ dependencies:
   # tflite_flutter: ^0.9.0  # Comentado para build offline sem TFLite
   
   # Processamento de Áudio
-  # speech_to_text: ^7.1.0  # Removido temporariamente devido a problemas de compatibilidade
+  # speech_to_text: ^6.3.0  # Temporariamente comentado devido a problemas de compilação
   flutter_tts: ^3.8.5     # Versão estável
   audioplayers: ^5.2.1    # Versão estável
   # record: ^5.0.4  # Mantido comentado até próxima atualização
