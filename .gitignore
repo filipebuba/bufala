@@ -109,6 +109,7 @@ celerybeat.pid
 env/
 venv/
 venv_*/
+venv_gemma/
 ENV/
 env.bak/
 venv.bak/
@@ -313,6 +314,14 @@ datasets/
 *.lib
 *.dylib
 *.so.*
+
+# Specific large files that cause Git issues
+libclang.dll
+cv2.pyd
+llvmlite.dll
+dnnl.lib
+torch_cpu.dll
+_pywrap_tensorflow_internal.pyd
 
 # ==========================================
 # MEDIA FILES
