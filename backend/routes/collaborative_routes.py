@@ -21,6 +21,45 @@ rankings_db = {}
 provocations_db = {}
 duels_db = {}
 
+# Endpoint para submissão de tradução colaborativa vinculada a uma frase existente
+@collaborative_bp.route('/translation/submit', methods=['POST'])
+def submit_translation():
+    data = request.get_json(force=True) or {}
+    required_fields = ['phrase_id', 'translated_text', 'target_language', 'user_id']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({'success': False, 'error': f'{field} é obrigatório'}), 400
+
+    phrase_id = data['phrase_id']
+    if phrase_id not in phrases_db:
+        return jsonify({'success': False, 'error': 'Frase não encontrada'}), 404
+
+    # Cria uma nova tradução colaborativa vinculada à frase
+    translation_id = str(uuid.uuid4())
+    translation = {
+        'id': translation_id,
+        'phrase_id': phrase_id,
+        'translated_text': data['translated_text'],
+        'target_language': data['target_language'],
+        'user_id': data['user_id'],
+        'created_at': datetime.now().isoformat(),
+        'validated': False
+    }
+    # Armazena a tradução em uma lista dentro da frase
+    phrase = phrases_db[phrase_id]
+    if 'collaborative_translations' not in phrase:
+        phrase['collaborative_translations'] = []
+    phrase['collaborative_translations'].append(translation)
+
+    # Pontua o usuário colaborador
+    if data['user_id'] in teachers_db:
+        teacher = teachers_db[data['user_id']]
+        teacher['points'] += 7  # Pontos por colaboração
+        teacher['last_active'] = datetime.now().isoformat()
+        _check_and_award_badges(teacher)
+
+    return jsonify({'success': True, 'data': translation, 'message': 'Tradução colaborativa submetida com sucesso!'})
+
 @collaborative_bp.route('/health', methods=['GET'])
 def health_check():
     """Health check específico do sistema colaborativo"""
@@ -68,7 +107,7 @@ def get_teacher_profile():
 @collaborative_bp.route('/teacher/profile', methods=['PUT'])
 def update_teacher_profile():
     """Atualizar perfil do professor"""
-    data = request.json
+    data = request.get_json(force=True) or {}
     teacher_id = data.get('teacher_id')
     
     if not teacher_id:
@@ -93,7 +132,7 @@ def update_teacher_profile():
 @collaborative_bp.route('/phrase/teach', methods=['POST'])
 def teach_phrase():
     """Ensinar nova frase"""
-    data = request.json
+    data = request.get_json(force=True) or {}
     
     required_fields = ['teacher_id', 'portuguese_text', 'translated_text', 'target_language', 'category']
     for field in required_fields:
@@ -152,7 +191,7 @@ def teach_phrase():
 @collaborative_bp.route('/phrase/validate', methods=['POST'])
 def validate_phrase():
     """Validar frase de outro professor"""
-    data = request.json
+    data = request.get_json(force=True) or {}
     
     required_fields = ['validator_id', 'phrase_id', 'validation_type']
     for field in required_fields:
@@ -259,7 +298,7 @@ def get_ranking():
 @collaborative_bp.route('/provocation/generate', methods=['POST'])
 def generate_provocation():
     """Gerar provocação ética"""
-    data = request.json
+    data = request.get_json(force=True) or {}
     
     required_fields = ['user_input', 'language', 'teacher_id']
     for field in required_fields:
@@ -311,7 +350,7 @@ def generate_provocation():
 @collaborative_bp.route('/duel/create', methods=['POST'])
 def create_duel():
     """Criar duelo linguístico"""
-    data = request.json
+    data = request.get_json(force=True) or {}
     
     required_fields = ['challenger_id', 'duel_type', 'language']
     for field in required_fields:

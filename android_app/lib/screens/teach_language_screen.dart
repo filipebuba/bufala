@@ -10,6 +10,12 @@ class TeachLanguageScreen extends StatefulWidget {
 }
 
 class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
+  final _translationFormKey = GlobalKey<FormState>();
+  String _translationPhraseId = '';
+  String _translationText = '';
+  String _translationTargetLanguage = '';
+  String? _translationSubmitError;
+  bool _translationSubmitting = false;
   final _formKey = GlobalKey<FormState>();
   String _portugueseText = '';
   String _translatedText = '';
@@ -106,6 +112,25 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                                 .map((lang) => Chip(label: Text(lang)))
                                 .toList(),
                           ),
+                                                      var result;
+                                                      if (_translationPhraseId.trim().isNotEmpty) {
+                                                        result = await _service.submitTranslation(
+                                                          phraseId: _translationPhraseId.trim(),
+                                                          translatedText: _translationText,
+                                                          targetLanguage: _translationTargetLanguage,
+                                                          userId: _profile!.id,
+                                                        );
+                                                      } else {
+                                                        // Caso contrário, envia como tradução colaborativa geral
+                                                        result = await _service.teachPhrase(
+                                                          teacherId: _profile!.id,
+                                                          portugueseText: '',
+                                                          translatedText: _translationText,
+                                                          targetLanguage: _translationTargetLanguage,
+                                                          category: 'colaborativa',
+                                                          difficultyLevel: DifficultyLevel.basic,
+                                                        );
+                                                      }
                           const SizedBox(height: 32),
                           ElevatedButton.icon(
                             onPressed: _loadProfile,
@@ -280,23 +305,135 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              showDialog<void>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title:
-                                      const Text('Nova tradução colaborativa'),
-                                  content: const Text(
-                                      'Funcionalidade colaborativa em breve!'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                            onPressed: _translationSubmitting
+                                ? null
+                                : () {
+                                    showDialog<void>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text(
+                                            'Nova tradução colaborativa'),
+                                        content: Form(
+                                          key: _translationFormKey,
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                TextFormField(
+                                                  decoration: const InputDecoration(
+                                                      labelText:
+                                                          'ID da frase (opcional)'),
+                                                  onChanged: (v) =>
+                                                      _translationPhraseId = v,
+                                                ),
+                                                TextFormField(
+                                                  decoration:
+                                                      const InputDecoration(
+                                                          labelText:
+                                                              'Tradução'),
+                                                  onChanged: (v) =>
+                                                      _translationText = v,
+                                                  validator: (v) =>
+                                                      v == null || v.isEmpty
+                                                          ? 'Obrigatório'
+                                                          : null,
+                                                ),
+                                                TextFormField(
+                                                  decoration: const InputDecoration(
+                                                      labelText:
+                                                          'Idioma alvo (ex: crioulo, francês)'),
+                                                  onChanged: (v) =>
+                                                      _translationTargetLanguage =
+                                                          v,
+                                                  validator: (v) =>
+                                                      v == null || v.isEmpty
+                                                          ? 'Obrigatório'
+                                                          : null,
+                                                ),
+                                                if (_translationSubmitError !=
+                                                    null)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 8),
+                                                    child: Text(
+                                                        _translationSubmitError!,
+                                                        style: const TextStyle(
+                                                            color: Colors.red)),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: _translationSubmitting
+                                                ? null
+                                                : () async {
+                                                    if (_translationFormKey
+                                                            .currentState
+                                                            ?.validate() ??
+                                                        false) {
+                                                      setState(() {
+                                                        _translationSubmitting =
+                                                            true;
+                                                        _translationSubmitError =
+                                                            null;
+                                                      });
+                                                      // Usando teachPhrase para simular envio de tradução colaborativa
+                                                      final result =
+                                                          await _service
+                                                              .teachPhrase(
+                                                        teacherId: _profile!.id,
+                                                        portugueseText: '',
+                                                        translatedText:
+                                                            _translationText,
+                                                        targetLanguage:
+                                                            _translationTargetLanguage,
+                                                        category:
+                                                            'colaborativa',
+                                                        difficultyLevel:
+                                                            DifficultyLevel
+                                                                .basic,
+                                                      );
+                                                      setState(() {
+                                                        _translationSubmitting =
+                                                            false;
+                                                      });
+                                                      if (result.success) {
+                                                        Navigator.pop(context);
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                                const SnackBar(
+                                                                    content: Text(
+                                                                        'Tradução enviada com sucesso!')));
+                                                      } else {
+                                                        setState(() {
+                                                          _translationSubmitError =
+                                                              result.error;
+                                                        });
+                                                      }
+                                                    }
+                                                  },
+                                            child: _translationSubmitting
+                                                ? const SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                            strokeWidth: 2))
+                                                : const Text('Enviar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                             icon: const Icon(Icons.translate),
                             label: const Text('Enviar tradução colaborativa'),
                           ),

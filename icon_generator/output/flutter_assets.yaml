@@ -1,0 +1,16 @@
+# Adicione ao seu pubspec.yaml
+
+flutter:
+  assets:
+    - assets/icons/
+    - assets/icons/medical_icon.png
+    - assets/icons/education_icon.png
+    - assets/icons/agriculture_icon.png
+    - assets/icons/wellness_icon.png
+    - assets/icons/environmental_icon.png
+    - assets/icons/emergency_icon.png
+    - assets/icons/translate_icon.png
+    - assets/icons/camera_icon.png
+
+# Exemplo de uso:
+# Image.asset('assets/icons/medical_icon.png', width: 24, height: 24)
