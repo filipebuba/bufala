@@ -77,6 +77,11 @@ class SmartApiService {
       return false;
     }
   }
+  
+  /// Alias para compatibilidade
+  Future<bool> checkConnectivity() async {
+    return await hasInternetConnection();
+  }
 
   /// Health check otimizado
   Future<SmartApiResponse<Map<String, dynamic>>> healthCheck() async {

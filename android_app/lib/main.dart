@@ -12,8 +12,8 @@ import 'screens/home_screen.dart';
 import 'screens/medical_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_agriculture_screen.dart';
-import 'screens/voiceguide_accessibility_screen.dart';
 import 'screens/voice_guide_navigation_screen.dart';
+import 'screens/voiceguide_accessibility_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
 import 'services/offline_service.dart';
@@ -42,11 +42,11 @@ void main() async {
       ? '🟢 Serviço de wellness inicializado!'
       : '🟡 Serviço de wellness em modo offline');
 
-  runApp(const BuFalaApp());
+  runApp(const MoranaApp());
 }
 
-class BuFalaApp extends StatelessWidget {
-  const BuFalaApp({super.key});
+class MoranaApp extends StatelessWidget {
+  const MoranaApp({super.key});
 
   @override
   Widget build(BuildContext context) => MultiProvider(
@@ -58,7 +58,7 @@ class BuFalaApp extends StatelessWidget {
         ],
         child: Consumer<AppProvider>(
           builder: (context, appProvider, child) => MaterialApp(
-            title: 'Bu Fala',
+            title: 'Moransa',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               primarySwatch: AppColors.primarySwatch,

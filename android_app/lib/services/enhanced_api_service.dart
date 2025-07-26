@@ -1,18 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'package:dio/dio.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'modular_backend_service.dart';
+
 import 'connection_state.dart' as conn_state;
+import 'modular_backend_service.dart';
 import 'smart_api_service.dart';
 
 /// Eventos da API
 class ApiEvent {
-  final String type;
-  final String message;
-  final Map<String, dynamic> data;
-  final DateTime timestamp;
 
   ApiEvent({
     required this.type,
@@ -20,78 +13,58 @@ class ApiEvent {
     this.data = const {},
   }) : timestamp = DateTime.now();
 
-  factory ApiEvent.healthCheckStarted() {
-    return ApiEvent(
+  factory ApiEvent.healthCheckStarted() => ApiEvent(
       type: 'health_check_started',
       message: 'Iniciando verificação de saúde',
     );
-  }
 
-  factory ApiEvent.healthCheckCompleted(bool success, String service) {
-    return ApiEvent(
+  factory ApiEvent.healthCheckCompleted(bool success, String service) => ApiEvent(
       type: 'health_check_completed',
       message: 'Verificação de saúde concluída: $service',
       data: {'success': success, 'service': service},
     );
-  }
 
-  factory ApiEvent.medicalQueryStarted(String question, bool isEmergency) {
-    return ApiEvent(
+  factory ApiEvent.medicalQueryStarted(String question, bool isEmergency) => ApiEvent(
       type: 'medical_query_started',
       message: 'Iniciando consulta médica',
       data: {'question': question, 'is_emergency': isEmergency},
     );
-  }
 
-  factory ApiEvent.medicalQueryCompleted(bool success, String service) {
-    return ApiEvent(
+  factory ApiEvent.medicalQueryCompleted(bool success, String service) => ApiEvent(
       type: 'medical_query_completed',
       message: 'Consulta médica concluída: $service',
       data: {'success': success, 'service': service},
     );
-  }
 
-  factory ApiEvent.educationQueryStarted(String question, String subject) {
-    return ApiEvent(
+  factory ApiEvent.educationQueryStarted(String question, String subject) => ApiEvent(
       type: 'education_query_started',
       message: 'Iniciando consulta educacional',
       data: {'question': question, 'subject': subject},
     );
-  }
 
-  factory ApiEvent.educationQueryCompleted(bool success, String service) {
-    return ApiEvent(
+  factory ApiEvent.educationQueryCompleted(bool success, String service) => ApiEvent(
       type: 'education_query_completed',
       message: 'Consulta educacional concluída: $service',
       data: {'success': success, 'service': service},
     );
-  }
 
-  factory ApiEvent.error(String message) {
-    return ApiEvent(
+  factory ApiEvent.error(String message) => ApiEvent(
       type: 'error',
       message: message,
     );
-  }
+  final String type;
+  final String message;
+  final Map<String, dynamic> data;
+  final DateTime timestamp;
 }
 
 /// Resposta aprimorada da API
 class EnhancedApiResponse<T> {
-  final bool success;
-  final T? data;
-  final String? error;
-  final String source;
-  final String service;
-  final double? confidence;
-  final bool fromCache;
-  final double? responseTime;
 
   const EnhancedApiResponse({
     required this.success,
-    this.data,
+    required this.source, required this.service, this.data,
     this.error,
-    required this.source,
-    required this.service,
     this.confidence,
     this.fromCache = false,
     this.responseTime,
@@ -104,8 +77,7 @@ class EnhancedApiResponse<T> {
     double? confidence,
     bool fromCache = false,
     double? responseTime,
-  }) {
-    return EnhancedApiResponse(
+  }) => EnhancedApiResponse(
       success: true,
       data: data,
       source: source,
@@ -114,29 +86,25 @@ class EnhancedApiResponse<T> {
       fromCache: fromCache,
       responseTime: responseTime,
     );
-  }
 
-  factory EnhancedApiResponse.error(String error) {
-    return EnhancedApiResponse(
+  factory EnhancedApiResponse.error(String error) => EnhancedApiResponse(
       success: false,
       error: error,
       source: 'Error',
       service: 'none',
     );
-  }
+  final bool success;
+  final T? data;
+  final String? error;
+  final String source;
+  final String service;
+  final double? confidence;
+  final bool fromCache;
+  final double? responseTime;
 }
 
 /// Serviço de API Aprimorado que integra o SmartApiService com o ModularBackendService
 class EnhancedApiService {
-  static EnhancedApiService? _instance;
-  static EnhancedApiService get instance => _instance ??= EnhancedApiService._();
-  
-  late final SmartApiService _smartApi;
-  late final ModularBackendService _modularService;
-  late final conn_state.ConnectionMonitor _connectionMonitor;
-  
-  // Stream controllers para eventos
-  final StreamController<ApiEvent> _eventController = StreamController<ApiEvent>.broadcast();
   
   EnhancedApiService._() {
     _smartApi = SmartApiService();
@@ -146,6 +114,15 @@ class EnhancedApiService {
     // Monitorar mudanças de estado da conexão
     _connectionMonitor.stateStream.listen(_onConnectionStateChanged);
   }
+  static EnhancedApiService? _instance;
+  static EnhancedApiService get instance => _instance ??= EnhancedApiService._();
+  
+  late final SmartApiService _smartApi;
+  late final ModularBackendService _modularService;
+  late final conn_state.ConnectionMonitor _connectionMonitor;
+  
+  // Stream controllers para eventos
+  final StreamController<ApiEvent> _eventController = StreamController<ApiEvent>.broadcast();
 
   /// Inicializar o serviço
   Future<void> initialize() async {
@@ -163,9 +140,7 @@ class EnhancedApiService {
   }
 
   /// Stream do estado da conexão
-  Stream<conn_state.ConnectionState> get connectionStream {
-    return _connectionMonitor.stateStream;
-  }
+  Stream<conn_state.ConnectionState> get connectionStream => _connectionMonitor.stateStream;
   
   /// Stream de eventos da API
   Stream<ApiEvent> get eventStream => _eventController.stream;
@@ -272,7 +247,7 @@ class EnhancedApiService {
         language: language,
       );
       
-      if (smartResult != null && smartResult['answer'] != null) {
+      if (smartResult['answer'] != null) {
         _emitEvent(ApiEvent.medicalQueryCompleted(true, 'Smart'));
         return EnhancedApiResponse.success(
           data: smartResult['answer'],
@@ -329,7 +304,7 @@ class EnhancedApiService {
         language: language,
       );
       
-      if (smartResult != null && smartResult['answer'] != null) {
+      if (smartResult['answer'] != null) {
         _emitEvent(ApiEvent.educationQueryCompleted(true, 'Smart'));
         return EnhancedApiResponse.success(
           data: smartResult['answer'],
@@ -381,7 +356,7 @@ class EnhancedApiService {
         language: language,
       );
       
-      if (smartResult != null && smartResult['answer'] != null) {
+      if (smartResult['answer'] != null) {
         return EnhancedApiResponse.success(
           data: smartResult['answer'],
           source: 'Smart API',

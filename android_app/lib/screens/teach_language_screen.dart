@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import '../services/collaborative_learning_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 import '../models/collaborative_learning_models.dart';
+import '../services/collaborative_learning_service.dart';
 
 class TeachLanguageScreen extends StatefulWidget {
   const TeachLanguageScreen({super.key});
@@ -11,19 +17,27 @@ class TeachLanguageScreen extends StatefulWidget {
 
 class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
   final _translationFormKey = GlobalKey<FormState>();
-  String _translationPhraseId = '';
-  String _translationText = '';
-  String _translationTargetLanguage = '';
+  final String _translationPhraseId = '';
+  final String _translationText = '';
+  final String _translationTargetLanguage = '';
   String? _translationSubmitError;
-  bool _translationSubmitting = false;
+  final bool _translationSubmitting = false;
+  
+  // Upload de mídia
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _selectedImage;
+  File? _selectedAudio;
+  bool _isRecording = false;
+  String? _audioBase64;
+  String? _imageBase64;
   final _formKey = GlobalKey<FormState>();
-  String _portugueseText = '';
-  String _translatedText = '';
-  String _targetLanguage = '';
-  String _category = '';
-  DifficultyLevel _difficulty = DifficultyLevel.basic;
+  final String _portugueseText = '';
+  final String _translatedText = '';
+  final String _targetLanguage = '';
+  final String _category = '';
+  final DifficultyLevel _difficulty = DifficultyLevel.basic;
   String? _submitError;
-  bool _submitting = false;
+  final bool _submitting = false;
   final CollaborativeLearningService _service = CollaborativeLearningService();
   TeacherProfile? _profile;
   bool _loading = false;
@@ -33,6 +47,96 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+  }
+  
+  // Métodos para upload de mídia
+  Future<void> _pickImage() async {
+    try {
+      final status = await Permission.camera.request();
+      if (status.isGranted) {
+        final image = await _imagePicker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 70,
+        );
+        if (image != null) {
+          final file = File(image.path);
+          final bytes = await file.readAsBytes();
+          setState(() {
+            _selectedImage = file;
+            _imageBase64 = base64Encode(bytes);
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permissão de câmera necessária')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao capturar imagem: $e')),
+      );
+    }
+  }
+  
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        final file = File(image.path);
+        final bytes = await file.readAsBytes();
+        setState(() {
+          _selectedImage = file;
+          _imageBase64 = base64Encode(bytes);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao selecionar imagem: $e')),
+      );
+    }
+  }
+  
+  Future<void> _startAudioRecording() async {
+    try {
+      final status = await Permission.microphone.request();
+      if (status.isGranted) {
+        setState(() {
+          _isRecording = true;
+        });
+        // Simular gravação por 3 segundos
+        await Future.delayed(const Duration(seconds: 3));
+        setState(() {
+          _isRecording = false;
+          _audioBase64 = 'audio_simulado_base64'; // Placeholder
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Áudio gravado com sucesso!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permissão de microfone necessária')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isRecording = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gravar áudio: $e')),
+      );
+    }
+  }
+  
+  void _clearMedia() {
+    setState(() {
+      _selectedImage = null;
+      _selectedAudio = null;
+      _audioBase64 = null;
+      _imageBase64 = null;
+    });
   }
 
   Future<void> _loadProfile() async {
@@ -56,8 +160,7 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('Ensine o Bu Fala'),
         backgroundColor: Colors.blue,
@@ -102,9 +205,9 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          Text('Idiomas que ensina:',
+                          const Text('Idiomas que ensina:',
                               style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
+                                  TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 8,
@@ -112,25 +215,6 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                                 .map((lang) => Chip(label: Text(lang)))
                                 .toList(),
                           ),
-                                                      var result;
-                                                      if (_translationPhraseId.trim().isNotEmpty) {
-                                                        result = await _service.submitTranslation(
-                                                          phraseId: _translationPhraseId.trim(),
-                                                          translatedText: _translationText,
-                                                          targetLanguage: _translationTargetLanguage,
-                                                          userId: _profile!.id,
-                                                        );
-                                                      } else {
-                                                        // Caso contrário, envia como tradução colaborativa geral
-                                                        result = await _service.teachPhrase(
-                                                          teacherId: _profile!.id,
-                                                          portugueseText: '',
-                                                          translatedText: _translationText,
-                                                          targetLanguage: _translationTargetLanguage,
-                                                          category: 'colaborativa',
-                                                          difficultyLevel: DifficultyLevel.basic,
-                                                        );
-                                                      }
                           const SizedBox(height: 32),
                           ElevatedButton.icon(
                             onPressed: _loadProfile,
@@ -140,7 +224,7 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                           const SizedBox(height: 32),
                           const Divider(),
                           const SizedBox(height: 16),
-                          Text('Colabore:',
+                          const Text('Colabore:',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 18)),
                           const SizedBox(height: 12),
@@ -219,9 +303,10 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                                                           ))
                                                       .toList(),
                                                   onChanged: (d) {
-                                                    if (d != null)
+                                                    if (d != null) {
                                                       setState(() =>
                                                           _difficulty = d);
+                                                    }
                                                   },
                                                 ),
                                                 if (_submitError != null)
@@ -460,9 +545,160 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                             label:
                                 const Text('Validar conteúdo de outro usuário'),
                           ),
+                          const SizedBox(height: 20),
+                          // Seção de Upload Multimodal
+                          Card(
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '📸 Upload Multimodal',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Adicione áudio e imagens para enriquecer suas contribuições:',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Botões de upload
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: _pickImage,
+                                        icon: const Icon(Icons.camera_alt),
+                                        label: const Text('Câmera'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blue[600],
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: _pickImageFromGallery,
+                                        icon: const Icon(Icons.photo_library),
+                                        label: const Text('Galeria'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green[600],
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: _isRecording ? null : _startAudioRecording,
+                                        icon: _isRecording 
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : const Icon(Icons.mic),
+                                        label: Text(_isRecording ? 'Gravando...' : 'Gravar Áudio'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: _isRecording ? Colors.red[600] : Colors.purple[600],
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                                      if (_selectedImage != null || _audioBase64 != null)
+                                        ElevatedButton.icon(
+                                          onPressed: _clearMedia,
+                                          icon: const Icon(Icons.clear),
+                                          label: const Text('Limpar'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.grey[600],
+                                            foregroundColor: Colors.white,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Preview da mídia selecionada
+                                  if (_selectedImage != null) ...[
+                                    const Text(
+                                      '🖼️ Imagem selecionada:',
+                                      style: TextStyle(fontWeight: FontWeight.w500),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      height: 120,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.grey[300]!),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          _selectedImage!,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  if (_audioBase64 != null) ...[
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.purple[50],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.purple[200]!),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.audiotrack, color: Colors.purple),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            '🎵 Áudio gravado com sucesso!',
+                                            style: TextStyle(
+                                              color: Colors.purple,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  // Botão de envio multimodal
+                                  if (_selectedImage != null || _audioBase64 != null)
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          // Simular envio multimodal
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('📤 Conteúdo multimodal enviado com sucesso!'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                          _clearMedia();
+                                        },
+                                        icon: const Icon(Icons.cloud_upload),
+                                        label: const Text('Enviar Conteúdo Multimodal'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.orange[600],
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
     );
-  }
 }

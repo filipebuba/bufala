@@ -1,0 +1,661 @@
+ openapi: 3.0.3
+info:
+  title: Bu Fala Backend API
+  version: "2.0.0"
+  description: |
+    API completa do Bu Fala - Sistema multimodal com Gemma 3n para acessibilidade, educação, agricultura e saúde.
+    
+    ## Recursos Principais
+    - **Multimodalidade**: Análise de imagem, áudio e texto
+    - **Acessibilidade**: VoiceGuide AI para navegação assistiva
+    - **Offline-first**: Funciona sem conexão com internet
+    - **Multilíngue**: Suporte a múltiplos idiomas
+    - **Sustentabilidade**: Diagnósticos ambientais e agrícolas
+    
+    ## Tecnologias
+    - Gemma 3n (Google)
+    - Flask Backend
+    - Flutter Mobile App
+    
+  contact:
+    name: Bu Fala Team
+    url: https://github.com/bufala
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Servidor de desenvolvimento local
+  - url: http://192.168.1.100:5000
+    description: Servidor de rede local
+
+tags:
+  - name: Health
+    description: Verificação de saúde do sistema
+  - name: Medical
+    description: Orientações médicas gerais
+  - name: Education
+    description: Orientações educacionais
+  - name: Agriculture
+    description: Orientações agrícolas
+  - name: Accessibility
+    description: Sistema de acessibilidade VoiceGuide AI
+  - name: Voice Guide
+    description: Navegação assistiva por voz
+  - name: Wellness
+    description: Bem-estar e coaching
+  - name: Translation
+    description: Tradução de textos
+  - name: Environmental
+    description: Sustentabilidade e meio ambiente
+  - name: Multimodal
+    description: Análise multimodal (imagem, áudio, texto)
+
+paths:
+  # Health Routes
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Verificar saúde do sistema
+      description: Retorna o status de saúde do backend e serviços
+      responses:
+        '200':
+          description: Sistema saudável
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Medical Routes
+  /api/medical:
+    post:
+      tags: [Medical]
+      summary: Obter orientações médicas
+      description: Fornece orientações médicas gerais baseadas em sintomas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicalRequest'
+      responses:
+        '200':
+          description: Orientação médica gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalResponse'
+        '400':
+          description: Dados inválidos
+        '500':
+          description: Erro interno
+
+  # Education Routes
+  /api/education:
+    post:
+      tags: [Education]
+      summary: Obter orientações educacionais
+      description: Fornece orientações educacionais personalizadas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EducationRequest'
+      responses:
+        '200':
+          description: Orientação educacional gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EducationResponse'
+        '400':
+          description: Dados inválidos
+        '500':
+          description: Erro interno
+
+  # Agriculture Routes
+  /api/agriculture:
+    post:
+      tags: [Agriculture]
+      summary: Obter orientações agrícolas
+      description: Fornece orientações agrícolas baseadas em cultivo e região
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgricultureRequest'
+      responses:
+        '200':
+          description: Orientação agrícola gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgricultureResponse'
+        '400':
+          description: Dados inválidos
+        '500':
+          description: Erro interno
+
+  # Accessibility Routes
+  /api/accessibility/visual/describe:
+    post:
+      tags: [Accessibility]
+      summary: Descrever ambiente visual
+      description: Descreve o ambiente usando câmera para deficientes visuais
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisualDescribeRequest'
+      responses:
+        '200':
+          description: Descrição do ambiente gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisualDescribeResponse'
+
+  /api/accessibility/audio/navigation:
+    post:
+      tags: [Accessibility]
+      summary: Navegação por áudio
+      description: Fornece instruções de navegação por áudio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AudioNavigationRequest'
+      responses:
+        '200':
+          description: Instruções de navegação geradas
+
+  # Voice Guide Routes
+  /api/voice-guide/health:
+    get:
+      tags: [Voice Guide]
+      summary: Verificar saúde do VoiceGuide
+      description: Verifica o status do serviço VoiceGuide
+      responses:
+        '200':
+          description: Serviço funcionando
+
+  /api/voice-guide/navigation-instructions:
+    post:
+      tags: [Voice Guide]
+      summary: Gerar instruções de navegação
+      description: Gera instruções de navegação personalizadas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NavigationRequest'
+      responses:
+        '200':
+          description: Instruções geradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NavigationResponse'
+
+  # Wellness Routes
+  /api/wellness/coaching:
+    post:
+      tags: [Wellness]
+      summary: Coaching de bem-estar
+      description: Fornece orientações de bem-estar personalizadas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WellnessRequest'
+      responses:
+        '200':
+          description: Orientação de bem-estar gerada
+
+  # Translation Routes
+  /api/translate:
+    post:
+      tags: [Translation]
+      summary: Traduzir texto
+      description: Traduz texto entre idiomas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationRequest'
+      responses:
+        '200':
+          description: Texto traduzido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationResponse'
+
+  # Environmental Routes
+  /api/environment/diagnosis:
+    post:
+      tags: [Environmental]
+      summary: Diagnóstico ambiental
+      description: Realiza diagnóstico de problemas ambientais
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentalRequest'
+      responses:
+        '200':
+          description: Diagnóstico ambiental gerado
+
+  # Multimodal Routes
+  /api/multimodal/image/analyze:
+    post:
+      tags: [Multimodal]
+      summary: Analisar imagem
+      description: Analisa imagem usando Gemma 3n
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageAnalysisRequest'
+      responses:
+        '200':
+          description: Análise da imagem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageAnalysisResponse'
+        '400':
+          description: Imagem obrigatória
+        '500':
+          description: Erro no processamento
+
+components:
+  schemas:
+    # Base Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Mensagem de erro
+        message:
+          type: string
+          description: Detalhes do erro
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+        timestamp:
+          type: string
+          format: date-time
+
+    # Health Schemas
+    HealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            service:
+              type: string
+              example: "Bu Fala Backend Modularizado"
+            version:
+              type: string
+              example: "2.0.0"
+            gemma_service:
+              type: object
+              properties:
+                is_initialized:
+                  type: boolean
+                loading_method:
+                  type: string
+                  enum: [pipeline, chat_template, traditional]
+            features:
+              type: object
+              properties:
+                pipeline_api:
+                  type: boolean
+                chat_templates:
+                  type: boolean
+                traditional_optimized:
+                  type: boolean
+                context_validation:
+                  type: boolean
+                production_optimizations:
+                  type: boolean
+            endpoints:
+              type: array
+              items:
+                type: string
+
+    # Medical Schemas
+    MedicalRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          description: Descrição dos sintomas ou pergunta médica
+          example: "Estou com dor de cabeça e febre"
+        language:
+          type: string
+          default: "pt-BR"
+          example: "pt-BR"
+        urgency:
+          type: string
+          enum: [low, medium, high, emergency]
+          default: "medium"
+
+    MedicalResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            response:
+              type: string
+              description: Orientação médica gerada
+            type:
+              type: string
+              example: "medical_guidance"
+            urgency:
+              type: string
+            language:
+              type: string
+            disclaimer:
+              type: string
+              example: "Esta é uma orientação geral. Procure um médico para diagnóstico preciso."
+
+    # Education Schemas
+    EducationRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          description: Pergunta ou tópico educacional
+          example: "Como funciona a fotossíntese?"
+        language:
+          type: string
+          default: "pt-BR"
+        subject:
+          type: string
+          example: "biologia"
+        level:
+          type: string
+          enum: [elementary, middle, high, university]
+          default: "middle"
+
+    EducationResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            response:
+              type: string
+              description: Orientação educacional gerada
+            type:
+              type: string
+              example: "educational_guidance"
+            subject:
+              type: string
+            level:
+              type: string
+            language:
+              type: string
+
+    # Agriculture Schemas
+    AgricultureRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          description: Pergunta agrícola
+          example: "Como cuidar de plantas de tomate?"
+        question:
+          type: string
+          description: Alternativa para prompt (compatibilidade)
+        language:
+          type: string
+          default: "pt-BR"
+        crop_type:
+          type: string
+          default: "geral"
+          example: "tomate"
+        region:
+          type: string
+          default: "brasil"
+          example: "nordeste"
+
+    AgricultureResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            answer:
+              type: string
+              description: Resposta agrícola
+            response:
+              type: string
+              description: Resposta agrícola (compatibilidade)
+            type:
+              type: string
+              example: "agricultural_guidance"
+            crop_type:
+              type: string
+            region:
+              type: string
+            language:
+              type: string
+            farming_tips:
+              type: array
+              items:
+                type: string
+              example: [
+                "Monitore a umidade do solo regularmente",
+                "Use práticas de agricultura sustentável",
+                "Faça rotação de culturas quando possível"
+              ]
+
+    # Accessibility Schemas
+    VisualDescribeRequest:
+      type: object
+      required: [image_data]
+      properties:
+        image_data:
+          type: string
+          description: Imagem em base64
+        context:
+          type: string
+          default: "navigation"
+          example: "navigation"
+        language:
+          type: string
+          default: "pt-BR"
+
+    VisualDescribeResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            description:
+              type: string
+              description: Descrição do ambiente
+            context:
+              type: string
+            language:
+              type: string
+
+    AudioNavigationRequest:
+      type: object
+      required: [audio_data]
+      properties:
+        audio_data:
+          type: string
+          description: Áudio em base64
+        destination:
+          type: string
+          example: "farmácia"
+        language:
+          type: string
+          default: "pt-BR"
+
+    # Voice Guide Schemas
+    NavigationRequest:
+      type: object
+      required: [destination]
+      properties:
+        destination:
+          type: string
+          example: "Hospital Central"
+        current_analysis:
+          type: string
+          example: "Estou na rua principal"
+        language:
+          type: string
+          default: "pt-BR"
+
+    NavigationResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            instructions:
+              type: string
+              description: Instruções de navegação
+            destination:
+              type: string
+            language:
+              type: string
+
+    # Wellness Schemas
+    WellnessRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          example: "Como melhorar meu sono?"
+        language:
+          type: string
+          default: "pt-BR"
+        category:
+          type: string
+          enum: [mental_health, physical_health, nutrition, sleep, stress]
+          default: "general"
+
+    # Translation Schemas
+    TranslationRequest:
+      type: object
+      required: [text, target_language]
+      properties:
+        text:
+          type: string
+          example: "Olá, como você está?"
+        source_language:
+          type: string
+          default: "auto"
+          example: "pt-BR"
+        target_language:
+          type: string
+          example: "en"
+
+    TranslationResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            translated_text:
+              type: string
+              description: Texto traduzido
+            source_language:
+              type: string
+            target_language:
+              type: string
+            confidence:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 1
+
+    # Environmental Schemas
+    EnvironmentalRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          example: "Como reduzir o desperdício de água?"
+        category:
+          type: string
+          enum: [water, soil, air, waste, energy, biodiversity]
+          default: "general"
+        language:
+          type: string
+          default: "pt-BR"
+
+    # Multimodal Schemas
+    ImageAnalysisRequest:
+      type: object
+      required: [image_data]
+      properties:
+        image_data:
+          type: string
+          description: Imagem em base64
+        prompt:
+          type: string
+          description: Pergunta sobre a imagem
+          example: "O que você vê nesta imagem?"
+        language:
+          type: string
+          default: "pt-BR"
+        analysis_type:
+          type: string
+          enum: [general, medical, agricultural, educational, accessibility]
+          default: "general"
+
+    ImageAnalysisResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            analysis:
+              type: string
+              description: Análise da imagem
+            confidence:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 1
+            detected_objects:
+              type: array
+              items:
+                type: string
+            analysis_type:
+              type: string
+            language:
+              type: string

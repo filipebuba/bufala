@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+
 import 'services/api_service.dart';
-import 'services/modular_backend_service.dart';
-import 'services/enhanced_api_service.dart';
 import 'services/connection_state.dart';
+import 'services/enhanced_api_service.dart';
+import 'services/modular_backend_service.dart';
 
 /// Tela de teste de conectividade com o backend Bu Fala
 class ConnectionTestScreen extends StatefulWidget {
+  const ConnectionTestScreen({super.key});
+
   @override
   _ConnectionTestScreenState createState() => _ConnectionTestScreenState();
 }
@@ -19,7 +22,7 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
   String _connectionStatus = 'Não testado';
   String _lastError = '';
   bool _isLoading = false;
-  Map<String, dynamic> _testResults = {};
+  final Map<String, dynamic> _testResults = {};
 
   @override
   void initState() {
@@ -57,21 +60,18 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
       // Teste 3: Teste de consulta médica
       final medicalTest = await _apiService.askMedicalQuestion(
         'Teste de conectividade médica',
-        language: 'pt-BR',
       );
       _testResults['medical_query'] = medicalTest != null;
 
       // Teste 4: Teste de consulta educacional
       final educationTest = await _apiService.askEducationQuestion(
         'Teste de conectividade educacional',
-        language: 'pt-BR',
       );
       _testResults['education_query'] = educationTest != null;
 
       // Teste 5: Teste de consulta agrícola
       final agricultureTest = await _apiService.askAgricultureQuestion(
         'Teste de conectividade agrícola',
-        language: 'pt-BR',
       );
       _testResults['agriculture_query'] = agricultureTest != null;
 
@@ -97,32 +97,31 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
-        title: Text('Teste de Conectividade Bu Fala'),
+        title: const Text('Teste de Conectividade Bu Fala'),
         backgroundColor: Colors.green,
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Status da conexão
             Card(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Status da Conexão',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(
@@ -133,15 +132,15 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
                               ? Colors.green
                               : Colors.red,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(_connectionStatus),
                       ],
                     ),
-                    if (_lastError.isNotEmpty) ..[
-                      SizedBox(height: 8),
+                    if (_lastError.isNotEmpty) ...[
+                      const SizedBox(height: 8),
                       Text(
                         'Último erro: $_lastError',
-                        style: TextStyle(color: Colors.red, fontSize: 12),
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
                       ),
                     ],
                   ],
@@ -149,13 +148,18 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
               ),
             ),
             
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             
             // Botão de teste
             ElevatedButton(
               onPressed: _isLoading ? null : _testAllConnections,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
               child: _isLoading
-                  ? Row(
+                  ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
@@ -167,33 +171,28 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
                         Text('Testando...'),
                       ],
                     )
-                  : Text('Testar Todas as Conexões'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 16),
-              ),
+                  : const Text('Testar Todas as Conexões'),
             ),
             
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             
             // Resultados dos testes
             if (_testResults.isNotEmpty)
               Expanded(
                 child: Card(
                   child: Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Resultados dos Testes',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Expanded(
                           child: ListView(
                             children: _testResults.entries.map((entry) {
@@ -223,7 +222,6 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
         ),
       ),
     );
-  }
 
   String _getTestName(String key) {
     switch (key) {
@@ -255,21 +253,21 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
 
 /// Widget principal para executar o teste
 class ConnectionTestApp extends StatelessWidget {
+  const ConnectionTestApp({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context) => MaterialApp(
       title: 'Bu Fala Connection Test',
       theme: ThemeData(
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: ConnectionTestScreen(),
+      home: const ConnectionTestScreen(),
       debugShowCheckedModeBanner: false,
     );
-  }
 }
 
 /// Função main para executar apenas o teste de conectividade
 void main() {
-  runApp(ConnectionTestApp());
+  runApp(const ConnectionTestApp());
 }

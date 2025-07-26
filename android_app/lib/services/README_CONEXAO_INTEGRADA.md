@@ -1,8 +1,8 @@
-# 🔗 Conexão Integrada Bu Fala - Backend Modular + Flutter
+# 🔗 Conexão Integrada Moransa - Backend Modular + Flutter
 
 ## 📋 Visão Geral
 
-Este documento descreve a nova arquitetura de conexão integrada entre o backend modular Bu Fala e o aplicativo Flutter, projetada especificamente para atender às necessidades da comunidade da Guiné-Bissau.
+Este documento descreve a nova arquitetura de conexão integrada entre o backend modular Moransa e o aplicativo Flutter, projetada especificamente para atender às necessidades da comunidade da Guiné-Bissau e outras comunidades.
 
 ## 🏗️ Arquitetura dos Serviços
 

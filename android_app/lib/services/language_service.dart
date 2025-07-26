@@ -1,7 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LanguageService {
+abstract class ILanguageService {
+  List<String> getAvailableLanguages();
+
+  Future<String> detectLanguage();
+
+  double getLanguageLearningProgress(String language);
+
+  bool isOffline();
+}
+
+class LanguageService implements ILanguageService {
   static const String _languageKey = 'selected_language';
   static const String defaultLanguage = 'pt';
   
@@ -12,6 +22,29 @@ class LanguageService {
     'fr': 'Français',
     'crioulo': 'Kriol (Crioulo)',
   };
+  
+  @override
+  List<String> getAvailableLanguages() {
+    return supportedLanguages.keys.toList();
+  }
+  
+  @override
+  Future<String> detectLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_languageKey) ?? defaultLanguage;
+  }
+  
+  @override
+  double getLanguageLearningProgress(String language) {
+    // Implementação básica - pode ser expandida
+    return 0.0;
+  }
+  
+  @override
+  bool isOffline() {
+    // Implementação básica - sempre retorna false por enquanto
+    return false;
+  }
   
   // Traduções básicas
   static const Map<String, Map<String, String>> translations = {

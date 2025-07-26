@@ -19,7 +19,7 @@ class InternationalTeachingService {
 
   void _initializeSystem() {
     _system = InternationalTeachingSystem(
-      id: 'bufala_international',
+      id: 'android_app_international',
       name: 'Bu Fala - Sistema Internacional',
       description: 'Sistema de ensino multilíngue para ONGs e organizações internacionais',
       supportedLanguages: _supportedLanguages,
@@ -469,8 +469,8 @@ class InternationalTeachingService {
       adaptationLevel: 0.8,
       personality: 'encorajador',
       voiceSettings: const VoiceSettings(
-        speed: 1.0,
-        pitch: 1.0,
+        speed: 1,
+        pitch: 1,
         accent: 'neutral',
         gender: 'neutro',
       ),
@@ -684,7 +684,7 @@ class InternationalTeachingService {
 
   /// Calcular pontos do exercício
   int _calculateExercisePoints(ExerciseType type, DifficultyLevel difficulty) {
-    final var basePoints = switch (type) {
+    final basePoints = switch (type) {
       ExerciseType.translation => 15,
       ExerciseType.multipleChoice => 10,
       ExerciseType.fillInTheBlank => 12,
@@ -693,7 +693,7 @@ class InternationalTeachingService {
       ExerciseType.matching => 14,
     };
 
-    var multiplier = switch (difficulty) {
+    final multiplier = switch (difficulty) {
       DifficultyLevel.beginner => 1.0,
       DifficultyLevel.intermediate => 1.5,
       DifficultyLevel.advanced => 2.0,
@@ -1159,7 +1159,7 @@ class InternationalTeachingService {
       userId: userId,
       nativeLanguage: _supportedLanguages.first,
       targetLanguages: <String, LanguageProgress>{},
-      overallProgress: 0.0,
+      overallProgress: 0,
       sessionHistory: <String>[],
       achievements: <Achievement>[],
       currentStreak: 0,

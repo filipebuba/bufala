@@ -1,14 +1,12 @@
-import 'package:bufala/models/assessment_result.dart';
-import 'package:bufala/models/learning_content.dart';
-import 'package:bufala/models/user_progress.dart';
-import 'package:bufala/services/offline_learning_service.dart';
+import 'package:android_app/models/assessment_result.dart';
+import 'package:android_app/models/learning_content.dart';
+import 'package:android_app/models/user_progress.dart';
+import 'package:android_app/services/offline_learning_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-// Generate mocks
-@GenerateMocks([OfflineLearningService])
-import 'offline_learning_service_test.mocks.dart';
+
 
 void main() {
   group('OfflineLearningService Tests', () {

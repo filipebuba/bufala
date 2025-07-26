@@ -4,7 +4,13 @@ import '../models/crisis_response_models.dart';
 import 'gemma3_multimodal_service.dart';
 
 /// Serviço de resposta a crises - versão simplificada para build
-class CrisisResponseService {
+abstract class ICrisisResponseService {
+  Future<String> getEmergencyInstructions(String situation);
+
+  Future<void> contactEmergencyServices(String location);
+}
+
+class CrisisResponseService implements ICrisisResponseService {
   factory CrisisResponseService() => _instance;
   CrisisResponseService._internal();
   static final CrisisResponseService _instance =
@@ -16,6 +22,58 @@ class CrisisResponseService {
       'http://127.0.0.1:5000'; // Backend localhost
   final Map<String, CrisisResponseData> _emergencyDatabase = {};
   bool _isInitialized = false;
+  
+  @override
+  Future<String> getEmergencyInstructions(String situation) async {
+    try {
+      await initialize();
+      
+      // Buscar instruções na base de dados local
+      final instructions = _getLocalEmergencyInstructions(situation);
+      if (instructions.isNotEmpty) {
+        return instructions;
+      }
+      
+      // Fallback para instruções básicas
+      return 'Em caso de emergência:\n1. Mantenha a calma\n2. Avalie a situação\n3. Procure ajuda médica se necessário\n4. Siga as instruções de primeiros socorros básicos';
+    } catch (e) {
+      print('Erro ao obter instruções de emergência: $e');
+      return 'Erro ao carregar instruções. Procure ajuda médica imediatamente.';
+    }
+  }
+  
+  @override
+  Future<void> contactEmergencyServices(String location) async {
+    try {
+      print('Tentando contatar serviços de emergência para localização: $location');
+      
+      // Implementação básica - pode ser expandida para integrar com serviços reais
+      // Por enquanto, apenas registra a tentativa
+      final timestamp = DateTime.now().toIso8601String();
+      print('Emergência registrada em $timestamp para $location');
+      
+      // Aqui poderia integrar com APIs de emergência locais
+      // ou enviar notificações para contatos de emergência
+      
+    } catch (e) {
+      print('Erro ao contatar serviços de emergência: $e');
+      throw Exception('Falha ao contatar serviços de emergência');
+    }
+  }
+  
+  String _getLocalEmergencyInstructions(String situation) {
+    final situationLower = situation.toLowerCase();
+    
+    if (situationLower.contains('queimadura')) {
+      return 'Queimadura:\n1. Resfrie com água fria por 10-20 minutos\n2. Não use gelo\n3. Cubra com pano limpo\n4. Procure ajuda médica';
+    } else if (situationLower.contains('corte') || situationLower.contains('ferimento')) {
+      return 'Ferimento:\n1. Pressione o local com pano limpo\n2. Eleve o membro se possível\n3. Não remova objetos grandes\n4. Procure ajuda médica';
+    } else if (situationLower.contains('parto') || situationLower.contains('nascimento')) {
+      return 'Parto de emergência:\n1. Chame ajuda médica\n2. Prepare local limpo\n3. Não force o processo\n4. Mantenha mãe e bebê aquecidos';
+    }
+    
+    return '';
+  }
 
   /// Inicializar serviço
   Future<bool> initialize() async {

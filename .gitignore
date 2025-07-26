@@ -103,6 +103,8 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+test_*.py
+
 # Environments
 .env
 .venv
@@ -498,6 +500,9 @@ pids
 *.pbtxt
 *.onnx
 *.mlmodel
+*.bin
+*.safetensors
+offload/
 
 # Audio recordings (temporary)
 recordings/
@@ -514,6 +519,74 @@ cache/
 # User data (development)
 user_data/
 test_data/
+
+# Development and testing files
+test_*.py
+test_*.dart
+debug_*.py
+demo_*.py
+validacao_*.py
+teste_*.py
+*_test.py
+*_debug.py
+*_demo.py
+
+# Documentation files (development)
+*_STATUS*.md
+*_FINAL*.md
+*_GUIDE*.md
+*_README*.md
+RELATORIO_*.md
+DOC_*.md
+GUIA_*.md
+MELHORIAS_*.md
+PROBLEMA_*.md
+SISTEMA_*.md
+WELLNESS_*.md
+SMART_*.md
+GEMMA*.md
+INTEGRATION_*.md
+COMUNICACAO_*.md
+PADRONIZACAO_*.md
+MIGRACAO_*.md
+DIRETRIZES_*.md
+RESUMO_*.md
+EDUCATION_*.md
+AGRICULTURA_*.md
+APRENDE_*.md
+ME_ENSINA*.md
+FUTTER_*.md
+BACKEND_*.md
+ENDPOINTS_*.md
+
+# Script files (development)
+*.ps1
+*.sh
+*.bat
+setup_*.py
+start_*.py
+run_*.py
+check_*.py
+diagnose_*.py
+quick_*.py
+validate_*.py
+
+# Temporary project files
+api_service_*.dart
+app_optimized.py
+bufala_*.py
+backend_teste_*.py
+
+# Diretórios específicos do projeto
+venv_gemma/
+.idea/
+.vscode/
+.trunk/
+.vercel/
+build/
+lib/
+logs/
+voice/
 
 # Crashlytics
 crashlytics-build.properties

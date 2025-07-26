@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../models/offline_learning_models.dart';
 import '../models/international_teaching_models.dart' as intl;
-import '../screens/content_view_screen.dart';
+import '../models/offline_learning_models.dart';
 import '../services/gemma3_backend_service.dart';
+import '../services/international_teaching_service_simple.dart';
 import '../services/offline_learning_service.dart';
 import '../services/smart_api_service.dart';
-import '../services/international_teaching_service_simple.dart';
 import '../utils/app_colors.dart';
 
 class EducationScreenEnhancedFixed extends StatefulWidget {
@@ -525,14 +524,14 @@ class _EducationScreenEnhancedFixedState
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.amber, size: 20),
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 4),
                       Text(
                         '$_totalPoints ${_useCreole ? 'pontu' : 'pontos'}',
                         style: const TextStyle(color: Colors.white),
                       ),
                       const SizedBox(width: 16),
-                      Icon(Icons.local_fire_department,
+                      const Icon(Icons.local_fire_department,
                           color: Colors.orange, size: 20),
                       const SizedBox(width: 4),
                       Text(
@@ -1083,10 +1082,8 @@ class _EducationScreenEnhancedFixedState
             FloatingActionButton(
               heroTag: 'help',
               backgroundColor: Colors.indigo,
+              onPressed: _showHelpDialog,
               child: const Icon(Icons.help_outline),
-              onPressed: () {
-                _showHelpDialog();
-              },
             ),
           if (_showInternationalSection) const SizedBox(height: 8),
           FloatingActionButton(

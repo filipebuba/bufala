@@ -1,16 +1,14 @@
 import 'dart:io';
 
-import 'package:bufala/models/agricultural_recommendation.dart';
-import 'package:bufala/models/crop_diagnosis.dart';
-import 'package:bufala/models/weather_data.dart';
-import 'package:bufala/services/agricultural_advisor_service.dart';
+import 'package:android_app/models/agricultural_recommendation.dart';
+import 'package:android_app/models/crop_diagnosis.dart';
+import 'package:android_app/models/weather_data.dart';
+import 'package:android_app/services/agricultural_advisor_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-// Generate mocks
-@GenerateMocks([AgriculturalAdvisorService])
-import 'agricultural_advisor_service_test.mocks.dart';
+
 
 void main() {
   group('AgriculturalAdvisorService Tests', () {

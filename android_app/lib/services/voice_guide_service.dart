@@ -1,16 +1,9 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'smart_api_service.dart';
 
 /// Modelo para análise de ambiente
 class EnvironmentAnalysis {
-  final String analysis;
-  final String timestamp;
-  final String language;
-  final String context;
-  final bool emergencyDetected;
-  final List<String> navigationSuggestions;
 
   EnvironmentAnalysis({
     required this.analysis,
@@ -21,8 +14,7 @@ class EnvironmentAnalysis {
     required this.navigationSuggestions,
   });
 
-  factory EnvironmentAnalysis.fromJson(Map<String, dynamic> json) {
-    return EnvironmentAnalysis(
+  factory EnvironmentAnalysis.fromJson(Map<String, dynamic> json) => EnvironmentAnalysis(
       analysis: json['analysis'] ?? '',
       timestamp: json['timestamp'] ?? '',
       language: json['language'] ?? 'pt-BR',
@@ -30,18 +22,16 @@ class EnvironmentAnalysis {
       emergencyDetected: json['emergency_detected'] ?? false,
       navigationSuggestions: List<String>.from(json['navigation_suggestions'] ?? []),
     );
-  }
+  final String analysis;
+  final String timestamp;
+  final String language;
+  final String context;
+  final bool emergencyDetected;
+  final List<String> navigationSuggestions;
 }
 
 /// Modelo para instruções de navegação
 class NavigationInstructions {
-  final String instructions;
-  final String destination;
-  final String timestamp;
-  final String language;
-  final List<String> steps;
-  final String estimatedTime;
-  final List<String> safetyAlerts;
 
   NavigationInstructions({
     required this.instructions,
@@ -53,8 +43,7 @@ class NavigationInstructions {
     required this.safetyAlerts,
   });
 
-  factory NavigationInstructions.fromJson(Map<String, dynamic> json) {
-    return NavigationInstructions(
+  factory NavigationInstructions.fromJson(Map<String, dynamic> json) => NavigationInstructions(
       instructions: json['instructions'] ?? '',
       destination: json['destination'] ?? '',
       timestamp: json['timestamp'] ?? '',
@@ -63,16 +52,17 @@ class NavigationInstructions {
       estimatedTime: json['estimated_time'] ?? '',
       safetyAlerts: List<String>.from(json['safety_alerts'] ?? []),
     );
-  }
+  final String instructions;
+  final String destination;
+  final String timestamp;
+  final String language;
+  final List<String> steps;
+  final String estimatedTime;
+  final List<String> safetyAlerts;
 }
 
 /// Modelo para resposta de comando de voz
 class VoiceCommandResponse {
-  final String response;
-  final String type;
-  final String timestamp;
-  final String? destination;
-  final String? command;
 
   VoiceCommandResponse({
     required this.response,
@@ -82,24 +72,22 @@ class VoiceCommandResponse {
     this.command,
   });
 
-  factory VoiceCommandResponse.fromJson(Map<String, dynamic> json) {
-    return VoiceCommandResponse(
+  factory VoiceCommandResponse.fromJson(Map<String, dynamic> json) => VoiceCommandResponse(
       response: json['response'] ?? '',
       type: json['type'] ?? 'general',
       timestamp: json['timestamp'] ?? '',
       destination: json['destination'],
       command: json['command'],
     );
-  }
+  final String response;
+  final String type;
+  final String timestamp;
+  final String? destination;
+  final String? command;
 }
 
 /// Modelo para modo de emergência
 class EmergencyResponse {
-  final String emergencyInstructions;
-  final Map<String, String> emergencyContacts;
-  final String timestamp;
-  final String context;
-  final String priority;
 
   EmergencyResponse({
     required this.emergencyInstructions,
@@ -109,22 +97,22 @@ class EmergencyResponse {
     required this.priority,
   });
 
-  factory EmergencyResponse.fromJson(Map<String, dynamic> json) {
-    return EmergencyResponse(
+  factory EmergencyResponse.fromJson(Map<String, dynamic> json) => EmergencyResponse(
       emergencyInstructions: json['emergency_instructions'] ?? '',
       emergencyContacts: Map<String, String>.from(json['emergency_contacts'] ?? {}),
       timestamp: json['timestamp'] ?? '',
       context: json['context'] ?? '',
       priority: json['priority'] ?? 'NORMAL',
     );
-  }
+  final String emergencyInstructions;
+  final Map<String, String> emergencyContacts;
+  final String timestamp;
+  final String context;
+  final String priority;
 }
 
 /// Modelo para navegação rápida
 class QuickNavigationResult {
-  final EnvironmentAnalysis environmentAnalysis;
-  final NavigationInstructions navigationInstructions;
-  final QuickSummary quickSummary;
 
   QuickNavigationResult({
     required this.environmentAnalysis,
@@ -132,21 +120,17 @@ class QuickNavigationResult {
     required this.quickSummary,
   });
 
-  factory QuickNavigationResult.fromJson(Map<String, dynamic> json) {
-    return QuickNavigationResult(
+  factory QuickNavigationResult.fromJson(Map<String, dynamic> json) => QuickNavigationResult(
       environmentAnalysis: EnvironmentAnalysis.fromJson(json['environment_analysis'] ?? {}),
       navigationInstructions: NavigationInstructions.fromJson(json['navigation_instructions'] ?? {}),
       quickSummary: QuickSummary.fromJson(json['quick_summary'] ?? {}),
     );
-  }
+  final EnvironmentAnalysis environmentAnalysis;
+  final NavigationInstructions navigationInstructions;
+  final QuickSummary quickSummary;
 }
 
 class QuickSummary {
-  final String destination;
-  final bool emergencyDetected;
-  final int stepCount;
-  final String estimatedTime;
-  final List<String> safetyAlerts;
 
   QuickSummary({
     required this.destination,
@@ -156,15 +140,18 @@ class QuickSummary {
     required this.safetyAlerts,
   });
 
-  factory QuickSummary.fromJson(Map<String, dynamic> json) {
-    return QuickSummary(
+  factory QuickSummary.fromJson(Map<String, dynamic> json) => QuickSummary(
       destination: json['destination'] ?? '',
       emergencyDetected: json['emergency_detected'] ?? false,
       stepCount: json['step_count'] ?? 0,
       estimatedTime: json['estimated_time'] ?? '',
       safetyAlerts: List<String>.from(json['safety_alerts'] ?? []),
     );
-  }
+  final String destination;
+  final bool emergencyDetected;
+  final int stepCount;
+  final String estimatedTime;
+  final List<String> safetyAlerts;
 }
 
 /// Serviço principal do VoiceGuide AI
@@ -382,9 +369,7 @@ class VoiceGuideService {
   }
 
   /// Converte imagem para base64
-  static String imageToBase64(Uint8List imageBytes) {
-    return base64Encode(imageBytes);
-  }
+  static String imageToBase64(Uint8List imageBytes) => base64Encode(imageBytes);
 
   /// Valida se o serviço está disponível
   Future<bool> isServiceAvailable() async {

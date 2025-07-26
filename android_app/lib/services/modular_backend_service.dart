@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+
 import 'package:dio/dio.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:logger/logger.dart';
+
 import 'backend_connection_config.dart';
 import 'connection_state.dart' as conn_state;
 import 'retry_interceptor.dart';
@@ -11,6 +10,11 @@ import 'retry_interceptor.dart';
 /// Serviço Modular para conexão com Backend Bu Fala
 /// Otimizado para trabalhar com a arquitetura modular do backend
 class ModularBackendService {
+  
+  ModularBackendService._() {
+    _initializeDio();
+    _startConnectivityMonitoring();
+  }
   static ModularBackendService? _instance;
   static ModularBackendService get instance => _instance ??= ModularBackendService._();
   
@@ -22,11 +26,6 @@ class ModularBackendService {
   
   final Map<String, dynamic> _responseCache = {};
   Timer? _connectivityTimer;
-  
-  ModularBackendService._() {
-    _initializeDio();
-    _startConnectivityMonitoring();
-  }
 
   /// Inicializar o serviço
   Future<void> initialize() async {
@@ -45,9 +44,7 @@ class ModularBackendService {
   }
 
   /// Stream do estado da conexão
-  Stream<conn_state.ConnectionState> get connectionStream {
-    return Stream.periodic(Duration(seconds: 5), (_) => _connectionState);
-  }
+  Stream<conn_state.ConnectionState> get connectionStream => Stream.periodic(const Duration(seconds: 5), (_) => _connectionState);
   
   void _initializeDio() {
     _dio = Dio(BaseOptions(
@@ -60,17 +57,15 @@ class ModularBackendService {
     
     // Configurar interceptors personalizados
     _dio.interceptors.add(RetryInterceptor(
-      maxRetries: BackendConnectionConfig.maxRetries,
-      retryDelay: BackendConnectionConfig.retryInterval,
+      
     ));
     
     _dio.interceptors.add(LoggingInterceptor(
-      logRequestBody: true,
-      logResponseBody: true,
+      
     ));
     
     _dio.interceptors.add(CacheInterceptor(
-      cacheDuration: Duration(minutes: 5),
+      
     ));
     
     // Interceptor de métricas de performance
@@ -79,8 +74,7 @@ class ModularBackendService {
     }
   }
   
-  InterceptorsWrapper _createLoggingInterceptor() {
-    return InterceptorsWrapper(
+  InterceptorsWrapper _createLoggingInterceptor() => InterceptorsWrapper(
       onRequest: (options, handler) {
         print('[🔄 MODULAR-API] ${options.method} ${options.path}');
         print('[📋 MODULAR-API] Headers: ${options.headers}');
@@ -104,10 +98,8 @@ class ModularBackendService {
         handler.next(error);
       },
     );
-  }
   
-  InterceptorsWrapper _createRetryInterceptor() {
-    return InterceptorsWrapper(
+  InterceptorsWrapper _createRetryInterceptor() => InterceptorsWrapper(
       onError: (error, handler) async {
         if (_shouldRetry(error)) {
           final retryCount = error.requestOptions.extra['retry_count'] ?? 0;
@@ -132,10 +124,8 @@ class ModularBackendService {
         handler.next(error);
       },
     );
-  }
   
-  InterceptorsWrapper _createCacheInterceptor() {
-    return InterceptorsWrapper(
+  InterceptorsWrapper _createCacheInterceptor() => InterceptorsWrapper(
       onRequest: (options, handler) {
         if (options.method == 'GET' && _shouldUseCache(options.path)) {
           final cacheKey = _getCacheKey(options);
@@ -171,10 +161,8 @@ class ModularBackendService {
         handler.next(response);
       },
     );
-  }
   
-  InterceptorsWrapper _createPerformanceInterceptor() {
-    return InterceptorsWrapper(
+  InterceptorsWrapper _createPerformanceInterceptor() => InterceptorsWrapper(
       onRequest: (options, handler) {
         options.extra['start_time'] = DateTime.now().millisecondsSinceEpoch;
         handler.next(options);
@@ -191,27 +179,22 @@ class ModularBackendService {
         handler.next(response);
       },
       onError: (error, handler) {
-        _updateConnectionState(false, 0.0, error.message);
+        _updateConnectionState(false, 0, error.message);
         handler.next(error);
       },
     );
-  }
   
-  bool _shouldRetry(DioException error) {
-    return error.type == DioExceptionType.connectionTimeout ||
+  bool _shouldRetry(DioException error) => error.type == DioExceptionType.connectionTimeout ||
            error.type == DioExceptionType.receiveTimeout ||
            error.type == DioExceptionType.connectionError ||
            (error.response?.statusCode ?? 0) >= 500;
-  }
   
   bool _shouldUseCache(String path) {
     final nonCacheablePaths = ['/health', '/medical', '/accessibility/voice'];
     return !nonCacheablePaths.any((p) => path.contains(p));
   }
   
-  String _getCacheKey(RequestOptions options) {
-    return '${options.method}_${options.path}_${jsonEncode(options.queryParameters)}';
-  }
+  String _getCacheKey(RequestOptions options) => '${options.method}_${options.path}_${jsonEncode(options.queryParameters)}';
   
   bool _isCacheValid(Map<String, dynamic> cachedItem) {
     final timestamp = cachedItem['timestamp'] as int;
@@ -237,9 +220,11 @@ class ModularBackendService {
   }
   
   void _startConnectivityMonitoring() {
-    _connectivityTimer = Timer.periodic(Duration(seconds: 30), (_) async {
-      await _checkConnectivity();
-    });
+    _connectivityTimer?.cancel(); // Cancel previous timer if any
+    _connectivityTimer = Timer.periodic(
+      BackendConnectionConfig.connectivityCheckInterval,
+      (_) => _checkConnectivity(),
+    );
   }
 
   Future<void> _performInitialHealthCheck() async {
@@ -248,10 +233,10 @@ class ModularBackendService {
       if (result.success) {
         _updateConnectionState(true, result.responseTime ?? 0.0);
       } else {
-        _updateConnectionState(false, 0.0, result.error);
+        _updateConnectionState(false, 0, result.error);
       }
     } catch (e) {
-      _updateConnectionState(false, 0.0, e.toString());
+      _updateConnectionState(false, 0, e.toString());
     }
   }
 
@@ -261,10 +246,10 @@ class ModularBackendService {
       if (result.success) {
         _updateConnectionState(true, result.responseTime ?? 0.0);
       } else {
-        _updateConnectionState(false, 0.0, result.error);
+        _updateConnectionState(false, 0, result.error);
       }
     } catch (e) {
-      _updateConnectionState(false, 0.0, e.toString());
+      _updateConnectionState(false, 0, e.toString());
     }
   }
 
@@ -277,19 +262,15 @@ class ModularBackendService {
       consecutiveFailures: isConnected ? 0 : _connectionState.consecutiveFailures + 1,
     );
   }
-    _connectivityTimer = Timer.periodic(
-      BackendConnectionConfig.connectivityCheckInterval,
-      (_) => _checkConnectivity(),
-    );
-  }
+
   
   Future<void> _checkConnectivity() async {
     try {
       final response = await _dio.get('/health', 
         options: Options(receiveTimeout: const Duration(seconds: 5)));
-      _updateConnectionState(true, 0.0);
+      _updateConnectionState(true, 0);
     } catch (e) {
-      _updateConnectionState(false, 0.0, e.toString());
+      _updateConnectionState(false, 0, e.toString());
     }
   }
   
@@ -477,7 +458,6 @@ class ModularBackendService {
           data: fallbackResponses[key]!,
           source: 'Resposta de Emergência',
           confidence: 0.6,
-          fromCache: false,
         );
       }
     }
@@ -486,7 +466,6 @@ class ModularBackendService {
       data: 'Para qualquer problema de saúde, recomendo procurar atendimento médico adequado. Em emergências, ligue para 192.',
       source: 'Resposta de Emergência Geral',
       confidence: 0.5,
-      fromCache: false,
     );
   }
   
@@ -504,19 +483,11 @@ class ModularBackendService {
 
 /// Classe de resposta padronizada
 class ModularApiResponse<T> {
-  final bool success;
-  final T? data;
-  final String? error;
-  final String source;
-  final double confidence;
-  final bool fromCache;
-  final double? responseTime;
   
   const ModularApiResponse._({
     required this.success,
-    this.data,
+    required this.source, this.data,
     this.error,
-    required this.source,
     this.confidence = 1.0,
     this.fromCache = false,
     this.responseTime,
@@ -528,8 +499,7 @@ class ModularApiResponse<T> {
     double confidence = 1.0,
     bool fromCache = false,
     double? responseTime,
-  }) {
-    return ModularApiResponse._(
+  }) => ModularApiResponse._(
       success: true,
       data: data,
       source: source,
@@ -537,15 +507,19 @@ class ModularApiResponse<T> {
       fromCache: fromCache,
       responseTime: responseTime,
     );
-  }
   
-  factory ModularApiResponse.error(String error) {
-    return ModularApiResponse._(
+  factory ModularApiResponse.error(String error) => ModularApiResponse._(
       success: false,
       error: error,
       source: 'Erro',
     );
-  }
+  final bool success;
+  final T? data;
+  final String? error;
+  final String source;
+  final double confidence;
+  final bool fromCache;
+  final double? responseTime;
   
   bool get isFromCache => fromCache;
   bool get isHighConfidence => confidence >= 0.8;

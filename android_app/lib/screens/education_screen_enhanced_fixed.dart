@@ -753,7 +753,7 @@ class _EducationScreenEnhancedState extends State<EducationScreenEnhanced>
                     color: AppColors.primaryGreen.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.school,
                     size: 64,
                     color: AppColors.primaryGreen,

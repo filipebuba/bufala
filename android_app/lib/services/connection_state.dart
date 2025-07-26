@@ -2,21 +2,20 @@ import 'dart:async';
 
 /// Estado da conexão com o backend modular
 class ConnectionState {
+  
+  const ConnectionState({
+    required this.isConnected,
+    required this.lastCheck, this.lastError,
+    this.responseTime,
+    this.consecutiveFailures = 0,
+    this.metrics = const {},
+  });
   final bool isConnected;
   final String? lastError;
   final DateTime lastCheck;
   final double? responseTime;
   final int consecutiveFailures;
   final Map<String, dynamic> metrics;
-  
-  const ConnectionState({
-    required this.isConnected,
-    this.lastError,
-    required this.lastCheck,
-    this.responseTime,
-    this.consecutiveFailures = 0,
-    this.metrics = const {},
-  });
   
   /// Verifica se a conexão está saudável
   bool get isHealthy {
@@ -85,8 +84,7 @@ class ConnectionState {
     double? responseTime,
     int? consecutiveFailures,
     Map<String, dynamic>? metrics,
-  }) {
-    return ConnectionState(
+  }) => ConnectionState(
       isConnected: isConnected ?? this.isConnected,
       lastError: lastError ?? this.lastError,
       lastCheck: lastCheck ?? this.lastCheck,
@@ -94,33 +92,25 @@ class ConnectionState {
       consecutiveFailures: consecutiveFailures ?? this.consecutiveFailures,
       metrics: metrics ?? this.metrics,
     );
-  }
   
   /// Incrementa falhas consecutivas
-  ConnectionState withFailure(String error) {
-    return copyWith(
+  ConnectionState withFailure(String error) => copyWith(
       isConnected: false,
       lastError: error,
       lastCheck: DateTime.now(),
       consecutiveFailures: consecutiveFailures + 1,
     );
-  }
   
   /// Reseta para estado de sucesso
-  ConnectionState withSuccess({double? responseTime}) {
-    return copyWith(
+  ConnectionState withSuccess({double? responseTime}) => copyWith(
       isConnected: true,
-      lastError: null,
       lastCheck: DateTime.now(),
       responseTime: responseTime,
       consecutiveFailures: 0,
     );
-  }
   
   @override
-  String toString() {
-    return 'ConnectionState(connected: $isConnected, quality: $quality, responseTime: ${responseTime}ms)';
-  }
+  String toString() => 'ConnectionState(connected: $isConnected, quality: $quality, responseTime: ${responseTime}ms)';
   
   @override
   bool operator ==(Object other) {
@@ -133,14 +123,12 @@ class ConnectionState {
   }
   
   @override
-  int get hashCode {
-    return Object.hash(
+  int get hashCode => Object.hash(
       isConnected,
       lastError,
       responseTime,
       consecutiveFailures,
     );
-  }
 }
 
 /// Qualidade da conexão
@@ -155,6 +143,8 @@ enum ConnectionQuality {
 
 /// Monitor de conexão em tempo real
 class ConnectionMonitor {
+  
+  ConnectionMonitor._();
   static ConnectionMonitor? _instance;
   static ConnectionMonitor get instance => _instance ??= ConnectionMonitor._();
   
@@ -165,8 +155,6 @@ class ConnectionMonitor {
     isConnected: false,
     lastCheck: DateTime.now(),
   );
-  
-  ConnectionMonitor._();
   
   /// Stream do estado da conexão
   Stream<ConnectionState> get stateStream => _stateController.stream;
@@ -225,19 +213,19 @@ class ConnectionMetrics {
   
   /// Tempo médio de resposta
   double get averageResponseTime {
-    if (_responseTimes.isEmpty) return 0.0;
+    if (_responseTimes.isEmpty) return 0;
     return _responseTimes.reduce((a, b) => a + b) / _responseTimes.length;
   }
   
   /// Tempo mínimo de resposta
   double get minResponseTime {
-    if (_responseTimes.isEmpty) return 0.0;
+    if (_responseTimes.isEmpty) return 0;
     return _responseTimes.reduce((a, b) => a < b ? a : b);
   }
   
   /// Tempo máximo de resposta
   double get maxResponseTime {
-    if (_responseTimes.isEmpty) return 0.0;
+    if (_responseTimes.isEmpty) return 0;
     return _responseTimes.reduce((a, b) => a > b ? a : b);
   }
   
@@ -249,7 +237,7 @@ class ConnectionMetrics {
     final recentRequests = _requestTimes.where((time) => time.isAfter(last24h)).length;
     final totalErrors = _errorCounts.values.fold(0, (sum, count) => sum + count);
     
-    if (recentRequests == 0) return 1.0;
+    if (recentRequests == 0) return 1;
     return (recentRequests - totalErrors) / recentRequests;
   }
   

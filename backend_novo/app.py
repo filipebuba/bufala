@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Bu Fala Backend - Novo
+Backend modular e organizado para o aplicativo Bu Fala
+Desenvolvido para o Hackathon Gemma 3n
+
+Este backend foi criado seguindo as regras do hackathon:
+- Uso do modelo Gemma-3n para IA multimodal
+- Funcionamento offline e privado
+- Foco em impacto social para comunidades da Guiné-Bissau
+"""
+
+import os
+import sys
+import logging
+from flask import Flask, jsonify, request, render_template
+from flask_cors import CORS
+from datetime import datetime
+
+# Adicionar o diretório atual ao path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Importar configurações
+from config.settings import BackendConfig, SystemPrompts
+
+# Importar configuração do Swagger
+from swagger_config import setup_swagger, SWAGGER_TEMPLATE, COMMON_SCHEMAS
+
+from services.gemma_service import GemmaService
+from services.health_service import HealthService
+from utils.logger import setup_logger
+from utils.error_handler import setup_error_handlers
+
+# Importar rotas
+from routes.health_routes import health_bp
+from routes.medical_routes import medical_bp
+from routes.education_routes import education_bp
+from routes.agriculture_routes import agriculture_bp
+from routes.wellness_routes import wellness_bp
+from routes.translation_routes import translation_bp
+from routes.accessibility_routes import accessibility_bp
+from routes.voice_guide_routes import voice_guide_bp
+from routes.multimodal_routes import multimodal_bp
+from routes.environmental_routes import environmental_bp
+
+def create_app():
+    """Factory function para criar a aplicação Flask"""
+    app = Flask(__name__)
+    
+    # Configurar CORS
+    CORS(app, resources={
+        r"/*": {
+            "origins": ["*"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
+    
+    # Configurar logging
+    setup_logger()
+    logger = logging.getLogger(__name__)
+    
+    # Configurar tratamento de erros
+    setup_error_handlers(app)
+    
+    # Inicializar serviços
+    try:
+        logger.info("Inicializando serviços...")
+        
+        # Inicializar serviço Gemma
+        gemma_service = GemmaService()
+        app.gemma_service = gemma_service
+        
+        # Inicializar serviço de saúde
+        health_service = HealthService(gemma_service)
+        app.health_service = health_service
+        
+        logger.info("Serviços inicializados com sucesso")
+        
+    except Exception as e:
+        logger.error(f"Erro ao inicializar serviços: {e}")
+        # Continuar sem os serviços para permitir desenvolvimento
+        app.gemma_service = None
+        app.health_service = None
+    
+    # Configurar Swagger
+    swagger = setup_swagger(app)
+    
+    # Registrar blueprints
+    app.register_blueprint(health_bp, url_prefix='/api')
+    app.register_blueprint(medical_bp, url_prefix='/api')
+    app.register_blueprint(education_bp, url_prefix='/api')
+    app.register_blueprint(agriculture_bp, url_prefix='/api')
+    app.register_blueprint(wellness_bp, url_prefix='/api')
+    app.register_blueprint(translation_bp, url_prefix='/api')
+    app.register_blueprint(accessibility_bp, url_prefix='/api')
+    app.register_blueprint(voice_guide_bp, url_prefix='/api')
+    app.register_blueprint(multimodal_bp, url_prefix='/api')
+    app.register_blueprint(environmental_bp, url_prefix='/api')
+    
+    # Rota raiz
+    @app.route('/')
+    def index():
+        return jsonify({
+            'message': 'Bu Fala Backend - Novo',
+            'version': '2.0.0',
+            'status': 'running',
+            'timestamp': datetime.now().isoformat(),
+            'description': 'Backend modular para o aplicativo Bu Fala - Hackathon Gemma 3n',
+            'documentation': {
+                'swagger_ui': '/api/docs/',
+                'swagger_json': '/api/swagger.json',
+                'custom_ui': '/docs'
+            },
+            'endpoints': {
+                'health': '/api/health',
+                'medical': '/api/medical',
+                'education': '/api/education',
+                'agriculture': '/api/agriculture',
+                'wellness': '/api/wellness',
+                'translation': '/api/translate',
+                'accessibility': '/api/accessibility',
+                'voice_guide': '/api/voice-guide',
+                'multimodal': '/api/multimodal',
+                'environmental': '/api/environment'
+            }
+        })
+    
+    @app.route('/docs', methods=['GET'])
+    def custom_swagger_ui():
+        """Rota para interface Swagger personalizada"""
+        return render_template('swagger_ui.html')
+    
+    @app.route('/swagger.yaml', methods=['GET'])
+    def swagger_yaml():
+        """Rota para servir o arquivo swagger.yaml"""
+        import os
+        from flask import send_file
+        swagger_path = os.path.join(os.path.dirname(__file__), 'swagger.yaml')
+        return send_file(swagger_path, mimetype='application/x-yaml')
+    
+    # Middleware para logging de requests
+    @app.before_request
+    def log_request_info():
+        logger.info(f'{request.method} {request.url} - {request.remote_addr}')
+    
+    return app
+
+def main():
+    """Função principal para executar o servidor"""
+    app = create_app()
+    
+    logger = logging.getLogger(__name__)
+    logger.info("="*50)
+    logger.info("Bu Fala Backend - Novo")
+    logger.info("Hackathon Gemma 3n")
+    logger.info("="*50)
+    logger.info(f"Servidor iniciando em http://{BackendConfig.HOST}:{BackendConfig.PORT}")
+    
+    try:
+        app.run(
+            host=BackendConfig.HOST,
+            port=BackendConfig.PORT,
+            debug=BackendConfig.DEBUG,
+            threaded=True
+        )
+    except KeyboardInterrupt:
+        logger.info("Servidor interrompido pelo usuário")
+    except Exception as e:
+        logger.error(f"Erro ao iniciar servidor: {e}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

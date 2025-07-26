@@ -1,6 +1,7 @@
 import 'dart:math';
-import '../models/international_teaching_models.dart';
+
 import '../models/collaborative_learning_models.dart';
+import '../models/international_teaching_models.dart';
 import '../services/gemma3_backend_service.dart';
 
 /// Serviço simplificado para sistema de ensino internacional
@@ -66,7 +67,7 @@ class InternationalTeachingServiceSimple {
       supportedLanguages: _supportedLanguages,
       teachingMethods: _getAvailableTeachingMethods(),
       targetAudiences: _getAvailableTargetAudiences(),
-      aiCapabilities: AICapabilities(
+      aiCapabilities: const AICapabilities(
         canTranslate: true,
         canGenerateContent: true,
         canAdaptToContext: true,
@@ -329,7 +330,7 @@ class InternationalTeachingServiceSimple {
         userId: userId,
         nativeLanguage: _supportedLanguages.first,
         targetLanguages: {},
-        overallProgress: 0.0,
+        overallProgress: 0,
         sessionHistory: [],
         achievements: [],
       );
@@ -340,12 +341,12 @@ class InternationalTeachingServiceSimple {
     final languageProgress = progress.targetLanguages[targetLanguage.code] ??
         LanguageProgress(
           language: targetLanguage,
-          proficiency: 0.0,
-          vocabulary: 0.0,
-          grammar: 0.0,
-          pronunciation: 0.0,
-          culturalKnowledge: 0.0,
-          practicalUsage: 0.0,
+          proficiency: 0,
+          vocabulary: 0,
+          grammar: 0,
+          pronunciation: 0,
+          culturalKnowledge: 0,
+          practicalUsage: 0,
           lastPracticed: DateTime.now(),
         );
 
@@ -366,8 +367,7 @@ class InternationalTeachingServiceSimple {
   }
 
   /// Obter sessões ativas do usuário
-  List<Map<String, dynamic>> getUserActiveSessions(String userId) {
-    return _activeSessions
+  List<Map<String, dynamic>> getUserActiveSessions(String userId) => _activeSessions
         .where((session) => session.teacherId == userId)
         .map((session) => {
               'id': session.id,
@@ -379,7 +379,6 @@ class InternationalTeachingServiceSimple {
               'endTime': session.endTime?.toIso8601String(),
             })
         .toList();
-  }
 
   /// Finalizar sessão
   void finishSession(String sessionId, String userId) {

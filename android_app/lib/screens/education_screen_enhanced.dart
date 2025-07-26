@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../models/offline_learning_models.dart';
 import '../models/international_teaching_models.dart' as intl;
+import '../models/offline_learning_models.dart';
 import '../screens/content_view_screen.dart';
 import '../services/gemma3_backend_service.dart';
+import '../services/international_teaching_service.dart';
 import '../services/offline_learning_service.dart';
 import '../services/smart_api_service.dart';
-import '../services/international_teaching_service.dart';
 import '../utils/app_colors.dart';
 
 class EducationScreenEnhanced extends StatefulWidget {

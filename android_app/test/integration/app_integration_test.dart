@@ -1,25 +1,26 @@
-import 'package:bufala/main.dart' as app;
-import 'package:bufala/services/agricultural_advisor_service.dart';
-import 'package:bufala/services/crisis_response_service.dart';
-import 'package:bufala/services/offline_learning_service.dart';
+import 'package:android_app/main.dart' as app;
+import 'package:android_app/services/crisis_response_service.dart';
+import 'package:android_app/services/endpoints/agriculture_service.dart';
+import 'package:android_app/services/offline_learning_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import 'app_integration_test.mocks.dart';
+
 // Generate mocks
 @GenerateMocks([
-  CrisisResponseService,
-  OfflineLearningService,
-  AgriculturalAdvisorService,
+  ICrisisResponseService,
+  IOfflineLearningService,
+  IAgricultureService,
 ])
-import 'app_integration_test.mocks.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   
-  group('Bufala App Integration Tests', () {
+  group('Android App Integration Tests', () {
     testWidgets('complete emergency flow', (WidgetTester tester) async {
       // Arrange
       app.main();

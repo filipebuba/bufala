@@ -1,5 +1,6 @@
 /// Configurações de Conexão Backend-Flutter
 /// Otimizado para o backend modular Bu Fala
+library;
 
 class BackendConnectionConfig {
   // URLs base para diferentes ambientes
@@ -145,19 +146,15 @@ class BackendConnectionConfig {
   };
   
   // Método para obter configuração específica de contexto
-  static Map<String, dynamic> getContextConfig(String context) {
-    return contextConfigs[context] ?? {
+  static Map<String, dynamic> getContextConfig(String context) => contextConfigs[context] ?? {
       'priority': 'medium',
       'timeout_preference': 'balanced',
       'fallback_enabled': true,
       'cache_enabled': true,
     };
-  }
   
   // Método para verificar se endpoint está disponível
-  static bool isEndpointAvailable(String endpoint) {
-    return endpoints.containsValue(endpoint) || endpoints.containsKey(endpoint);
-  }
+  static bool isEndpointAvailable(String endpoint) => endpoints.containsValue(endpoint) || endpoints.containsKey(endpoint);
   
   // Método para obter URL completa do endpoint
   static String getFullUrl(String endpoint) {
@@ -173,17 +170,16 @@ class BackendConnectionConfig {
 
 /// Classe para gerenciar estado da conexão
 class ConnectionState {
+  
+  const ConnectionState({
+    required this.isConnected,
+    required this.lastCheck, this.lastError,
+    this.responseTime = 0.0,
+  });
   final bool isConnected;
   final String? lastError;
   final DateTime lastCheck;
   final double responseTime;
-  
-  const ConnectionState({
-    required this.isConnected,
-    this.lastError,
-    required this.lastCheck,
-    this.responseTime = 0.0,
-  });
   
   bool get isHealthy => isConnected && responseTime < 5.0;
   bool get needsCheck => DateTime.now().difference(lastCheck) > 

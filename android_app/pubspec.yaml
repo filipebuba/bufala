@@ -1,5 +1,5 @@
-name: bufala
-description: "Bufala - Aplicativo Comunitário Offline para Guiné-Bissau"
+name: android_app
+description: "Moransa - Aplicativo Comunitário Offline para Guiné-Bissau"
 version: 1.0.0+1
 
 environment:
@@ -24,6 +24,11 @@ dependencies:
   # Network & Connectivity
   dio: ^5.4.0
   connectivity_plus: ^5.0.2
+  http: ^1.1.0
+  
+  # API Integration & Code Generation
+  json_annotation: ^4.8.1
+  retrofit: ^4.0.3
   
   # Localização e Idiomas
   flutter_localizations:
@@ -89,6 +94,7 @@ dev_dependencies:
   # Geradores
   hive_generator: ^2.0.1
   json_serializable: ^6.7.1
+  retrofit_generator: ^8.0.4
 
 flutter:
   uses-material-design: true

@@ -1,0 +1,131 @@
+version: '3.8'
+
+# Configuração adicional para desenvolvimento
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONPATH=/app
+      - WATCHDOG_ENABLED=1
+    volumes:
+      - ./backend:/app:rw
+      - backend_dev_cache:/root/.cache
+      - /app/__pycache__  # Exclude pycache from volume
+    ports:
+      - "5000:5000"
+      - "5678:5678"  # Debug port
+    command: >
+      sh -c "pip install watchdog &&
+             python -m flask run --host=0.0.0.0 --port=5000 --reload"
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  icon-generator:
+    build:
+      context: ./icon_generator
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - ./icon_generator:/app:rw
+      - icon_dev_output:/app/output
+      - icon_dev_assets:/app/store_assets
+      - /app/node_modules  # Exclude node_modules from volume
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev
+    ports:
+      - "3000:3000"  # Development server
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # Database para desenvolvimento (opcional)
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: moransa-postgres-dev
+    environment:
+      - POSTGRES_DB=moransa_dev
+      - POSTGRES_USER=moransa
+      - POSTGRES_PASSWORD=dev_password_123
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - moransa-network
+    restart: unless-stopped
+    profiles:
+      - database
+
+  # Redis para cache (opcional)
+  redis-dev:
+    image: redis:7-alpine
+    container_name: moransa-redis-dev
+    command: redis-server --appendonly yes --requirepass dev_redis_123
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - moransa-network
+    restart: unless-stopped
+    profiles:
+      - cache
+
+  # Mailhog para testes de email (opcional)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: moransa-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - moransa-network
+    restart: unless-stopped
+    profiles:
+      - email
+
+  # Jupyter Notebook para análise de dados (opcional)
+  jupyter:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.jupyter
+    container_name: moransa-jupyter
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=moransa_dev_token
+    volumes:
+      - ./backend:/app:rw
+      - ./notebooks:/home/jovyan/work:rw
+      - jupyter_data:/home/jovyan/.jupyter
+    ports:
+      - "8888:8888"
+    networks:
+      - moransa-network
+    restart: unless-stopped
+    profiles:
+      - analysis
+
+volumes:
+  backend_dev_cache:
+    driver: local
+  icon_dev_output:
+    driver: local
+  icon_dev_assets:
+    driver: local
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  jupyter_data:
+    driver: local

@@ -3,19 +3,19 @@ import 'package:logger/logger.dart';
 
 /// Interceptor personalizado para retry automático de requisições
 class RetryInterceptor extends Interceptor {
-  final int maxRetries;
-  final Duration retryDelay;
-  final List<int> retryStatusCodes;
-  final Logger _logger = Logger();
 
   RetryInterceptor({
     this.maxRetries = 3,
     this.retryDelay = const Duration(seconds: 2),
     this.retryStatusCodes = const [500, 502, 503, 504, 408],
   });
+  final int maxRetries;
+  final Duration retryDelay;
+  final List<int> retryStatusCodes;
+  final Logger _logger = Logger();
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     final requestOptions = err.requestOptions;
     final retryCount = requestOptions.extra['retry_count'] ?? 0;
 
@@ -70,14 +70,14 @@ class RetryInterceptor extends Interceptor {
 
 /// Interceptor para logging detalhado de requisições
 class LoggingInterceptor extends Interceptor {
-  final Logger _logger = Logger();
-  final bool logRequestBody;
-  final bool logResponseBody;
 
   LoggingInterceptor({
     this.logRequestBody = true,
     this.logResponseBody = true,
   });
+  final Logger _logger = Logger();
+  final bool logRequestBody;
+  final bool logResponseBody;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -121,13 +121,13 @@ class LoggingInterceptor extends Interceptor {
 
 /// Interceptor para cache simples de requisições
 class CacheInterceptor extends Interceptor {
-  final Map<String, CacheEntry> _cache = {};
-  final Duration cacheDuration;
-  final Logger _logger = Logger();
 
   CacheInterceptor({
     this.cacheDuration = const Duration(minutes: 5),
   });
+  final Map<String, CacheEntry> _cache = {};
+  final Duration cacheDuration;
+  final Logger _logger = Logger();
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -167,9 +167,7 @@ class CacheInterceptor extends Interceptor {
     handler.next(response);
   }
 
-  String _generateCacheKey(RequestOptions options) {
-    return '${options.method}_${options.path}_${options.queryParameters.toString()}';
-  }
+  String _generateCacheKey(RequestOptions options) => '${options.method}_${options.path}_${options.queryParameters.toString()}';
 
   void clearCache() {
     _cache.clear();
@@ -178,15 +176,15 @@ class CacheInterceptor extends Interceptor {
 }
 
 class CacheEntry {
-  final Response response;
-  final DateTime timestamp;
-  final Duration duration;
 
   CacheEntry({
     required this.response,
     required this.timestamp,
     required this.duration,
   });
+  final Response response;
+  final DateTime timestamp;
+  final Duration duration;
 
   bool get isExpired => DateTime.now().difference(timestamp) > duration;
 }

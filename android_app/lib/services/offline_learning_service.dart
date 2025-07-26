@@ -1,8 +1,17 @@
 import '../models/offline_learning_models.dart';
 
 /// Serviço de aprendizado offline simplificado
-class OfflineLearningService {
+abstract class IOfflineLearningService {
+  Future<List<OfflineLearningContent>> getContent(String subject);
+  Future<List<OfflineLearningContent>> getContentBySubject(String subject);
+  Future<List<OfflineLearningContent>> getContentByLanguage(String language);
+  Future<void> saveProgress(String contentId, double progress);
+  Future<double> getProgress(String contentId);
+}
+
+class OfflineLearningService implements IOfflineLearningService {
   /// Gera conteúdo de aprendizado
+  @override
   Future<List<OfflineLearningContent>> getContent(String subject) async {
     try {
       // Simula carregamento assíncrono
@@ -15,10 +24,12 @@ class OfflineLearningService {
   }
 
   /// Obtém conteúdo por assunto específico
+  @override
   Future<List<OfflineLearningContent>> getContentBySubject(
       String subject) async => getContent(subject);
 
   /// Obtém conteúdo por idioma
+  @override
   Future<List<OfflineLearningContent>> getContentByLanguage(
       String language) async {
     try {
@@ -32,12 +43,14 @@ class OfflineLearningService {
   }
 
   /// Salva progresso do usuário
+  @override
   Future<void> saveProgress(String contentId, double progress) async {
     // Implementação simplificada para salvar progresso
     print('Progresso salvo para $contentId: $progress%');
   }
 
   /// Obtém progresso do usuário
+  @override
   Future<double> getProgress(String contentId) async {
     // Implementação simplificada - retorna 0 por padrão
     return 0.0;

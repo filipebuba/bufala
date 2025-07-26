@@ -1,13 +1,11 @@
-import 'package:bufala/models/emergency_case.dart';
-import 'package:bufala/models/medical_condition.dart';
-import 'package:bufala/services/crisis_response_service.dart';
+import 'package:android_app/models/emergency_case.dart';
+import 'package:android_app/models/medical_condition.dart';
+import 'package:android_app/services/crisis_response_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-// Generate mocks
-@GenerateMocks([CrisisResponseService])
-import 'crisis_response_service_test.mocks.dart';
+
 
 void main() {
   group('CrisisResponseService Tests', () {

@@ -1,17 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import '../services/voice_guide_service.dart';
+
 import '../services/smart_api_service.dart';
+import '../services/voice_guide_service.dart';
 
 // Modelo para itens de transcrição
 class TranscriptionItem {
-  final String timestamp;
-  final String originalText;
-  final String language;
-  final String? translatedText;
 
   TranscriptionItem({
     required this.timestamp,
@@ -27,6 +25,10 @@ class TranscriptionItem {
         language: json['language']?.toString() ?? 'pt-BR',
         translatedText: json['translated_text']?.toString(),
       );
+  final String timestamp;
+  final String originalText;
+  final String language;
+  final String? translatedText;
 }
 
 class VoiceGuideNavigationScreen extends StatefulWidget {
@@ -57,12 +59,12 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   bool _isLoading = false;
   bool _isEmergencyMode = false;
   bool _isSpeaking = false;
-  bool _isTranscribing = false;
-  String _currentLanguage = 'pt-BR';
+  final bool _isTranscribing = false;
+  final String _currentLanguage = 'pt-BR';
   String _currentMode = 'navigation'; // navigation, accessibility, emergency
   String _visualDescription = '';
 
-  Map<String, String> _supportedLanguages = {
+  final Map<String, String> _supportedLanguages = {
     'pt-BR': 'Português (Brasil)',
     'en-US': 'English (US)',
     'pt-GW': 'Crioulo (Guiné-Bissau)',
@@ -75,7 +77,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   NavigationInstructions? _currentInstructions;
   String _lastCommand = '';
   File? _selectedImage;
-  List<TranscriptionItem> _transcriptions = [];
+  final List<TranscriptionItem> _transcriptions = [];
 
   // Comandos de voz para navegação sem botões
   final Map<String, String> _voiceCommands = {
@@ -127,8 +129,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   Future<void> _initializeTts() async {
     await _flutterTts.setLanguage(_currentLanguage);
     await _flutterTts.setSpeechRate(0.6);
-    await _flutterTts.setVolume(1.0);
-    await _flutterTts.setPitch(1.0);
+    await _flutterTts.setVolume(1);
+    await _flutterTts.setPitch(1);
 
     _flutterTts.setStartHandler(() {
       setState(() {
@@ -222,7 +224,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   }
 
   Future<void> _announceHelp() async {
-    String helpText = 'Comandos disponíveis: ';
+    var helpText = 'Comandos disponíveis: ';
     _voiceCommands.forEach((command, description) {
       helpText += '$command, ';
     });
@@ -356,7 +358,6 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
       final response = await _smartApiService.describeEnvironment(
         imageBase64: imageBase64,
-        language: 'pt-BR',
       );
 
       if (response.success && response.data != null) {
@@ -434,7 +435,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         await _speak('EMERGÊNCIA: ${emergency.emergencyInstructions}');
 
         // Anunciar contatos de emergência
-        String contacts = 'Contatos de emergência: ';
+        var contacts = 'Contatos de emergência: ';
         emergency.emergencyContacts.forEach((key, value) {
           contacts += '$key: $value. ';
         });
@@ -491,7 +492,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
 
   Future<void> _pickImage() async {
     try {
-      final XFile? image = await _imagePicker.pickImage(
+      final image = await _imagePicker.pickImage(
         source: ImageSource.camera,
         imageQuality: 70,
       );
@@ -532,8 +533,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
   // ==========================================
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: Text(
           _isEmergencyMode
@@ -544,7 +544,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         actions: [
           if (_isSpeaking)
             const Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16),
               child: SizedBox(
                 width: 20,
                 height: 20,
@@ -568,7 +568,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 // Indicador de status
@@ -592,10 +592,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ),
       ),
     );
-  }
 
-  Widget _buildStatusIndicator() {
-    return Container(
+  Widget _buildStatusIndicator() => Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _isEmergencyMode ? Colors.red[100] : Colors.blue[100],
@@ -609,8 +607,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         children: [
           AnimatedBuilder(
             animation: _pulseAnimation,
-            builder: (context, child) {
-              return Transform.scale(
+            builder: (context, child) => Transform.scale(
                 scale: _isLoading ? _pulseAnimation.value : 1.0,
                 child: Icon(
                   _isEmergencyMode
@@ -621,8 +618,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
                   color: _isEmergencyMode ? Colors.red : Colors.blue,
                   size: 32,
                 ),
-              );
-            },
+              ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -656,10 +652,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ],
       ),
     );
-  }
 
-  Widget _buildVoiceCommandArea() {
-    return Container(
+  Widget _buildVoiceCommandArea() => Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -674,11 +668,11 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
       ),
       child: Column(
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.mic, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
+              Icon(Icons.mic, color: Colors.blue),
+              SizedBox(width: 8),
+              Text(
                 'Comando de Voz',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -710,7 +704,6 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ],
       ),
     );
-  }
 
   Widget _buildModeContent() {
     if (_isEmergencyMode) {
@@ -722,8 +715,7 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
     }
   }
 
-  Widget _buildNavigationContent() {
-    return SingleChildScrollView(
+  Widget _buildNavigationContent() => SingleChildScrollView(
       child: Column(
         children: [
           // Campo de destino
@@ -841,10 +833,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ],
       ),
     );
-  }
 
-  Widget _buildAccessibilityContent() {
-    return SingleChildScrollView(
+  Widget _buildAccessibilityContent() => SingleChildScrollView(
       child: Column(
         children: [
           // Descrição visual
@@ -930,10 +920,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ],
       ),
     );
-  }
 
-  Widget _buildEmergencyContent() {
-    return Container(
+  Widget _buildEmergencyContent() => Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.red[50],
@@ -944,13 +932,11 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         children: [
           AnimatedBuilder(
             animation: _emergencyAnimation,
-            builder: (context, child) {
-              return Icon(
+            builder: (context, child) => Icon(
                 Icons.warning,
                 size: 64,
                 color: _emergencyAnimation.value,
-              );
-            },
+              ),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -983,10 +969,8 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ],
       ),
     );
-  }
 
-  Widget _buildUsageInstructions() {
-    return Container(
+  Widget _buildUsageInstructions() => Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey[100],
@@ -1014,5 +998,4 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
         ],
       ),
     );
-  }
 }

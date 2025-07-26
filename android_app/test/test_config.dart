@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Test configuration and utilities for Bufala app tests
 class TestConfig {
-  static const String testDatabaseName = 'bufala_test.db';
+  static const String testDatabaseName = 'android_app_test.db';
   static const String testCachePath = 'test_cache';
   
   /// Mock data for testing

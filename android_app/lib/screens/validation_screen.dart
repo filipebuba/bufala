@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/collaborative_learning_models.dart' as models;
 import '../services/collaborative_learning_service.dart';
 
@@ -16,7 +17,8 @@ class ValidationScreen extends StatefulWidget {
   State<ValidationScreen> createState() => _ValidationScreenState();
 }
 
-class _ValidationScreenState extends State<ValidationScreen> {
+class _ValidationScreenState extends State<ValidationScreen> 
+    with TickerProviderStateMixin {
   final CollaborativeLearningService _service = CollaborativeLearningService();
   final TextEditingController _commentController = TextEditingController();
 
@@ -24,15 +26,65 @@ class _ValidationScreenState extends State<ValidationScreen> {
   int _currentIndex = 0;
   bool _isLoading = true;
   bool _isSubmitting = false;
+  
+  // Animações e feedback visual
+  late AnimationController _progressController;
+  late AnimationController _feedbackController;
+  late Animation<double> _progressAnimation;
+  late Animation<double> _feedbackAnimation;
+  late Animation<Color?> _feedbackColorAnimation;
+  
+  int _validationsCompleted = 0;
+  final int _totalValidations = 10; // Meta diária
+  String? _lastFeedbackMessage;
+  final bool _showCelebration = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
     _loadTranslationsToValidate();
+  }
+  
+  void _initializeAnimations() {
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _feedbackController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
+    _progressAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(
+      parent: _progressController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _feedbackAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(
+      parent: _feedbackController,
+      curve: Curves.elasticOut,
+    ));
+    
+    _feedbackColorAnimation = ColorTween(
+      begin: Colors.grey[300],
+      end: Colors.green[400],
+    ).animate(_feedbackController);
+    
+    _progressController.forward();
   }
 
   @override
   void dispose() {
+    _progressController.dispose();
+    _feedbackController.dispose();
     _commentController.dispose();
     super.dispose();
   }
@@ -57,6 +109,85 @@ class _ValidationScreenState extends State<ValidationScreen> {
       _showErrorSnackBar('Nenhuma tradução para validar no momento');
     }
   }
+  
+  void _showValidationFeedback(bool isCorrect) {
+    setState(() {
+      _validationsCompleted++;
+      _lastFeedbackMessage = isCorrect 
+        ? '✅ Validação correta! +10 pontos'
+        : '📝 Obrigado pela validação! +5 pontos';
+    });
+    
+    _feedbackController.reset();
+    _feedbackController.forward();
+    
+    // Verificar se atingiu meta
+    if (_validationsCompleted >= _totalValidations) {
+      _showCelebrationDialog();
+    }
+    
+    // Limpar feedback após 3 segundos
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _lastFeedbackMessage = null;
+        });
+      }
+    });
+  }
+  
+  void _showCelebrationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.celebration, color: Colors.orange, size: 32),
+            SizedBox(width: 8),
+            Text('🎉 Parabéns!'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Você atingiu sua meta diária de validações!',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.star, color: Colors.orange, size: 48),
+                  const SizedBox(height: 8),
+                  Text(
+                    '+${_validationsCompleted * 10} pontos ganhos!',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _submitValidation(bool isCorrect) async {
     if (_translations.isEmpty) return;
@@ -74,12 +205,15 @@ class _ValidationScreenState extends State<ValidationScreen> {
     setState(() => _isSubmitting = false);
 
     if (response.success) {
+      // Mostrar feedback visual
+      _showValidationFeedback(isCorrect);
+      
       _showSuccessSnackBar(isCorrect
-          ? 'Tradução aprovada! +50 pontos 🎉'
-          : 'Feedback enviado! +50 pontos 📝');
+          ? '✅ Tradução aprovada! +50 pontos 🎉'
+          : '📝 Feedback enviado! +50 pontos');
       _nextTranslation();
     } else {
-      _showErrorSnackBar('Erro ao enviar validação');
+      _showErrorSnackBar('❌ Erro ao enviar validação');
     }
   }
 
@@ -107,8 +241,13 @@ class _ValidationScreenState extends State<ValidationScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
-        title: const Text('✅ Validar Traduções'),
-        backgroundColor: Colors.green,
+        title: const Text('🔍 Validar Traduções'),
+        backgroundColor: Colors.blue[700],
+        foregroundColor: Colors.white,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: _buildProgressHeader(),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -181,6 +320,73 @@ class _ValidationScreenState extends State<ValidationScreen> {
 
           // Botão pular
           _buildSkipButton(),
+        ],
+      ),
+    );
+
+  Widget buildProgressHeader() => Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Progresso Diário',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                '$_validationsCompleted/$_totalValidations',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          AnimatedBuilder(
+            animation: _progressAnimation,
+            builder: (context, child) => LinearProgressIndicator(
+                value: (_validationsCompleted / _totalValidations) * _progressAnimation.value,
+                backgroundColor: Colors.white.withOpacity(0.3),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  _validationsCompleted >= _totalValidations 
+                    ? Colors.orange 
+                    : Colors.white,
+                ),
+                minHeight: 6,
+              ),
+          ),
+          if (_lastFeedbackMessage != null) ...[
+            const SizedBox(height: 8),
+            AnimatedBuilder(
+              animation: _feedbackAnimation,
+              builder: (context, child) => Transform.scale(
+                  scale: _feedbackAnimation.value,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _feedbackColorAnimation.value,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _lastFeedbackMessage!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+            ),
+          ],
         ],
       ),
     );

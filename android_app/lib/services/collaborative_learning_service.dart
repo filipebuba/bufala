@@ -4,36 +4,6 @@ import 'smart_api_service.dart';
 
 /// Serviço para o Sistema de Aprendizado Colaborativo - "Ensine o Bu Fala"
 class CollaborativeLearningService {
-  /// Submeter tradução colaborativa para uma frase existente
-  Future<SmartApiResponse> submitTranslation({
-    required String phraseId,
-    required String translatedText,
-    required String targetLanguage,
-    required String userId,
-  }) async {
-    try {
-      final data = {
-        'phrase_id': phraseId,
-        'translated_text': translatedText,
-        'target_language': targetLanguage,
-        'user_id': userId,
-      };
-      final response = await _dio.post(
-        '/api/collaborative/translation/submit',
-        data: data,
-      );
-      if (response.statusCode == 200) {
-        final responseData = response.data;
-        if (responseData['success'] == true) {
-          return SmartApiResponse.success();
-        }
-      }
-      return SmartApiResponse.error('Erro ao submeter tradução');
-    } catch (e) {
-      print('[❌ COLLABORATIVE] Erro ao submeter tradução: $e');
-      return SmartApiResponse.error('Falha na comunicação: $e');
-    }
-  }
 
   CollaborativeLearningService() {
     _dio = Dio(BaseOptions(
@@ -64,6 +34,36 @@ class CollaborativeLearningService {
         },
       ),
     );
+  }
+  /// Submeter tradução colaborativa para uma frase existente
+  Future<SmartApiResponse> submitTranslation({
+    required String phraseId,
+    required String translatedText,
+    required String targetLanguage,
+    required String userId,
+  }) async {
+    try {
+      final data = {
+        'phrase_id': phraseId,
+        'translated_text': translatedText,
+        'target_language': targetLanguage,
+        'user_id': userId,
+      };
+      final response = await _dio.post(
+        '/api/collaborative/translation/submit',
+        data: data,
+      );
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          return SmartApiResponse.success();
+        }
+      }
+      return SmartApiResponse.error('Erro ao submeter tradução');
+    } catch (e) {
+      print('[❌ COLLABORATIVE] Erro ao submeter tradução: $e');
+      return SmartApiResponse.error('Falha na comunicação: $e');
+    }
   }
   static const String baseUrl = 'http://10.0.2.2:5000';
   late final Dio _dio;
