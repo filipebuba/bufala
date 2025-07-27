@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas de Agricultura - Bu Fala Backend
+Rotas de Agricultura - Moransa Backend
 Hackathon Gemma 3n
 
 Especializado em agricultura tropical e sustentável,

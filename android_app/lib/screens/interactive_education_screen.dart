@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import '../services/gemma3_backend_service.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 import '../utils/app_colors.dart';
 
 class InteractiveEducationScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class InteractiveEducationScreen extends StatefulWidget {
 
 class _InteractiveEducationScreenState extends State<InteractiveEducationScreen>
     with TickerProviderStateMixin {
-  final SmartApiService _apiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   final Gemma3BackendService _gemmaService = Gemma3BackendService();
   final FlutterTts _flutterTts = FlutterTts();
 

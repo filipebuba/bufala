@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas do Guia de Voz - Bu Fala Backend
+Rotas do Guia de Voz - Moransa Backend
 Hackathon Gemma 3n
 
 Sistema de navegação assistiva por voz para

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas Multimodais - Bu Fala Backend
+Rotas Multimodais - Moransa Backend
 Hackathon Gemma 3n
 
 Sistema de processamento multimodal para análise

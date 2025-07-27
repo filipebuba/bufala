@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Configuração do Bu Fala Backend
+Configuração do Moransa Backend
 Hackathon Gemma 3n
 """
 
+import os
 import re
 from typing import Dict, Any, Optional, Tuple
 
@@ -127,7 +128,7 @@ class BackendConfig:
     # Configurações do servidor
     HOST = "0.0.0.0"
     PORT = 5000
-    DEBUG = True
+    DEBUG = False
     
     # Configurações de timeout
     REQUEST_TIMEOUT = 300
@@ -136,11 +137,19 @@ class BackendConfig:
     # Configurações do modelo - Suporte Ollama + Gemma-3n
     USE_OLLAMA = True
     OLLAMA_HOST = "http://localhost:11434"
-    OLLAMA_MODEL = "gemma2:2b"
+    OLLAMA_MODEL = "gemma3n:latest"
     
     # Configurações do modelo Gemma-3n (fallback)
-    MODEL_PATH = r"C:\Users\fbg67\.cache\kagglehub\models\google\gemma-3n\transformers\gemma-3n-e2b-it\1"
-    MODEL_NAME = "google/gemma-3n-e2b-it"
+    MODEL_PATH = "google/gemma-3n-E2B-it"
+    MODEL_NAME = "google/gemma-3n-E2B-it"
+    
+    # Configurações do Kaggle para acesso ao Gemma-3n
+    KAGGLE_USERNAME = os.getenv('KAGGLE_USERNAME', 'filipebuba')
+    KAGGLE_KEY = os.getenv('KAGGLE_KEY', 'e69c666d834cafb518be9859257301e3')
+    KAGGLE_CONFIG_PATH = os.getenv('KAGGLE_CONFIG_PATH', '../../kaggle.json')
+    
+    # Diretório de cache dos modelos
+    MODEL_CACHE_DIR = os.getenv('MODEL_CACHE_DIR', './models')
     
     # Configurações de geração
     MAX_NEW_TOKENS = 512
@@ -156,9 +165,13 @@ class BackendConfig:
     MAX_INPUT_LENGTH = 512
     
     # Configurações de dispositivo
-    USE_CUDA = True
-    USE_BFLOAT16 = True
-    ENABLE_OPTIMIZATIONS = True
+    USE_CUDA = os.getenv('USE_CUDA', 'true').lower() == 'true'
+    USE_BFLOAT16 = os.getenv('USE_BFLOAT16', 'true').lower() == 'true'
+    ENABLE_OPTIMIZATIONS = os.getenv('ENABLE_OPTIMIZATIONS', 'true').lower() == 'true'
+    
+    # Configurações de quantização Unsloth
+    USE_UNSLOTH = os.getenv('USE_UNSLOTH', 'true').lower() == 'true'
+    PREFER_UNSLOTH = os.getenv('PREFER_UNSLOTH', 'true').lower() == 'true'
     
     # Configurações de logging
     LOG_LEVEL = "INFO"
@@ -225,6 +238,23 @@ class BackendConfig:
         }
         
         return config
+    
+    @classmethod
+    def get_model_selector_config(cls) -> Dict[str, Any]:
+        """Configurações para o seletor automático de modelos"""
+        return {
+            'use_unsloth': cls.USE_UNSLOTH,
+            'prefer_unsloth': cls.PREFER_UNSLOTH,
+            'primary_model': cls.UNSLOTH_MODEL_PRIMARY,
+            'fallback_model': cls.UNSLOTH_MODEL_FALLBACK,
+            'quantization_settings': {
+                'use_quantization': cls.USE_QUANTIZATION,
+                'quantization_bits': cls.QUANTIZATION_BITS,
+                'use_bnb_4bit': cls.USE_BNB_4BIT,
+                'bnb_4bit_compute_dtype': cls.BNB_4BIT_COMPUTE_DTYPE,
+                'bnb_4bit_use_double_quant': cls.BNB_4BIT_USE_DOUBLE_QUANT
+            }
+        }
     
     @classmethod
     def get_query_type(cls, query: str) -> str:

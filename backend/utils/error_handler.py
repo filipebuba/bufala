@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Tratamento de Erros para Bu Fala Backend
+Tratamento de Erros para Moransa Backend
 Hackathon Gemma 3n
 """
 

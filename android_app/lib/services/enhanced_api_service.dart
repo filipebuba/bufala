@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'connection_state.dart' as conn_state;
 import 'modular_backend_service.dart';
-import 'smart_api_service.dart';
+import 'integrated_api_service.dart';
 
 /// Eventos da API
 class ApiEvent {
@@ -103,11 +103,11 @@ class EnhancedApiResponse<T> {
   final double? responseTime;
 }
 
-/// Serviço de API Aprimorado que integra o SmartApiService com o ModularBackendService
+/// Serviço de API Aprimorado que integra o IntegratedApiService com o ModularBackendService
 class EnhancedApiService {
   
   EnhancedApiService._() {
-    _smartApi = SmartApiService();
+    _smartApi = IntegratedApiService();
     _modularService = ModularBackendService.instance;
     _connectionMonitor = conn_state.ConnectionMonitor.instance;
     
@@ -117,7 +117,7 @@ class EnhancedApiService {
   static EnhancedApiService? _instance;
   static EnhancedApiService get instance => _instance ??= EnhancedApiService._();
   
-  late final SmartApiService _smartApi;
+  late final IntegratedApiService _smartApi;
   late final ModularBackendService _modularService;
   late final conn_state.ConnectionMonitor _connectionMonitor;
   

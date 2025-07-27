@@ -1,4 +1,4 @@
-# Bu Fala - Dependências do Backend Gemma 3n
+# Moransa - Dependências do Backend Gemma 3n
 # Sistema de IA para comunidades da Guiné-Bissau
 
 # Framework web
@@ -11,6 +11,7 @@ torchvision>=0.15.0
 transformers>=4.35.0
 kagglehub>=0.2.0
 accelerate>=0.24.0
+ollama run gemma3n
 
 # Processamento multimodal (CRÍTICO para hackathon)
 pillow>=10.0.0

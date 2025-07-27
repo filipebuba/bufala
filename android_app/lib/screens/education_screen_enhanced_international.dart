@@ -5,7 +5,7 @@ import '../models/offline_learning_models.dart';
 import '../services/gemma3_backend_service.dart';
 import '../services/international_teaching_service_simple.dart';
 import '../services/offline_learning_service.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 import '../utils/app_colors.dart';
 
 class EducationScreenEnhancedFixed extends StatefulWidget {
@@ -21,7 +21,7 @@ class _EducationScreenEnhancedFixedState
   // Services
   late OfflineLearningService _learningService;
   late Gemma3BackendService _gemmaService;
-  late SmartApiService _smartApiService;
+  late IntegratedApiService _smartApiService;
   late InternationalTeachingServiceSimple _teachingService;
 
   // Learning State
@@ -94,7 +94,7 @@ class _EducationScreenEnhancedFixedState
   Future<void> _initializeServices() async {
     _learningService = OfflineLearningService();
     _gemmaService = Gemma3BackendService();
-    _smartApiService = SmartApiService();
+    _smartApiService = IntegratedApiService();
     _teachingService = InternationalTeachingServiceSimple();
 
     try {
@@ -159,10 +159,9 @@ class _EducationScreenEnhancedFixedState
   Future<bool> _testBackendConnection() async {
     try {
       final response = await _smartApiService.askMedicalQuestion(
-        question: 'conexao_teste_educacao',
-        language: _useCreole ? 'crioulo-gb' : 'pt-BR',
+        'conexao_teste_educacao',
       );
-      return response.success;
+      return response['success'] == true;
     } catch (e) {
       print('❌ Erro teste backend: $e');
       return false;
@@ -175,11 +174,10 @@ class _EducationScreenEnhancedFixedState
       // Se backend conectado, tentar carregar progresso real
       if (_isBackendConnected) {
         final progressResponse = await _smartApiService.askEducationQuestion(
-          question: 'Carregar progresso educacional do usuário',
-          language: _useCreole ? 'crioulo-gb' : 'pt-BR',
+          'Carregar progresso educacional do usuário',
         );
 
-        if (progressResponse.success) {
+        if (progressResponse['success'] == true) {
           print('✅ Progresso carregado do backend');
           // TODO: Parse real progress data
           return;

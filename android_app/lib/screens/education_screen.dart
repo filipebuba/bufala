@@ -8,7 +8,7 @@ import '../models/offline_learning_models.dart';
 import '../screens/content_view_screen.dart';
 import '../services/gemma3_backend_service.dart';
 import '../services/offline_learning_service.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 import '../utils/app_colors.dart';
 
 class EducationScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class EducationScreen extends StatefulWidget {
 }
 
 class _EducationScreenState extends State<EducationScreen> {
-  final SmartApiService _apiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   late OfflineLearningService _learningService;
   late Gemma3BackendService _gemmaService;
 
@@ -302,8 +302,45 @@ class _EducationScreenState extends State<EducationScreen> {
 
       var content = <OfflineLearningContent>[];
 
-      if (_gemmaService.isInitialized) {
-        // Usar Gemma-3 para gerar conteúdo personalizado
+      // Primeiro, tentar usar o backend integrado para conteúdo dinâmico
+      try {
+        final response = await _apiService.askEducationQuestion(
+          'Gere conteúdo educacional sobre $_selectedSubject para nível $_currentLevel em ${_useCreole ? 'crioulo da Guiné-Bissau' : 'português'}',
+        );
+        
+        if (response['success'] == true && response['data'] != null) {
+          // Criar conteúdo a partir da resposta do backend
+          final backendContent = OfflineLearningContent(
+            id: 'backend_${DateTime.now().millisecondsSinceEpoch}',
+            title: 'Conteúdo de $_selectedSubject (IA)',
+            description: 'Conteúdo gerado dinamicamente pela IA',
+            subject: _getSubjectTitle(),
+            level: _currentLevel,
+            languages: [_useCreole ? 'crioulo-gb' : 'pt-BR'],
+            content: response['data'] as String,
+            type: 'ai_generated',
+            createdAt: DateTime.now(),
+            metadata: {
+              'source': 'backend_ai',
+              'language': _useCreole ? 'crioulo-gb' : 'pt-BR',
+              'generated_at': DateTime.now().toIso8601String(),
+            },
+          );
+          content.add(backendContent);
+          print('✅ Conteúdo educativo gerado pelo backend');
+        }
+      } catch (e) {
+        print('⚠️ Backend indisponível para conteúdo dinâmico: $e');
+      }
+
+      // Sempre adicionar conteúdo local como base
+      final localContent = await _learningService.getContentBySubject(
+        _selectedSubject,
+      );
+      content.addAll(localContent);
+
+      // Se ainda não há conteúdo, tentar Gemma-3 como último recurso
+      if (content.isEmpty && _gemmaService.isInitialized) {
         try {
           final generatedContent =
               await _gemmaService.generateEducationalContent(
@@ -313,26 +350,39 @@ class _EducationScreenState extends State<EducationScreen> {
             studentProfile: _lastWords.isNotEmpty ? _lastWords : null,
           );
           content = [generatedContent];
-          print('✅ Conteúdo educativo gerado com Gemma-3');
+          print('✅ Conteúdo educativo gerado com Gemma-3 (fallback)');
         } catch (e) {
-          print('⚠️ Erro ao gerar com Gemma-3, usando conteúdo local: $e');
-          // Fallback para conteúdo local
-          content = await _learningService.getContentBySubject(
-            _selectedSubject,
-          );
+          print('⚠️ Erro ao gerar com Gemma-3: $e');
         }
-      } else {
-        // Usar conteúdo local se backend indisponível
-        content = await _learningService.getContentBySubject(
-          _selectedSubject,
-        );
-        print('🟡 Usando conteúdo educativo local (fallback)');
+      }
+
+      // Se ainda não há conteúdo, criar conteúdo padrão
+      if (content.isEmpty) {
+        content = [
+          OfflineLearningContent(
+            id: 'default_${DateTime.now().millisecondsSinceEpoch}',
+            title: 'Conteúdo de ${_getSubjectTitle()}',
+            description: 'Conteúdo básico disponível offline',
+            subject: _getSubjectTitle(),
+            level: _currentLevel,
+            languages: [_useCreole ? 'crioulo-gb' : 'pt-BR'],
+            content: _useCreole 
+                ? 'Konteúdu di $_selectedSubject ta karga. Tenta karga di novu.'
+                : 'Conteúdo de $_selectedSubject está sendo carregado. Tente carregar novamente.',
+            type: 'placeholder',
+            createdAt: DateTime.now(),
+            metadata: {'type': 'fallback'},
+          ),
+        ];
+        print('🟡 Usando conteúdo padrão (fallback final)');
       }
 
       setState(() {
         _availableContent = content;
         _isLoading = false;
       });
+      
+      print('📚 Total de conteúdos carregados: ${content.length}');
     } catch (e) {
       setState(() => _isLoading = false);
       _showErrorDialog('Erro ao carregar conteúdo: $e');
