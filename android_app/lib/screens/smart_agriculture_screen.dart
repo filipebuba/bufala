@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/integrated_api_service.dart';
+import '../services/environmental_api_service.dart';
 
 class SmartAgricultureScreen extends StatefulWidget {
   const SmartAgricultureScreen({super.key});
@@ -12,6 +13,7 @@ class SmartAgricultureScreen extends StatefulWidget {
 class _SmartAgricultureScreenState extends State<SmartAgricultureScreen> 
     with TickerProviderStateMixin {
   final IntegratedApiService _apiService = IntegratedApiService();
+  final EnvironmentalApiService _environmentalApiService = EnvironmentalApiService(baseUrl: 'http://localhost:5000');
   final TextEditingController _questionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
@@ -34,6 +36,10 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
   
   // Histórico de perguntas
   final List<ConversationItem> _conversationHistory = [];
+  
+  // Alertas ambientais do Gemma 3
+  List<Map<String, dynamic>> _environmentalAlerts = [];
+  bool _loadingAlerts = false;
 
   // Dados das culturas
   final List<Map<String, String>> _cropTypes = [
@@ -101,6 +107,9 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
     
     // Verificar conectividade
     _checkConnectivity();
+    
+    // Carregar alertas ambientais
+    _loadEnvironmentalAlerts();
   }
 
   @override
@@ -120,6 +129,45 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
         isError: true,
       );
     }
+  }
+
+  Future<void> _loadEnvironmentalAlerts() async {
+    setState(() {
+      _loadingAlerts = true;
+    });
+    
+    try {
+      final alerts = await _environmentalApiService.getEnvironmentalAlerts();
+      setState(() {
+        _environmentalAlerts = alerts.where((alert) => 
+          _isAlertRelevantForAgriculture(alert)
+        ).map((alert) => alert as Map<String, dynamic>).toList();
+      });
+    } catch (e) {
+      print('[🌱 SMART-AGRI] Erro ao carregar alertas: $e');
+    } finally {
+      setState(() {
+        _loadingAlerts = false;
+      });
+    }
+  }
+
+  bool _isAlertRelevantForAgriculture(Map<String, dynamic> alert) {
+    final type = alert['type']?.toString().toLowerCase() ?? '';
+    final message = alert['message']?.toString().toLowerCase() ?? '';
+    final category = alert['category']?.toString().toLowerCase() ?? '';
+    
+    // Alertas relevantes para agricultura
+    final relevantKeywords = [
+      'inundação', 'seca', 'chuva', 'temperatura', 'vento',
+      'clima', 'água', 'solo', 'plantação', 'colheita'
+    ];
+    
+    return relevantKeywords.any((keyword) => 
+      type.contains(keyword) || 
+      message.contains(keyword) || 
+      category.contains(keyword)
+    );
   }
 
   Future<void> _submitQuestion() async {
@@ -222,9 +270,25 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
     final cropName = _getCropName();
     final seasonName = _getSeasonName();
     
-    final context = _useCreole
-        ? 'Na Guiné-Bissau, na tempu di $seasonName pa kultura di $cropName:'
-        : 'Na Guiné-Bissau, na época $seasonName para cultivo de $cropName:';
+    String context = _useCreole
+        ? 'Na Guiné-Bissau, na tempu di $seasonName pa kultura di $cropName'
+        : 'Na Guiné-Bissau, na época $seasonName para cultivo de $cropName';
+    
+    // Adicionar informações dos alertas ambientais do Gemma 3
+    if (_environmentalAlerts.isNotEmpty) {
+      final alertsContext = _environmentalAlerts.map((alert) {
+        final type = alert['type']?.toString() ?? alert['category']?.toString() ?? '';
+        final level = alert['level']?.toString() ?? '';
+        final message = alert['message']?.toString() ?? '';
+        return '$type ($level): $message';
+      }).join('; ');
+      
+      context += _useCreole
+          ? '. Kondison ambiental atual: $alertsContext'
+          : '. Condições ambientais atuais: $alertsContext';
+    }
+    
+    context += ':';
 
     return '$context ${_questionController.text.trim()}';
   }
@@ -302,6 +366,147 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
     _fadeAnimationController.reset();
   }
 
+  Widget _buildEnvironmentalAlertsSection() {
+    if (_environmentalAlerts.isEmpty && !_loadingAlerts) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber, color: Colors.orange[700]),
+                const SizedBox(width: 8),
+                Text(
+                  _useCreole ? 'Alerta Ambiental pa Agrikultura' : 'Alertas Ambientais para Agricultura',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange[700],
+                    fontSize: 14,
+                  ),
+                ),
+                const Spacer(),
+                if (_loadingAlerts)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.refresh, size: 18),
+                    onPressed: _loadEnvironmentalAlerts,
+                    tooltip: _useCreole ? 'Atualiza alerta' : 'Atualizar alertas',
+                  ),
+              ],
+            ),
+          ),
+          if (_environmentalAlerts.isNotEmpty)
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: _environmentalAlerts.length,
+                itemBuilder: (context, index) {
+                  final alert = _environmentalAlerts[index];
+                  return _buildAlertCard(alert);
+                },
+              ),
+            ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlertCard(Map<String, dynamic> alert) {
+    final type = alert['type']?.toString() ?? alert['category']?.toString() ?? 'Alerta';
+    final message = alert['message']?.toString() ?? '';
+    final level = alert['level']?.toString() ?? 'médio';
+    final region = alert['region']?.toString() ?? 'Guiné-Bissau';
+    
+    Color cardColor;
+    IconData cardIcon;
+    
+    switch (level.toLowerCase()) {
+      case 'alto':
+        cardColor = Colors.red[100]!;
+        cardIcon = Icons.dangerous;
+        break;
+      case 'médio':
+        cardColor = Colors.orange[100]!;
+        cardIcon = Icons.warning;
+        break;
+      default:
+        cardColor = Colors.yellow[100]!;
+        cardIcon = Icons.info;
+    }
+    
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(cardIcon, size: 16, color: Colors.grey[700]),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  type,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 11),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            region,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
+              fontStyle: FontStyle.italic,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
@@ -334,6 +539,9 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
         children: [
           // Configurações superiores
           _buildConfigurationPanel(),
+          
+          // Alertas ambientais do Gemma 3
+          _buildEnvironmentalAlertsSection(),
           
           // Área de conversa
           Expanded(
