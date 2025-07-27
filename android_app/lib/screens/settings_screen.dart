@@ -154,10 +154,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildRevolutionaryFeaturesSection(context),
             const SizedBox(height: 16),
             
-            // Configurações de Backend
-            _buildBackendSection(context),
-            const SizedBox(height: 16),
-            
             // Conectividade e Sincronização
             _buildConnectivitySection(context, appProvider),
             const SizedBox(height: 16),
@@ -370,79 +366,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
   
-  // Seção de Configurações de Backend
-  Widget _buildBackendSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.settings_applications,
-                  color: colorScheme.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Configurações de Backend',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_backendConfig.isNotEmpty) ...[
-              _buildBackendConfigTile(
-                'Modelo de IA',
-                _backendConfig['model_name'] ?? 'Não configurado',
-                Icons.memory,
-              ),
-              _buildBackendConfigTile(
-                'Temperatura',
-                '${_backendConfig['temperature'] ?? 0.7}',
-                Icons.thermostat,
-              ),
-              _buildBackendConfigTile(
-                'Tokens Máximos',
-                '${_backendConfig['max_tokens'] ?? 512}',
-                Icons.token,
-              ),
-              _buildBackendConfigTile(
-                'Timeout',
-                '${_backendConfig['timeout'] ?? 30}s',
-                Icons.timer,
-              ),
-            ] else
-              const Center(
-                child: Text(
-                  'Configurações não disponíveis offline',
-                  style: TextStyle(fontStyle: FontStyle.italic),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildBackendConfigTile(String title, String value, IconData icon) {
-    return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title),
-      trailing: Text(
-        value,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-    );
-  }
+
 
   Widget _buildLanguageSelector(AppProvider appProvider) => Card(
       child: Padding(
