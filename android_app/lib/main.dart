@@ -11,7 +11,6 @@ import 'screens/education_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_agriculture_screen.dart';
-import 'screens/voice_guide_navigation_screen.dart';
 import 'screens/voiceguide_accessibility_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
@@ -124,7 +123,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const HomeScreen(),
     const EducationScreen(),
     const SmartAgricultureScreen(),
-    const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade com navegação integrada
+    const VoiceGuideAccessibilityScreen(),
     const SettingsScreen(),
   ];
 
