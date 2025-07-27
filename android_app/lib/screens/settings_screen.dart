@@ -146,6 +146,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildAppearanceSection(context, appProvider),
             const SizedBox(height: 16),
             
+            // Modo Offline
+            _buildOfflineSection(context, appProvider),
+            const SizedBox(height: 16),
+            
             // Funcionalidades Revolucionárias
             _buildRevolutionaryFeaturesSection(context),
             const SizedBox(height: 16),
@@ -624,6 +628,98 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: colorScheme.primary,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Seção de Modo Offline
+  Widget _buildOfflineSection(BuildContext context, AppProvider appProvider) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.offline_bolt,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Modo Offline com Gemma 3n',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Ativar Modo Offline'),
+              subtitle: Text(
+                appProvider.isOfflineMode 
+                  ? 'IA funcionando localmente com Gemma 3n'
+                  : 'Conectar ao servidor quando disponível',
+              ),
+              value: appProvider.isOfflineMode,
+              onChanged: (value) => appProvider.setOfflineMode(value),
+              secondary: Icon(
+                appProvider.isOfflineMode ? Icons.offline_bolt : Icons.cloud,
+                color: colorScheme.primary,
+              ),
+            ),
+            if (appProvider.isOfflineMode) ...[
+              const Divider(),
+              ListTile(
+                leading: Icon(
+                  Icons.psychology,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('Gemma 3n Local'),
+                subtitle: const Text('IA otimizada para dispositivo - Privacidade garantida'),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: const Text(
+                    'ATIVO',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.translate,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('Suporte Multilíngue'),
+                subtitle: const Text('Crioulo, Português, Francês e outros idiomas locais'),
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.security,
+                  color: colorScheme.primary,
+                ),
+                title: const Text('Privacidade Total'),
+                subtitle: const Text('Dados processados apenas no seu dispositivo'),
+              ),
+            ],
           ],
         ),
       ),
