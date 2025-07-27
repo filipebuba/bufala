@@ -3,7 +3,9 @@ import '../constants/app_colors.dart';
 import '../models/mental_health_models.dart';
 import '../services/voice_analysis_service.dart';
 import '../services/wellness_coaching_service.dart';
+import '../services/gemma3_backend_service.dart';
 import 'wellness_profile_setup_screen.dart';
+import 'chat_screen.dart';
 
 class WellnessCoachingScreen extends StatefulWidget {
   const WellnessCoachingScreen({super.key});
@@ -16,6 +18,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     with TickerProviderStateMixin {
   final WellnessCoachingService _coachingService = WellnessCoachingService();
   final VoiceAnalysisService _voiceService = VoiceAnalysisService();
+  final Gemma3BackendService _gemmaService = Gemma3BackendService();
 
   late TabController _tabController;
   bool _isLoading = true;
@@ -42,6 +45,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     try {
       await _coachingService.initialize();
       await _voiceService.initialize();
+      await _gemmaService.initialize();
 
       _hasProfile = _coachingService.currentProfile != null;
 
@@ -472,6 +476,28 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickActionCard(
+                  icon: Icons.chat,
+                  label: 'Chat IA',
+                  color: Colors.teal,
+                  onTap: _startAIChat,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickActionCard(
+                  icon: Icons.tips_and_updates,
+                  label: 'Dicas',
+                  color: Colors.amber,
+                  onTap: _getWellnessTips,
+                ),
+              ),
+            ],
+          ),
         ],
       );
 
@@ -873,5 +899,96 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
         ],
       ),
     );
+  }
+
+  // ================= MÉTODOS GEMMA-3 =================
+
+  Future<void> _startAIChat() async {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ChatScreen(
+          initialContext: 'wellness_coaching',
+          initialLanguage: 'pt-BR',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _getWellnessTips() async {
+    try {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Gerando dicas personalizadas...'),
+            ],
+          ),
+        ),
+      );
+
+      final profile = _coachingService.currentProfile;
+      final profileInfo = profile != null
+          ? 'Perfil: ${profile.name}, Metas: ${profile.goals.join(", ")}'
+          : 'Usuário geral';
+
+      final response = await _gemmaService.sendChatMessage(
+        message:
+            'Gere 5 dicas personalizadas de bem-estar e saúde mental para hoje. $profileInfo',
+        context: 'wellness_tips',
+        language: 'pt-BR',
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Fechar dialog de loading
+
+        final tips = _cleanMarkdownFormatting(
+            response['response'] ?? response['answer'] ??
+                'Não foi possível gerar dicas no momento.');
+
+        showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.tips_and_updates, color: Colors.amber),
+                SizedBox(width: 8),
+                Text('Dicas de Bem-estar'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Text(tips),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar dicas: $e')),
+        );
+      }
+    }
+  }
+
+  String _cleanMarkdownFormatting(String text) {
+    return text
+        .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'$1') // Remove negrito
+        .replaceAll(RegExp(r'##\s*'), '') // Remove cabeçalhos
+        .replaceAll(RegExp(r'\*(.*?)\*'), r'$1') // Remove itálico
+        .replaceAll(RegExp(r'`(.*?)`'), r'$1') // Remove código
+        .replaceAll(RegExp(r'\n\s*\n'), '\n') // Remove quebras excessivas
+        .trim();
   }
 }
