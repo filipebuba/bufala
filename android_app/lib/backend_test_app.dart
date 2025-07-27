@@ -26,7 +26,7 @@ class BackendTestScreen extends StatefulWidget {
 
 class _BackendTestScreenState extends State<BackendTestScreen> {
   final Dio _dio = Dio();
-  static const String _baseUrl = 'http://10.0.2.2:5000'; // Para emulador
+  static String get _baseUrl => AppConfig.backendHost == 'localhost' ? 'http://localhost:5000' : 'http://10.0.2.2:5000'; // URL dinâmica
   final List<String> _testResults = [];
   bool _isRunning = false;
 
