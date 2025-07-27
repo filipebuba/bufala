@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 import '../widgets/connection_status.dart';
 import '../widgets/quick_action_button.dart';
 
@@ -15,7 +15,7 @@ class MedicalScreen extends StatefulWidget {
 
 class _MedicalScreenState extends State<MedicalScreen> {
   final TextEditingController _queryController = TextEditingController();
-  final SmartApiService _apiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   bool _isLoading = false;
   String? _response;
   bool _isConnected = false;
@@ -102,10 +102,14 @@ class _MedicalScreenState extends State<MedicalScreen> {
 
     try {
       final response = await _apiService.askMedicalQuestion(
-        question: _queryController.text,
+        _queryController.text,
       );
       setState(() {
-        _response = response.data ?? 'Resposta não disponível';
+        if (response['success'] == true && response['data'] != null) {
+          _response = response['data'].toString();
+        } else {
+          _response = response['error'] ?? 'Resposta não disponível';
+        }
       });
     } catch (e) {
       setState(() {

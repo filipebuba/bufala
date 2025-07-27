@@ -4,8 +4,10 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 import '../models/mental_health_models.dart';
 import 'voice_analysis_service.dart';
+import 'voice_guided_breathing_service.dart';
 
 /// Serviço completo de coaching de bem-estar pessoal
 class WellnessCoachingService {
@@ -26,11 +28,11 @@ class WellnessCoachingService {
       WellnessCoachingService._internal();
 
   final VoiceAnalysisService _voiceService = VoiceAnalysisService();
+  late final VoiceGuidedBreathingService _breathingService;
   late final Dio _dio;
 
   // Configuração do backend
-  static const String _backendUrl =
-      'http://10.0.2.2:5000'; // CORRIGIDO: emulador Android
+  static String get _baseUrl => AppConfig.apiBaseUrl; // URL dinâmica
   bool _backendAvailable = false;
 
   WellnessProfile? _currentProfile;
@@ -41,6 +43,19 @@ class WellnessCoachingService {
   /// Inicializa o serviço de coaching
   Future<bool> initialize() async {
     try {
+      // Evitar reinicialização
+      if (_isInitialized) {
+        debugPrint('⚠️ Serviço já inicializado, recarregando apenas dados...');
+        await _loadUserProfile();
+        await _loadSessions();
+        await _loadDailyMetrics();
+        return true;
+      }
+
+      // Inicializar serviços apenas na primeira vez
+      _breathingService = VoiceGuidedBreathingService();
+      await _breathingService.initialize();
+      
       // Verificar backend com retry
       await _checkBackendHealthWithRetry();
 
@@ -88,10 +103,10 @@ class WellnessCoachingService {
   /// Verificar saúde do backend
   Future<void> _checkBackendHealth() async {
     try {
-      debugPrint('🔍 Verificando saúde do backend em $_backendUrl...');
+      debugPrint('🔍 Verificando saúde do backend em $_baseUrl...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '$_backendUrl/health',
+        '$_baseUrl/health',
       );
 
       _backendAvailable = response.statusCode == 200;
@@ -112,7 +127,7 @@ class WellnessCoachingService {
             '❌ Backend connection timeout: Não foi possível conectar em 30s');
       } else if (e.type == DioExceptionType.connectionError) {
         debugPrint(
-            '❌ Backend connection error: Verifique se o servidor está rodando em $_backendUrl');
+            '❌ Backend connection error: Verifique se o servidor está rodando em $_baseUrl');
       } else {
         debugPrint('❌ Backend indisponível: ${e.type} - ${e.message}');
       }
@@ -130,6 +145,8 @@ class WellnessCoachingService {
     required List<String> goals,
   }) async {
     try {
+      debugPrint('🔄 Iniciando criação de perfil para: $name');
+      
       _currentProfile = WellnessProfile(
         userId: 'user_${DateTime.now().millisecondsSinceEpoch}',
         name: name,
@@ -141,12 +158,38 @@ class WellnessCoachingService {
         updatedAt: DateTime.now(),
       );
 
+      debugPrint('📝 Perfil criado em memória: ${_currentProfile?.name}');
+      
       await _saveUserProfile();
-      print('✅ Perfil de bem-estar criado para $name');
-      return true;
+      
+      debugPrint('💾 Perfil salvo no SharedPreferences');
+      
+      // Verificar se foi salvo corretamente
+      await _loadUserProfile();
+      
+      if (_currentProfile != null) {
+        debugPrint('✅ Perfil verificado após salvamento: ${_currentProfile!.name}');
+        return true;
+      } else {
+        debugPrint('❌ Perfil não foi carregado após salvamento');
+        return false;
+      }
     } catch (e) {
-      print('❌ Erro ao criar perfil: $e');
+      debugPrint('❌ Erro ao criar perfil: $e');
       return false;
+    }
+  }
+
+  /// Recarrega apenas os dados do usuário (perfil, sessões, métricas)
+  Future<void> reloadUserData() async {
+    try {
+      debugPrint('🔄 Recarregando dados do usuário...');
+      await _loadUserProfile();
+      await _loadSessions();
+      await _loadDailyMetrics();
+      debugPrint('✅ Dados do usuário recarregados');
+    } catch (e) {
+      debugPrint('❌ Erro ao recarregar dados: $e');
     }
   }
 
@@ -257,7 +300,7 @@ class WellnessCoachingService {
       print('📊 Enviando métricas diárias para backend Gemma-3n');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '$_backendUrl/wellness/daily-metrics',
+        '$_baseUrl/wellness/daily-metrics',
         data: {
           'metrics': {
             'mood_rating': metrics.moodRating,
@@ -407,29 +450,36 @@ class WellnessCoachingService {
   /// Sessão de exercícios de respiração
   Future<CoachingSession> _startBreathingSession(
       CoachingSession session) async {
-    print('🌬️ Iniciando sessão de respiração...');
+    print('🌬️ Iniciando sessão de respiração guiada por voz...');
 
-    final breathingPatterns = [
-      {'name': '4-7-8', 'inhale': 4, 'hold': 7, 'exhale': 8, 'cycles': 4},
-      {
-        'name': 'Box Breathing',
-        'inhale': 4,
-        'hold': 4,
-        'exhale': 4,
-        'hold2': 4,
-        'cycles': 6
-      },
-      {'name': 'Relaxamento', 'inhale': 3, 'hold': 2, 'exhale': 6, 'cycles': 8},
-    ];
-
-    final selectedPattern =
-        breathingPatterns[Random().nextInt(breathingPatterns.length)];
-
-    session.sessionData['pattern'] = selectedPattern;
     session.sessionData['start_stress'] = await _getCurrentStressLevel();
+    session.sessionData['start_time'] = DateTime.now().toIso8601String();
 
-    // Simular sessão de respiração
-    await _runBreathingExercise(selectedPattern);
+    try {
+      // Iniciar sessão de respiração guiada por voz
+      final breathingSession = await _breathingService.startGuidedBreathingSession(
+        durationMinutes: 5,
+        personalizedPrompt: _buildPersonalizedPrompt(session),
+      );
+
+      session.sessionData['breathing_session_id'] = breathingSession.id;
+      session.sessionData['pattern'] = {
+        'name': breathingSession.pattern.name,
+        'inhale': breathingSession.pattern.inhaleSeconds,
+        'hold': breathingSession.pattern.holdSeconds,
+        'exhale': breathingSession.pattern.exhaleSeconds,
+      };
+      session.sessionData['voice_guided'] = true;
+      
+      // Aguardar conclusão da sessão ou timeout
+      await _waitForBreathingCompletion(breathingSession);
+      
+    } catch (e) {
+      print('❌ Erro na respiração guiada: $e');
+      // Fallback para sessão simples
+      await _runSimpleBreathingExercise();
+      session.sessionData['voice_guided'] = false;
+    }
 
     session.sessionData['end_stress'] = await _getCurrentStressLevel();
     session.sessionData['duration_minutes'] = 5;
@@ -439,6 +489,7 @@ class WellnessCoachingService {
     session.recommendations.addAll([
       'Pratique respiração profunda 2-3 vezes ao dia',
       'Use técnicas de respiração quando sentir estresse',
+      'A respiração guiada por voz pode ajudar na concentração',
       'Mantenha ambiente calmo durante os exercícios',
     ]);
 
@@ -451,7 +502,7 @@ class WellnessCoachingService {
   /// Sessão de meditação guiada
   Future<CoachingSession> _startMeditationSession(
       CoachingSession session) async {
-    print('🧘 Iniciando sessão de meditação...');
+    print('🧘 Iniciando sessão de meditação guiada por voz...');
 
     final meditationTypes = [
       'Mindfulness básico',
@@ -468,9 +519,29 @@ class WellnessCoachingService {
     session.sessionData['meditation_type'] = selectedType;
     session.sessionData['duration_minutes'] = duration;
     session.sessionData['start_mood'] = await _getCurrentMoodLevel();
+    session.sessionData['start_time'] = DateTime.now().toIso8601String();
 
-    // Simular sessão de meditação
-    await _runMeditationSession(selectedType, duration);
+    try {
+      // Usar respiração guiada adaptada para meditação
+      final meditationPrompt = _buildMeditationPrompt(selectedType, session);
+      
+      final breathingSession = await _breathingService.startGuidedBreathingSession(
+        durationMinutes: duration,
+        personalizedPrompt: meditationPrompt,
+      );
+
+      session.sessionData['breathing_session_id'] = breathingSession.id;
+      session.sessionData['voice_guided'] = true;
+      
+      // Aguardar conclusão da sessão
+      await _waitForMeditationCompletion(breathingSession, duration);
+      
+    } catch (e) {
+      print('❌ Erro na meditação guiada: $e');
+      // Fallback para sessão simples
+      await _runMeditationSession(selectedType, duration);
+      session.sessionData['voice_guided'] = false;
+    }
 
     session.sessionData['end_mood'] = await _getCurrentMoodLevel();
     session.endTime = DateTime.now();
@@ -478,6 +549,7 @@ class WellnessCoachingService {
 
     session.recommendations.addAll([
       'Medite regularmente, mesmo que por poucos minutos',
+      'A meditação guiada por voz facilita o foco e concentração',
       'Encontre um local tranquilo para prática',
       'Seja paciente consigo mesmo durante o aprendizado',
     ]);
@@ -608,9 +680,105 @@ class WellnessCoachingService {
     await Future<void>.delayed(const Duration(seconds: 2)); // Simular
   }
 
+  Future<void> _runSimpleBreathingExercise() async {
+    await Future<void>.delayed(const Duration(minutes: 5)); // Simular sessão simples
+  }
+
   Future<void> _runMeditationSession(String type, int duration) async {
     await Future<void>.delayed(Duration(seconds: duration)); // Simular
   }
+
+  /// Construir prompt personalizado para respiração
+  String _buildPersonalizedPrompt(CoachingSession session) {
+    final stressLevel = session.sessionData['start_stress'] ?? 0.5;
+    final timeOfDay = DateTime.now().hour;
+    
+    String context = '';
+    
+    if (stressLevel > 0.7) {
+      context = 'O usuário está com alto nível de estresse e precisa de uma abordagem mais calmante.';
+    } else if (stressLevel < 0.3) {
+      context = 'O usuário está relativamente calmo, pode usar técnicas energizantes.';
+    }
+    
+    if (timeOfDay < 12) {
+      context += ' É manhã, foque em energizar para o dia.';
+    } else if (timeOfDay > 18) {
+      context += ' É noite, foque em relaxamento e preparação para o descanso.';
+    }
+    
+    return context;
+  }
+
+  /// Aguardar conclusão da sessão de respiração
+   Future<void> _waitForBreathingCompletion(dynamic breathingSession) async {
+     // Aguardar até 6 minutos (5 min + buffer)
+     final timeout = DateTime.now().add(const Duration(minutes: 6));
+     
+     while (DateTime.now().isBefore(timeout) && _breathingService.isSessionActive) {
+       await Future.delayed(const Duration(seconds: 1));
+     }
+     
+     // Se ainda estiver ativa, parar
+     if (_breathingService.isSessionActive) {
+       await _breathingService.stopSession();
+     }
+   }
+
+   /// Construir prompt personalizado para meditação
+   String _buildMeditationPrompt(String meditationType, CoachingSession session) {
+     final moodLevel = session.sessionData['start_mood'] ?? 5.0;
+     final timeOfDay = DateTime.now().hour;
+     
+     String context = 'Tipo de meditação: $meditationType. ';
+     
+     if (moodLevel < 4.0) {
+       context += 'O usuário está com humor baixo, use abordagem mais suave e encorajadora. ';
+     } else if (moodLevel > 7.0) {
+       context += 'O usuário está com bom humor, pode usar técnicas mais dinâmicas. ';
+     }
+     
+     switch (meditationType) {
+       case 'Mindfulness básico':
+         context += 'Foque na consciência do momento presente e respiração consciente.';
+         break;
+       case 'Body scan':
+         context += 'Guie através de um relaxamento progressivo do corpo, da cabeça aos pés.';
+         break;
+       case 'Meditação da gratidão':
+         context += 'Incentive reflexões sobre aspectos positivos da vida e gratidão.';
+         break;
+       case 'Visualização relaxante':
+         context += 'Crie imagens mentais de lugares calmos e paisagens tranquilas.';
+         break;
+       case 'Meditação para ansiedade':
+         context += 'Use técnicas específicas para acalmar a mente ansiosa e reduzir preocupações.';
+         break;
+     }
+     
+     if (timeOfDay < 12) {
+       context += ' É manhã, prepare a mente para um dia equilibrado.';
+     } else if (timeOfDay > 18) {
+       context += ' É noite, foque em liberar as tensões do dia.';
+     }
+     
+     return context;
+   }
+
+   /// Aguardar conclusão da sessão de meditação
+   Future<void> _waitForMeditationCompletion(dynamic breathingSession, int durationMinutes) async {
+     // Aguardar duração + buffer
+     final timeout = DateTime.now().add(Duration(minutes: durationMinutes + 1));
+     
+     while (DateTime.now().isBefore(timeout) && _breathingService.isSessionActive) {
+       await Future.delayed(const Duration(seconds: 1));
+     }
+     
+     // Se ainda estiver ativa, parar
+     if (_breathingService.isSessionActive) {
+       await _breathingService.stopSession();
+     }
+   }
 
   Future<void> _applyStressReliefTechnique(String technique) async {
     await Future<void>.delayed(const Duration(seconds: 3)); // Simular
@@ -806,24 +974,39 @@ class WellnessCoachingService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final profileJson = prefs.getString('wellness_profile');
+      debugPrint('📖 JSON carregado do SharedPreferences: $profileJson');
+      
       if (profileJson != null) {
-        _currentProfile = WellnessProfile.fromJson(
-            jsonDecode(profileJson) as Map<String, dynamic>);
+        final profileData = jsonDecode(profileJson) as Map<String, dynamic>;
+        debugPrint('📖 Dados decodificados: $profileData');
+        
+        _currentProfile = WellnessProfile.fromJson(profileData);
+        debugPrint('📖 Perfil carregado: ${_currentProfile?.name}');
+      } else {
+        debugPrint('📖 Nenhum perfil encontrado no SharedPreferences');
+        _currentProfile = null;
       }
     } catch (e) {
-      print('❌ Erro ao carregar perfil: $e');
+      debugPrint('❌ Erro ao carregar perfil: $e');
+      _currentProfile = null;
     }
   }
 
   Future<void> _saveUserProfile() async {
-    if (_currentProfile == null) return;
+    if (_currentProfile == null) {
+      debugPrint('⚠️ Tentativa de salvar perfil nulo');
+      return;
+    }
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-          'wellness_profile', jsonEncode(_currentProfile!.toJson()));
+      final profileJson = jsonEncode(_currentProfile!.toJson());
+      debugPrint('💾 Salvando perfil JSON: $profileJson');
+      
+      final success = await prefs.setString('wellness_profile', profileJson);
+      debugPrint('💾 Resultado do salvamento: $success');
     } catch (e) {
-      print('❌ Erro ao salvar perfil: $e');
+      debugPrint('❌ Erro ao salvar perfil: $e');
     }
   }
 
@@ -1184,18 +1367,19 @@ class WellnessCoachingService {
 
       // Preparar dados para enviar ao backend
       final requestData = {
-        'session_type': type,
-        'user_data': {
-          'mood_rating': 7.0,
-          'stress_level': 0.3,
-          'energy_level': 0.7,
-        },
-        'language': 'pt-BR',
+        'prompt': _getPromptForSessionType(type),
+        'wellness_area': _getWellnessAreaForType(type),
+        'urgency_level': 'normal',
+        'age_group': 'adulto',
+        'context': 'comunidade',
+        'mood': 'neutro',
+        'stress_level': 3,
+        'language': 'português',
       };
 
       // Enviar requisição para o backend com timeout maior
       final response = await _dio.post<Map<String, dynamic>>(
-        '$_backendUrl/wellness/coaching',
+        '$_baseUrl/wellness/coaching',
         data: requestData,
         options: Options(
           headers: {'Content-Type': 'application/json'},
@@ -1245,7 +1429,7 @@ class WellnessCoachingService {
             '❌ Backend timeout: Gemma-3n está demorando para processar. Usando fallback offline.');
       } else if (e.type == DioExceptionType.connectionError) {
         print(
-            '❌ Erro de conexão: Verifique se o backend está rodando em $_backendUrl');
+            '❌ Erro de conexão: Verifique se o backend está rodando em $_baseUrl');
       } else {
         print('❌ Erro ao usar backend: ${e.type} - ${e.message}');
       }
@@ -1285,6 +1469,40 @@ class WellnessCoachingService {
     } catch (e) {
       print('❌ Erro ao criar sessão offline: $e');
       return null;
+    }
+  }
+
+  /// Obter prompt apropriado para o tipo de sessão
+  String _getPromptForSessionType(String type) {
+    switch (type) {
+      case 'breathing':
+        return 'Preciso de orientação para exercícios de respiração para reduzir o estresse';
+      case 'meditation':
+        return 'Gostaria de aprender técnicas de meditação para melhorar meu bem-estar mental';
+      case 'voice_check':
+        return 'Quero fazer uma análise vocal para verificar meu estado emocional atual';
+      case 'mood_tracking':
+        return 'Preciso de ajuda para entender e acompanhar meu humor diário';
+      case 'stress_relief':
+        return 'Estou me sentindo estressado e preciso de técnicas para alívio do estresse';
+      default:
+        return 'Preciso de orientação geral sobre bem-estar e saúde mental';
+    }
+  }
+
+  /// Obter área de bem-estar para o tipo de sessão
+  String _getWellnessAreaForType(String type) {
+    switch (type) {
+      case 'breathing':
+      case 'meditation':
+      case 'stress_relief':
+        return 'mental';
+      case 'voice_check':
+        return 'emocional';
+      case 'mood_tracking':
+        return 'psicologico';
+      default:
+        return 'geral';
     }
   }
 

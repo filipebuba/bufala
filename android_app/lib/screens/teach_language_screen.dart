@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -80,17 +81,44 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
   
   Future<void> _pickImageFromGallery() async {
     try {
-      final image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 70,
-      );
+      XFile? image;
+      
+      // Verificar se está rodando na web
+       if (kIsWeb) {
+         // Para web, usar source gallery (funciona como file picker)
+         image = await _imagePicker.pickImage(
+           source: ImageSource.gallery,
+           imageQuality: 70,
+         );
+       } else {
+        // Para mobile, usar ImageSource.gallery
+        image = await _imagePicker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 70,
+        );
+      }
+      
       if (image != null) {
-        final file = File(image.path);
-        final bytes = await file.readAsBytes();
-        setState(() {
-          _selectedImage = file;
-          _imageBase64 = base64Encode(bytes);
-        });
+        final bytes = await image.readAsBytes();
+        
+        if (kIsWeb) {
+          // Para web, criar arquivo temporário
+          final tempDir = Directory.systemTemp;
+          final tempFile = File('${tempDir.path}/temp_image_${DateTime.now().millisecondsSinceEpoch}.jpg');
+          await tempFile.writeAsBytes(bytes);
+          
+          setState(() {
+            _selectedImage = tempFile;
+            _imageBase64 = base64Encode(bytes);
+          });
+        } else {
+          // Para mobile, usar o arquivo diretamente
+          final file = File(image.path);
+          setState(() {
+            _selectedImage = file;
+            _imageBase64 = base64Encode(bytes);
+          });
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

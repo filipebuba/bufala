@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/environmental_api_service.dart';
@@ -23,14 +24,41 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    
+    XFile? pickedFile;
+    
+    // Verificar se está rodando na web
+     if (kIsWeb) {
+       // Para web, usar source gallery (funciona como file picker)
+       pickedFile = await picker.pickImage(source: ImageSource.gallery);
+     } else {
+      // Para mobile, usar ImageSource.gallery
+      pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    }
+    
     if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-        _diagnosisResult = null;
-        _error = null;
-        _isFromCamera = false;
-      });
+      if (kIsWeb) {
+        // Para web, criar arquivo temporário
+        final bytes = await pickedFile.readAsBytes();
+        final tempDir = Directory.systemTemp;
+        final tempFile = File('${tempDir.path}/temp_image_${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await tempFile.writeAsBytes(bytes);
+        
+        setState(() {
+          _imageFile = tempFile;
+          _diagnosisResult = null;
+          _error = null;
+          _isFromCamera = false;
+        });
+      } else {
+         // Para mobile, usar o arquivo diretamente
+         setState(() {
+           _imageFile = File(pickedFile!.path);
+           _diagnosisResult = null;
+           _error = null;
+           _isFromCamera = false;
+         });
+       }
     }
   }
 

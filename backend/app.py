@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Bu Fala Backend - Novo
-Backend modular e organizado para o aplicativo Bu Fala
+Moransa Backend - Novo
+Backend modular e organizado para o aplicativo Moransa
 Desenvolvido para o Hackathon Gemma 3n
 
 Este backend foi criado seguindo as regras do hackathon:
@@ -43,6 +43,7 @@ from routes.accessibility_routes import accessibility_bp
 from routes.voice_guide_routes import voice_guide_bp
 from routes.multimodal_routes import multimodal_bp
 from routes.environmental_routes import environmental_bp
+from routes.model_management_routes import model_management_bp
 
 def create_app():
     """Factory function para criar a aplicação Flask"""
@@ -98,16 +99,17 @@ def create_app():
     app.register_blueprint(voice_guide_bp, url_prefix='/api')
     app.register_blueprint(multimodal_bp, url_prefix='/api')
     app.register_blueprint(environmental_bp, url_prefix='/api')
+    app.register_blueprint(model_management_bp, url_prefix='/api')
     
     # Rota raiz
     @app.route('/')
     def index():
         return jsonify({
-            'message': 'Bu Fala Backend - Novo',
+            'message': 'Moransa Backend - Novo',
             'version': '2.0.0',
             'status': 'running',
             'timestamp': datetime.now().isoformat(),
-            'description': 'Backend modular para o aplicativo Bu Fala - Hackathon Gemma 3n',
+            'description': 'Backend modular para o aplicativo Moransa - Hackathon Gemma 3n',
             'documentation': {
                 'swagger_ui': '/api/docs/',
                 'swagger_json': '/api/swagger.json',
@@ -123,7 +125,8 @@ def create_app():
                 'accessibility': '/api/accessibility',
                 'voice_guide': '/api/voice-guide',
                 'multimodal': '/api/multimodal',
-                'environmental': '/api/environment'
+                'environmental': '/api/environment',
+                'model_management': '/api/models'
             }
         })
     
@@ -140,6 +143,25 @@ def create_app():
         swagger_path = os.path.join(os.path.dirname(__file__), 'swagger.yaml')
         return send_file(swagger_path, mimetype='application/x-yaml')
     
+    @app.route('/api/swagger.json', methods=['GET'])
+    def swagger_json():
+        """Rota para servir a especificação OpenAPI em formato JSON"""
+        import os
+        import yaml
+        import json
+        
+        try:
+            swagger_path = os.path.join(os.path.dirname(__file__), 'swagger.yaml')
+            with open(swagger_path, 'r', encoding='utf-8') as file:
+                yaml_content = yaml.safe_load(file)
+            return jsonify(yaml_content)
+        except Exception as e:
+            logger.error(f"Erro ao carregar swagger.yaml: {e}")
+            return jsonify({
+                "error": "Não foi possível carregar a especificação da API",
+                "message": str(e)
+            }), 500
+    
     # Middleware para logging de requests
     @app.before_request
     def log_request_info():
@@ -153,7 +175,7 @@ def main():
     
     logger = logging.getLogger(__name__)
     logger.info("="*50)
-    logger.info("Bu Fala Backend - Novo")
+    logger.info("Moransa Backend - Novo")
     logger.info("Hackathon Gemma 3n")
     logger.info("="*50)
     logger.info(f"Servidor iniciando em http://{BackendConfig.HOST}:{BackendConfig.PORT}")

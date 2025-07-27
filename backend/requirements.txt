@@ -23,6 +23,8 @@ transformers==4.35.0
 huggingface-hub==0.17.3
 tokenizers==0.14.1
 safetensors==0.4.0
+ollama run gemma3n:e2b
+ollama run gemma3n:e4b
 
 # Processamento de linguagem natural
 sentencepiece==0.1.99

@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../config/app_config.dart';
 import '../models/mental_health_models.dart';
 
 /// Serviço avançado de análise de voz para saúde mental
@@ -14,7 +15,7 @@ class VoiceAnalysisService {
   VoiceAnalysisService._internal() {
     // Configurar Dio para comunicação com backend Gemma-3n
     _dio = Dio(BaseOptions(
-      baseUrl: 'http://10.0.2.2:5000',
+      baseUrl: AppConfig.backendHost == 'localhost' ? 'http://localhost:5000' : 'http://10.0.2.2:5000',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 60),
       headers: {

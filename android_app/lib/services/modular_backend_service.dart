@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'backend_connection_config.dart';
 import 'connection_state.dart' as conn_state;
 import 'retry_interceptor.dart';
+import '../config/app_config.dart';
 
 /// Serviço Modular para conexão com Backend Bu Fala
 /// Otimizado para trabalhar com a arquitetura modular do backend
@@ -48,7 +49,7 @@ class ModularBackendService {
   
   void _initializeDio() {
     _dio = Dio(BaseOptions(
-      baseUrl: BackendConnectionConfig.baseUrl,
+      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
       connectTimeout: BackendConnectionConfig.connectTimeout,
       receiveTimeout: BackendConnectionConfig.receiveTimeoutMedium,
       sendTimeout: BackendConnectionConfig.sendTimeout,
@@ -190,7 +191,7 @@ class ModularBackendService {
            (error.response?.statusCode ?? 0) >= 500;
   
   bool _shouldUseCache(String path) {
-    final nonCacheablePaths = ['/health', '/medical', '/accessibility/voice'];
+    final nonCacheablePaths = [AppConfig.buildUrl('health'), AppConfig.buildUrl('medical'), AppConfig.buildUrl('accessibility/voice')];
     return !nonCacheablePaths.any((p) => path.contains(p));
   }
   
@@ -266,7 +267,7 @@ class ModularBackendService {
   
   Future<void> _checkConnectivity() async {
     try {
-      final response = await _dio.get('/health', 
+      final response = await _dio.get(AppConfig.buildUrl('health'), 
         options: Options(receiveTimeout: const Duration(seconds: 5)));
       _updateConnectionState(true, 0);
     } catch (e) {
@@ -279,7 +280,7 @@ class ModularBackendService {
   /// Health Check
   Future<ModularApiResponse<Map<String, dynamic>>> healthCheck() async {
     try {
-      final response = await _dio.get('/health');
+      final response = await _dio.get(AppConfig.buildUrl('health'));
       return ModularApiResponse.success(
         data: response.data,
         source: 'Backend Modular',
@@ -297,7 +298,7 @@ class ModularBackendService {
     bool isEmergency = false,
   }) async {
     try {
-      final endpoint = isEmergency ? '/medical/emergency' : '/medical';
+      final endpoint = isEmergency ? AppConfig.buildUrl('medical/emergency') : AppConfig.buildUrl('medical');
       final timeout = BackendConnectionConfig.getTimeoutForEndpoint(endpoint);
       
       final response = await _dio.post(
@@ -330,7 +331,7 @@ class ModularBackendService {
   }) async {
     try {
       final response = await _dio.post(
-        '/education',
+        AppConfig.buildUrl('education'),
         data: {
           'question': question,
           'language': language,
@@ -356,7 +357,7 @@ class ModularBackendService {
   }) async {
     try {
       final response = await _dio.post(
-        '/agriculture',
+        AppConfig.buildUrl('agriculture'),
         data: {
           'question': question,
           'language': language,
@@ -381,7 +382,7 @@ class ModularBackendService {
   }) async {
     try {
       final response = await _dio.post(
-        '/wellness',
+        AppConfig.buildUrl('wellness'),
         data: {
           'question': question,
           'language': language,
@@ -405,7 +406,7 @@ class ModularBackendService {
   }) async {
     try {
       final response = await _dio.post(
-        '/accessibility/$mode',
+        AppConfig.buildUrl('accessibility/$mode'),
         data: {
           'text': text,
           'language': language,

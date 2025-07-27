@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 
 class SmartAgricultureScreen extends StatefulWidget {
   const SmartAgricultureScreen({super.key});
@@ -11,7 +11,7 @@ class SmartAgricultureScreen extends StatefulWidget {
 
 class _SmartAgricultureScreenState extends State<SmartAgricultureScreen> 
     with TickerProviderStateMixin {
-  final SmartApiService _smartApiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   final TextEditingController _questionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
@@ -113,7 +113,7 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
   }
 
   Future<void> _checkConnectivity() async {
-    final hasConnection = await _smartApiService.hasInternetConnection();
+    final hasConnection = await _apiService.hasInternetConnection();
     if (!hasConnection) {
       _showSnackBar(
         _useCreole ? 'Sem internet - uza modo offline' : 'Sem internet - usando modo offline',
@@ -154,22 +154,20 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
       
       print('[🌱 SMART-AGRI] Enviando pergunta: $contextualizedQuestion');
 
-      final response = await _smartApiService.askAgricultureQuestion(
-        question: contextualizedQuestion,
+      final response = await _apiService.askAgricultureQuestion(
+        contextualizedQuestion,
         language: _useCreole ? 'crioulo-gb' : 'pt-BR',
-        cropType: _selectedCropType,
-        season: _selectedSeason,
       );
 
       stopwatch.stop();
       final totalTime = stopwatch.elapsedMilliseconds / 1000.0;
 
       setState(() {
-        if (response.success && response.data != null) {
-          _response = response.data!;
-          _responseSource = response.source;
-          _responseTime = response.responseTime > 0 ? response.responseTime : totalTime;
-          _confidence = response.confidence;
+        if (response['success'] == true && response['data'] != null) {
+          _response = response['data'] as String;
+          _responseSource = response['source'] ?? 'IA Integrada';
+          _responseTime = (response['responseTime'] as num?)?.toDouble() ?? totalTime;
+          _confidence = (response['confidence'] as num?)?.toDouble() ?? 0.8;
           
           // Adicionar resposta ao histórico
           _conversationHistory.add(ConversationItem(
@@ -189,7 +187,7 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
           _fadeAnimationController.forward();
           
         } else {
-          final errorMsg = response.error ?? 'Erro desconhecido';
+          final errorMsg = response['error'] ?? 'Erro desconhecido';
           _response = _useCreole ? 'Erro: $errorMsg' : 'Erro: $errorMsg';
           _responseSource = 'Sistema de Erro';
           _responseTime = totalTime;

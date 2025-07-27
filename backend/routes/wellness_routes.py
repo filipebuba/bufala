@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas de Bem-estar - Bu Fala Backend
+Rotas de Bem-estar - Moransa Backend
 Hackathon Gemma 3n
 
 Especializado em bem-estar mental, físico e social,
@@ -9,6 +9,7 @@ com foco em saúde comunitária e prevenção.
 """
 
 import logging
+import re
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
 from config.settings import SystemPrompts
@@ -17,6 +18,385 @@ from utils.error_handler import create_error_response, log_error
 # Criar blueprint
 wellness_bp = Blueprint('wellness', __name__)
 logger = logging.getLogger(__name__)
+
+@wellness_bp.route('/wellness', methods=['POST'])
+def wellness_content():
+    """
+    Endpoint principal para conteúdo de bem-estar (respiração e meditação)
+    ---
+    tags:
+      - Bem-estar
+    summary: Conteúdo de bem-estar com Gemma-3
+    description: |
+      Endpoint principal para gerar conteúdo de bem-estar personalizado,
+      incluindo exercícios de respiração e meditação usando Gemma-3.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - prompt
+          properties:
+            prompt:
+              type: string
+              description: Solicitação de conteúdo de bem-estar
+              example: "Preciso de um exercício de respiração para relaxar"
+            type:
+              type: string
+              enum: ["breathing", "meditation", "relaxation", "mindfulness"]
+              description: Tipo de conteúdo solicitado
+              example: "breathing"
+            duration:
+              type: integer
+              description: Duração desejada em minutos
+              example: 5
+            difficulty:
+              type: string
+              enum: ["beginner", "intermediate", "advanced"]
+              description: Nível de dificuldade
+              example: "beginner"
+            language:
+              type: string
+              enum: ["português", "crioulo", "ambos"]
+              description: Idioma preferido
+              example: "português"
+    responses:
+      200:
+        description: Conteúdo de bem-estar gerado com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            data:
+              type: object
+              properties:
+                content:
+                  type: string
+                  description: Conteúdo de bem-estar gerado
+                instructions:
+                  type: array
+                  items:
+                    type: string
+                  description: Instruções passo a passo
+                duration:
+                  type: integer
+                  description: Duração em minutos
+                type:
+                  type: string
+                  description: Tipo de exercício
+      400:
+        description: Dados inválidos
+      500:
+        description: Erro interno do servidor
+    """
+    try:
+        # Obter dados da requisição
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        # Extrair parâmetros
+        prompt = data.get('prompt') or data.get('question') or data.get('query')
+        if not prompt:
+            return jsonify(create_error_response(
+                'missing_prompt',
+                'Campo "prompt", "question" ou "query" é obrigatório',
+                400
+            )), 400
+        
+        content_type = data.get('type', 'breathing')
+        duration = data.get('duration', 5)
+        difficulty = data.get('difficulty', 'beginner')
+        language = data.get('language', 'português')
+        
+        # Preparar contexto para o Gemma-3
+        wellness_context = _prepare_wellness_content_context(
+            prompt, content_type, duration, difficulty, language
+        )
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar conteúdo usando Gemma-3
+            response = gemma_service.generate_response(
+                wellness_context,
+                SystemPrompts.WELLNESS,
+                temperature=0.7,
+                max_new_tokens=500
+            )
+            
+            if response.get('success'):
+                # Processar resposta do Gemma-3
+                content_data = _process_wellness_content_response(
+                    response.get('response', ''), content_type, duration
+                )
+            else:
+                # Fallback se Gemma-3 falhar
+                content_data = _get_wellness_content_fallback(
+                    content_type, duration, difficulty, language
+                )
+        else:
+            # Resposta de fallback sem Gemma-3
+            content_data = _get_wellness_content_fallback(
+                content_type, duration, difficulty, language
+            )
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'content': content_data['content'],
+                'instructions': content_data['instructions'],
+                'duration': duration,
+                'type': content_type,
+                'difficulty': difficulty,
+                'language': language,
+                'tips': content_data.get('tips', []),
+                'benefits': content_data.get('benefits', [])
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        log_error(logger, e, "conteúdo de bem-estar")
+        return jsonify(create_error_response(
+            'wellness_content_error',
+            'Erro ao gerar conteúdo de bem-estar',
+            500
+        )), 500
+
+@wellness_bp.route('/wellness/mood-analysis', methods=['POST'])
+def mood_analysis():
+    """
+    Análise de humor com IA
+    ---
+    tags:
+      - Bem-estar
+    summary: Análise profissional de humor usando Gemma-3
+    description: |
+      Endpoint para análise detalhada do humor do usuário usando IA.
+      Fornece insights psicológicos, recomendações e técnicas de enfrentamento.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - mood
+            - intensity
+          properties:
+            mood:
+              type: string
+              enum: ["happy", "calm", "neutral", "sad", "anxious", "angry", "tired", "motivated"]
+              description: Humor atual selecionado
+              example: "anxious"
+            intensity:
+              type: integer
+              minimum: 1
+              maximum: 10
+              description: Intensidade do humor (1-10)
+              example: 7
+            description:
+              type: string
+              description: Descrição adicional do estado emocional
+              example: "Estou me sentindo ansioso por causa do trabalho"
+            user_profile:
+              type: object
+              description: Perfil do usuário para personalização
+              properties:
+                name:
+                  type: string
+                goals:
+                  type: array
+                  items:
+                    type: string
+            language:
+              type: string
+              enum: ["português", "crioulo", "ambos"]
+              description: Idioma preferido
+              example: "português"
+    responses:
+      200:
+        description: Análise de humor realizada com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            data:
+              type: object
+              properties:
+                insights:
+                  type: string
+                  description: Insights psicológicos sobre o estado emocional
+                recommendations:
+                  type: string
+                  description: Recomendações específicas para melhorar o bem-estar
+                coping_techniques:
+                  type: string
+                  description: Técnicas de enfrentamento práticas
+                exercises:
+                  type: string
+                  description: Exercícios sugeridos (respiração, meditação, físicos)
+                mood_score:
+                  type: integer
+                  description: Pontuação do humor (1-100)
+                risk_level:
+                  type: string
+                  enum: ["low", "medium", "high"]
+                  description: Nível de risco psicológico
+            timestamp:
+              type: string
+              format: date-time
+      400:
+        description: Dados inválidos
+      500:
+        description: Erro interno do servidor
+    """
+    try:
+        # Obter dados da requisição
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        # Extrair parâmetros obrigatórios
+        mood = data.get('mood')
+        intensity = data.get('intensity')
+        
+        if not mood or intensity is None:
+            return jsonify(create_error_response(
+                'missing_parameters',
+                'Campos "mood" e "intensity" são obrigatórios',
+                400
+            )), 400
+        
+        # Validar intensidade
+        try:
+            intensity = int(intensity)
+            if intensity < 1 or intensity > 10:
+                raise ValueError("Intensidade deve estar entre 1 e 10")
+        except (ValueError, TypeError):
+            return jsonify(create_error_response(
+                'invalid_intensity',
+                'Intensidade deve ser um número entre 1 e 10',
+                400
+            )), 400
+        
+        # Extrair parâmetros opcionais
+        description = data.get('description', '')
+        user_profile = data.get('user_profile', {})
+        language = data.get('language', 'português')
+        
+        # Mapear humor para português
+        mood_labels = {
+            'happy': 'Feliz',
+            'calm': 'Calmo',
+            'neutral': 'Neutro',
+            'sad': 'Triste',
+            'anxious': 'Ansioso',
+            'angry': 'Irritado',
+            'tired': 'Cansado',
+            'motivated': 'Motivado'
+        }
+        
+        mood_label = mood_labels.get(mood, mood)
+        
+        # Preparar contexto para análise
+        profile_info = ''
+        if user_profile:
+            name = user_profile.get('name', 'Usuário')
+            goals = user_profile.get('goals', [])
+            if goals:
+                profile_info = f"Nome: {name}, Metas: {', '.join(goals)}"
+            else:
+                profile_info = f"Nome: {name}"
+        else:
+            profile_info = 'Usuário geral'
+        
+        # Construir prompt para análise
+        analysis_prompt = f"""
+Você é um psicólogo especialista em saúde mental. Analise o humor do usuário e forneça insights profissionais.
+
+Dados do usuário:
+- Perfil: {profile_info}
+- Humor atual: {mood_label} ({mood})
+- Intensidade: {intensity}/10
+- Descrição adicional: {description if description else 'Não fornecida'}
+
+Por favor, forneça uma análise estruturada em {language} com:
+
+1. INSIGHTS: Análise psicológica do estado emocional atual (2-3 parágrafos)
+2. RECOMENDAÇÕES: Sugestões específicas para melhorar o bem-estar (lista de 4-5 itens)
+3. TÉCNICAS DE ENFRENTAMENTO: Estratégias práticas para lidar com este humor (lista de 3-4 técnicas)
+4. EXERCÍCIOS SUGERIDOS: Atividades específicas como respiração, meditação, exercícios físicos (lista de 3-4 exercícios)
+
+Seja empático, profissional e focado em soluções práticas. Considere o contexto cultural da Guiné-Bissau.
+"""
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar análise usando Gemma-3
+            response = gemma_service.generate_response(
+                analysis_prompt,
+                SystemPrompts.WELLNESS,
+                temperature=0.7,
+                max_new_tokens=800
+            )
+            
+            if response.get('success'):
+                analysis_text = response.get('response', '')
+                # Processar resposta estruturada
+                analysis_data = _parse_mood_analysis_response(analysis_text)
+            else:
+                # Fallback se Gemma-3 falhar
+                analysis_data = _get_mood_analysis_fallback(mood, intensity, description, language)
+        else:
+            # Resposta de fallback sem Gemma-3
+            analysis_data = _get_mood_analysis_fallback(mood, intensity, description, language)
+        
+        # Calcular pontuação do humor e nível de risco
+        mood_score = _calculate_mood_score(mood, intensity)
+        risk_level = _assess_risk_level(mood, intensity, description)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'insights': analysis_data.get('insights', ''),
+                'recommendations': analysis_data.get('recommendations', ''),
+                'coping_techniques': analysis_data.get('coping_techniques', ''),
+                'exercises': analysis_data.get('exercises', ''),
+                'mood_score': mood_score,
+                'risk_level': risk_level,
+                'mood': mood,
+                'intensity': intensity,
+                'language': language
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        log_error(logger, e, "análise de humor")
+        return jsonify(create_error_response(
+            'mood_analysis_error',
+            'Erro ao analisar humor',
+            500
+        )), 500
 
 @wellness_bp.route('/wellness/coaching', methods=['POST'])
 def wellness_coaching():
@@ -695,3 +1075,810 @@ def _get_stress_prevention_tips():
         "Reserve tempo para relaxamento",
         "Pratique gratidão diariamente"
     ]
+
+@wellness_bp.route('/wellness/voice-analysis', methods=['POST'])
+def voice_analysis():
+    """
+    Análise de voz para bem-estar mental
+    ---
+    tags:
+      - Bem-estar
+    summary: Análise de voz para saúde mental
+    description: |
+      Endpoint para análise de voz usando IA Gemma-3 para avaliar indicadores
+      de bem-estar mental, estresse e estado emocional.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - voice_data
+          properties:
+            voice_data:
+              type: object
+              description: Dados de análise de voz
+              properties:
+                stress_indicators:
+                  type: number
+                  description: Indicadores de estresse na voz
+                energy_indicators:
+                  type: number
+                  description: Indicadores de energia na voz
+                stability_indicators:
+                  type: number
+                  description: Indicadores de estabilidade emocional
+                duration_factor:
+                  type: number
+                  description: Fator de duração da gravação
+                quality_factor:
+                  type: number
+                  description: Fator de qualidade do áudio
+                detected_mood:
+                  type: string
+                  description: Humor detectado
+                pitch_variance:
+                  type: number
+                  description: Variação de tom
+                speaking_rate:
+                  type: number
+                  description: Taxa de fala
+            language:
+              type: string
+              description: Idioma preferido
+              example: "pt-BR"
+    responses:
+      200:
+        description: Análise de voz realizada com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            analysis:
+              type: object
+              properties:
+                stress_level:
+                  type: number
+                  description: Nível de estresse detectado (0-1)
+                energy_level:
+                  type: number
+                  description: Nível de energia detectado (0-1)
+                emotional_stability:
+                  type: number
+                  description: Estabilidade emocional (0-1)
+                mood_state:
+                  type: string
+                  description: Estado de humor detectado
+                confidence:
+                  type: number
+                  description: Confiança da análise (0-1)
+            recommendations:
+              type: array
+              items:
+                type: string
+              description: Recomendações baseadas na análise
+            wellness_tips:
+              type: array
+              items:
+                type: string
+              description: Dicas de bem-estar personalizadas
+      400:
+        description: Dados inválidos
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+      500:
+        description: Erro interno do servidor
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+    """
+    try:
+        # Obter dados da requisição
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        # Extrair dados de voz
+        voice_data = data.get('voice_data')
+        if not voice_data:
+            return jsonify(create_error_response(
+                'missing_voice_data',
+                'Campo "voice_data" é obrigatório',
+                400
+            )), 400
+        
+        # Obter parâmetros opcionais
+        language = data.get('language', 'pt-BR')
+        
+        # Extrair métricas de voz
+        stress_indicators = voice_data.get('stress_indicators', 0.5)
+        energy_indicators = voice_data.get('energy_indicators', 0.5)
+        stability_indicators = voice_data.get('stability_indicators', 0.5)
+        detected_mood = voice_data.get('detected_mood', 'neutral')
+        pitch_variance = voice_data.get('pitch_variance', 25.0)
+        speaking_rate = voice_data.get('speaking_rate', 150.0)
+        
+        # Preparar prompt para análise de voz com Gemma-3
+        voice_analysis_prompt = f"""
+        Analise os seguintes dados de voz para avaliação de bem-estar mental:
+        
+        Indicadores de Estresse: {stress_indicators:.2f} (0-1)
+        Indicadores de Energia: {energy_indicators:.2f} (0-1)
+        Indicadores de Estabilidade: {stability_indicators:.2f} (0-1)
+        Humor Detectado: {detected_mood}
+        Variação de Tom: {pitch_variance:.1f} Hz
+        Taxa de Fala: {speaking_rate:.1f} palavras/min
+        
+        Com base nestes dados, forneça:
+        1. Análise do estado emocional e bem-estar
+        2. Recomendações específicas para melhorar o bem-estar
+        3. Técnicas de relaxamento apropriadas
+        4. Sinais de alerta se necessário
+        
+        Responda em {language} de forma empática e culturalmente apropriada para a comunidade da Guiné-Bissau.
+        """
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar análise usando Gemma-3
+            response = gemma_service.generate_response(
+                voice_analysis_prompt,
+                SystemPrompts.WELLNESS,
+                temperature=0.6,  # Temperatura moderada para análise consistente
+                max_new_tokens=400
+            )
+            
+            if response.get('success'):
+                # Processar resposta do Gemma e extrair análise estruturada
+                gemma_analysis = response.get('response', '')
+                
+                # Calcular métricas finais baseadas nos dados de entrada e análise do Gemma
+                final_stress_level = min(max(stress_indicators, 0.0), 1.0)
+                final_energy_level = min(max(energy_indicators, 0.0), 1.0)
+                final_stability = min(max(stability_indicators, 0.0), 1.0)
+                
+                # Determinar estado de humor final
+                mood_mapping = {
+                    'stressed': 'estressado',
+                    'tired': 'cansado',
+                    'calm': 'calmo',
+                    'energetic': 'energético',
+                    'neutral': 'neutro'
+                }
+                final_mood = mood_mapping.get(detected_mood, 'neutro')
+                
+                # Gerar recomendações baseadas na análise
+                recommendations = _generate_voice_recommendations(
+                    final_stress_level, final_energy_level, final_stability, final_mood
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'analysis': {
+                        'stress_level': final_stress_level,
+                        'energy_level': final_energy_level,
+                        'emotional_stability': final_stability,
+                        'mood_state': final_mood,
+                        'confidence': 0.85,
+                        'gemma_analysis': gemma_analysis
+                    },
+                    'recommendations': recommendations,
+                    'wellness_tips': _get_voice_wellness_tips(final_stress_level, final_energy_level),
+                    'timestamp': datetime.now().isoformat()
+                })
+            else:
+                # Fallback se Gemma falhar
+                fallback_analysis = _get_voice_analysis_fallback(
+                    stress_indicators, energy_indicators, stability_indicators, detected_mood
+                )
+                return jsonify(fallback_analysis)
+        else:
+            # Resposta de fallback quando Gemma não está disponível
+            fallback_analysis = _get_voice_analysis_fallback(
+                stress_indicators, energy_indicators, stability_indicators, detected_mood
+            )
+            return jsonify(fallback_analysis)
+        
+    except Exception as e:
+        log_error(logger, e, "análise de voz")
+        return jsonify(create_error_response(
+            'voice_analysis_error',
+            'Erro ao processar análise de voz',
+            500
+        )), 500
+
+@wellness_bp.route('/chat', methods=['POST'])
+def chat_generic():
+    """
+    Chat genérico com IA para bem-estar
+    ---
+    tags:
+      - Bem-estar
+    summary: Chat genérico com IA
+    description: |
+      Endpoint para chat genérico com a IA, focado em bem-estar e coaching.
+      Suporta conversas contextuais e personalizadas.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              description: Mensagem do usuário
+              example: "Como posso melhorar meu bem-estar?"
+            context:
+              type: string
+              description: Contexto da conversa
+              example: "wellness_coaching"
+            language:
+              type: string
+              description: Idioma preferido
+              example: "pt-BR"
+            history:
+              type: array
+              items:
+                type: object
+                properties:
+                  role:
+                    type: string
+                    enum: ["user", "assistant"]
+                  content:
+                    type: string
+              description: Histórico da conversa
+    responses:
+      200:
+        description: Resposta do chat gerada com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            response:
+              type: string
+              description: Resposta da IA
+            context:
+              type: string
+              description: Contexto utilizado
+            timestamp:
+              type: string
+              description: Timestamp da resposta
+      400:
+        description: Dados inválidos
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+      500:
+        description: Erro interno do servidor
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+    """
+    try:
+        # Obter dados da requisição
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        # Extrair mensagem
+        message = data.get('message')
+        if not message:
+            return jsonify(create_error_response(
+                'missing_message',
+                'Campo "message" é obrigatório',
+                400
+            )), 400
+        
+        # Obter parâmetros opcionais
+        context = data.get('context', 'wellness_coaching')
+        language = data.get('language', 'pt-BR')
+        history = data.get('history', [])
+        
+        # Preparar prompt baseado no contexto
+        if context == 'wellness_coaching':
+            system_prompt = SystemPrompts.WELLNESS
+            prompt = f"Como coach de bem-estar para a comunidade da Guiné-Bissau, responda em {language}: {message}"
+        elif context == 'wellness_tips':
+            system_prompt = SystemPrompts.WELLNESS
+            prompt = f"Como especialista em bem-estar, forneça dicas práticas em {language} para: {message}"
+        else:
+            system_prompt = SystemPrompts.WELLNESS
+            prompt = f"Responda de forma útil e empática em {language}: {message}"
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar resposta usando Gemma
+            response = gemma_service.generate_response(
+                prompt,
+                system_prompt,
+                temperature=0.7,
+                max_new_tokens=300
+            )
+            
+            if response.get('success'):
+                return jsonify({
+                    'success': True,
+                    'response': response.get('response', ''),
+                    'answer': response.get('response', ''),  # Compatibilidade
+                    'context': context,
+                    'timestamp': datetime.now().isoformat()
+                })
+            else:
+                # Fallback se Gemma falhar
+                fallback_response = _get_chat_fallback_response(message, context, language)
+                return jsonify({
+                    'success': True,
+                    'response': fallback_response,
+                    'answer': fallback_response,
+                    'context': context,
+                    'timestamp': datetime.now().isoformat()
+                })
+        else:
+            # Resposta de fallback quando Gemma não está disponível
+            fallback_response = _get_chat_fallback_response(message, context, language)
+            return jsonify({
+                'success': True,
+                'response': fallback_response,
+                'answer': fallback_response,
+                'context': context,
+                'timestamp': datetime.now().isoformat()
+            })
+        
+    except Exception as e:
+        log_error(logger, e, "chat genérico")
+        return jsonify(create_error_response(
+            'chat_error',
+            'Erro ao processar mensagem de chat',
+            500
+        )), 500
+
+def _get_chat_fallback_response(message, context, language):
+    """Obter resposta de fallback para chat"""
+    if 'pt' in language.lower():
+        if context == 'wellness_coaching':
+            return "Obrigado por compartilhar isso comigo. Como seu coach de bem-estar, recomendo que você se concentre em pequenos passos diários para melhorar seu bem-estar. Que tal começarmos com uma prática de respiração ou uma caminhada curta?"
+        elif context == 'wellness_tips':
+            return "Aqui estão algumas dicas de bem-estar: 1) Pratique respiração profunda por 5 minutos diariamente, 2) Mantenha uma rotina de sono regular, 3) Conecte-se com pessoas queridas, 4) Pratique gratidão, 5) Faça atividade física leve regularmente."
+        else:
+            return "Entendo sua preocupação. É importante cuidar do seu bem-estar físico e mental. Recomendo conversar com pessoas de confiança e buscar atividades que tragam paz e alegria para sua vida."
+    else:
+        if context == 'wellness_coaching':
+            return "Thank you for sharing that with me. As your wellness coach, I recommend focusing on small daily steps to improve your well-being. How about we start with a breathing practice or a short walk?"
+        elif context == 'wellness_tips':
+            return "Here are some wellness tips: 1) Practice deep breathing for 5 minutes daily, 2) Maintain a regular sleep routine, 3) Connect with loved ones, 4) Practice gratitude, 5) Do light physical activity regularly."
+        else:
+            return "I understand your concern. It's important to take care of your physical and mental well-being. I recommend talking to trusted people and seeking activities that bring peace and joy to your life."
+
+def _generate_voice_recommendations(stress_level, energy_level, stability, mood):
+    """Gerar recomendações baseadas na análise de voz"""
+    recommendations = []
+    
+    # Recomendações baseadas no nível de estresse
+    if stress_level > 0.7:
+        recommendations.extend([
+            "Pratique técnicas de respiração profunda por 10 minutos",
+            "Considere uma caminhada ao ar livre para relaxar",
+            "Tente ouvir música calma ou sons da natureza",
+            "Converse com alguém de confiança sobre suas preocupações"
+        ])
+    elif stress_level > 0.4:
+        recommendations.extend([
+            "Faça pausas regulares durante suas atividades",
+            "Pratique exercícios de alongamento suave",
+            "Mantenha uma rotina de sono regular"
+        ])
+    
+    # Recomendações baseadas no nível de energia
+    if energy_level < 0.3:
+        recommendations.extend([
+            "Certifique-se de dormir adequadamente (7-8 horas)",
+            "Considere uma alimentação nutritiva e regular",
+            "Faça atividades físicas leves como caminhada",
+            "Exponha-se à luz solar pela manhã"
+        ])
+    elif energy_level > 0.8:
+        recommendations.extend([
+            "Canalize sua energia em atividades produtivas",
+            "Pratique exercícios físicos para equilibrar a energia",
+            "Mantenha um horário estruturado para suas atividades"
+        ])
+    
+    # Recomendações baseadas na estabilidade emocional
+    if stability < 0.4:
+        recommendations.extend([
+            "Pratique técnicas de mindfulness e meditação",
+            "Estabeleça rotinas diárias consistentes",
+            "Busque apoio de familiares ou amigos próximos",
+            "Considere conversar com um conselheiro ou líder comunitário"
+        ])
+    
+    # Recomendações baseadas no humor
+    if mood in ['estressado', 'cansado']:
+        recommendations.extend([
+            "Reserve tempo para atividades que lhe trazem alegria",
+            "Pratique gratidão listando 3 coisas boas do seu dia",
+            "Conecte-se com a natureza sempre que possível"
+        ])
+    
+    return recommendations[:6]  # Limitar a 6 recomendações
+
+def _get_voice_wellness_tips(stress_level, energy_level):
+    """Obter dicas de bem-estar baseadas na análise de voz"""
+    tips = [
+        "Mantenha uma comunicação aberta com pessoas queridas",
+        "Pratique atividades que conectem você com sua cultura local",
+        "Reserve momentos diários para reflexão e paz interior"
+    ]
+    
+    if stress_level > 0.6:
+        tips.extend([
+            "Experimente técnicas tradicionais de relaxamento da sua comunidade",
+            "Participe de atividades comunitárias que tragam alegria",
+            "Considere práticas espirituais ou religiosas que lhe confortem"
+        ])
+    
+    if energy_level < 0.4:
+        tips.extend([
+            "Mantenha uma alimentação baseada em produtos locais frescos",
+            "Estabeleça horários regulares para descanso e atividade",
+            "Busque atividades ao ar livre durante o dia"
+        ])
+    
+    return tips[:5]  # Limitar a 5 dicas
+
+def _get_voice_analysis_fallback(stress_indicators, energy_indicators, stability_indicators, detected_mood):
+    """Resposta de fallback para análise de voz quando Gemma não está disponível"""
+    # Calcular métricas básicas
+    final_stress = min(max(stress_indicators, 0.0), 1.0)
+    final_energy = min(max(energy_indicators, 0.0), 1.0)
+    final_stability = min(max(stability_indicators, 0.0), 1.0)
+    
+    # Mapear humor
+    mood_mapping = {
+        'stressed': 'estressado',
+        'tired': 'cansado', 
+        'calm': 'calmo',
+        'energetic': 'energético',
+        'neutral': 'neutro'
+    }
+    final_mood = mood_mapping.get(detected_mood, 'neutro')
+    
+    # Gerar recomendações básicas
+    basic_recommendations = [
+        "Pratique respiração profunda por alguns minutos",
+        "Mantenha conexões sociais saudáveis",
+        "Estabeleça uma rotina de sono regular",
+        "Faça atividades físicas leves regularmente",
+        "Reserve tempo para relaxamento diário"
+    ]
+    
+    basic_tips = [
+        "Cuide do seu bem-estar físico e mental",
+        "Busque apoio da comunidade quando necessário",
+        "Pratique atividades que lhe trazem paz",
+        "Mantenha uma alimentação saudável"
+    ]
+    
+    return {
+        'success': True,
+        'analysis': {
+            'stress_level': final_stress,
+            'energy_level': final_energy,
+            'emotional_stability': final_stability,
+            'mood_state': final_mood,
+            'confidence': 0.75,
+            'gemma_analysis': 'Análise básica realizada. Para uma avaliação mais detalhada, o serviço Gemma-3 precisa estar disponível.'
+        },
+        'recommendations': basic_recommendations,
+        'wellness_tips': basic_tips,
+        'fallback': True,
+        'timestamp': datetime.now().isoformat()
+    }
+
+def _prepare_wellness_content_context(prompt, content_type, duration, difficulty, language):
+    """Preparar contexto para geração de conteúdo de bem-estar com Gemma-3"""
+    context_map = {
+        'breathing': f"Como especialista em bem-estar, crie um exercício de respiração de {duration} minutos para nível {difficulty}. Solicitação: {prompt}",
+        'meditation': f"Como guia de meditação, crie uma sessão de meditação de {duration} minutos para nível {difficulty}. Solicitação: {prompt}",
+        'relaxation': f"Como terapeuta de relaxamento, crie um exercício de relaxamento de {duration} minutos para nível {difficulty}. Solicitação: {prompt}",
+        'mindfulness': f"Como instrutor de mindfulness, crie uma prática de atenção plena de {duration} minutos para nível {difficulty}. Solicitação: {prompt}"
+    }
+    
+    base_context = context_map.get(content_type, context_map['breathing'])
+    
+    if language == 'crioulo':
+        base_context += " Responda em crioulo da Guiné-Bissau quando possível."
+    elif language == 'ambos':
+        base_context += " Forneça instruções em português e crioulo da Guiné-Bissau."
+    else:
+        base_context += " Responda em português claro e simples."
+    
+    base_context += " Inclua instruções passo a passo, benefícios e dicas práticas. Adapte para o contexto cultural da Guiné-Bissau."
+    
+    return base_context
+
+def _process_wellness_content_response(gemma_response, content_type, duration):
+    """Processar resposta do Gemma-3 para conteúdo de bem-estar"""
+    # Extrair instruções da resposta
+    lines = gemma_response.split('\n')
+    instructions = []
+    tips = []
+    benefits = []
+    
+    current_section = 'content'
+    content = ''
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Identificar seções
+        if 'instruções' in line.lower() or 'passos' in line.lower():
+            current_section = 'instructions'
+            continue
+        elif 'dicas' in line.lower() or 'tips' in line.lower():
+            current_section = 'tips'
+            continue
+        elif 'benefícios' in line.lower() or 'benefits' in line.lower():
+            current_section = 'benefits'
+            continue
+        
+        # Adicionar conteúdo à seção apropriada
+        if current_section == 'instructions' and (line.startswith(('-', '•', '1.', '2.', '3.')) or line[0].isdigit()):
+            instructions.append(line.lstrip('-•0123456789. '))
+        elif current_section == 'tips' and (line.startswith(('-', '•', '1.', '2.', '3.')) or line[0].isdigit()):
+            tips.append(line.lstrip('-•0123456789. '))
+        elif current_section == 'benefits' and (line.startswith(('-', '•', '1.', '2.', '3.')) or line[0].isdigit()):
+            benefits.append(line.lstrip('-•0123456789. '))
+        else:
+            content += line + ' '
+    
+    # Se não conseguiu extrair instruções, criar algumas básicas
+    if not instructions:
+        instructions = _get_default_instructions(content_type, duration)
+    
+    return {
+        'content': content.strip() or _get_default_content(content_type, duration),
+        'instructions': instructions,
+        'tips': tips or _get_default_tips(content_type),
+        'benefits': benefits or _get_default_benefits(content_type)
+    }
+
+def _get_wellness_content_fallback(content_type, duration, difficulty, language):
+    """Obter conteúdo de fallback quando Gemma-3 não está disponível"""
+    content_templates = {
+        'breathing': {
+            'content': f"Exercício de respiração de {duration} minutos para relaxamento e redução do estresse. Esta prática ajuda a acalmar a mente e o corpo.",
+            'instructions': [
+                "Sente-se confortavelmente com as costas retas",
+                "Feche os olhos suavemente",
+                "Respire pelo nariz contando até 4",
+                "Segure a respiração contando até 4",
+                "Expire pela boca contando até 6",
+                "Repita este ciclo durante todo o exercício",
+                "Termine respirando naturalmente por alguns momentos"
+            ],
+            'tips': [
+                "Pratique em um local silencioso",
+                "Use roupas confortáveis",
+                "Não force a respiração",
+                "Se sentir tontura, respire normalmente"
+            ],
+            'benefits': [
+                "Reduz o estresse e ansiedade",
+                "Melhora a concentração",
+                "Promove relaxamento",
+                "Ajuda a regular as emoções"
+            ]
+        },
+        'meditation': {
+            'content': f"Sessão de meditação de {duration} minutos para cultivar paz interior e clareza mental.",
+            'instructions': [
+                "Encontre uma posição confortável",
+                "Feche os olhos ou mantenha o olhar suave",
+                "Concentre-se na sua respiração natural",
+                "Quando a mente divagar, gentilmente retorne à respiração",
+                "Observe pensamentos sem julgamento",
+                "Mantenha uma atitude de aceitação",
+                "Termine gradualmente voltando à consciência do ambiente"
+            ],
+            'tips': [
+                "Comece com sessões curtas",
+                "Seja paciente consigo mesmo",
+                "Pratique regularmente",
+                "Não há meditação 'errada'"
+            ],
+            'benefits': [
+                "Aumenta a autoconsciência",
+                "Reduz pensamentos negativos",
+                "Melhora o foco",
+                "Promove bem-estar emocional"
+            ]
+        }
+    }
+    
+    return content_templates.get(content_type, content_templates['breathing'])
+
+def _get_default_instructions(content_type, duration):
+    """Obter instruções padrão por tipo de conteúdo"""
+    defaults = {
+        'breathing': [
+            "Sente-se confortavelmente",
+            "Respire profundamente pelo nariz",
+            "Expire lentamente pela boca",
+            "Repita por {} minutos".format(duration)
+        ],
+        'meditation': [
+            "Encontre uma posição confortável",
+            "Feche os olhos",
+            "Concentre-se na respiração",
+            "Medite por {} minutos".format(duration)
+        ]
+    }
+    return defaults.get(content_type, defaults['breathing'])
+
+def _get_default_content(content_type, duration):
+    """Obter conteúdo padrão por tipo"""
+    defaults = {
+        'breathing': f"Exercício de respiração de {duration} minutos para relaxamento.",
+        'meditation': f"Sessão de meditação de {duration} minutos para paz interior."
+    }
+    return defaults.get(content_type, defaults['breathing'])
+
+def _get_default_tips(content_type):
+    """Obter dicas padrão por tipo de conteúdo"""
+    defaults = {
+        'breathing': ["Pratique em local silencioso", "Não force a respiração"],
+        'meditation': ["Seja paciente consigo mesmo", "Pratique regularmente"]
+    }
+    return defaults.get(content_type, defaults['breathing'])
+
+def _get_default_benefits(content_type):
+    """Obter benefícios padrão por tipo de conteúdo"""
+    defaults = {
+        'breathing': ["Reduz estresse", "Melhora concentração"],
+        'meditation': ["Aumenta autoconsciência", "Promove bem-estar"]
+    }
+    return defaults.get(content_type, defaults['breathing'])
+
+# ================= FUNÇÕES AUXILIARES PARA ANÁLISE DE HUMOR =================
+
+def _parse_mood_analysis_response(response_text):
+    """Parsear resposta estruturada da análise de humor do Gemma-3"""
+    analysis = {}
+    
+    # Patterns para extrair seções
+    patterns = {
+        'insights': re.compile(r'(?:1\.|INSIGHTS:?)([\s\S]*?)(?=(?:2\.|RECOMENDAÇÕES|TÉCNICAS|EXERCÍCIOS|\Z))', re.IGNORECASE),
+        'recommendations': re.compile(r'(?:2\.|RECOMENDAÇÕES:?)([\s\S]*?)(?=(?:3\.|TÉCNICAS|EXERCÍCIOS|\Z))', re.IGNORECASE),
+        'coping_techniques': re.compile(r'(?:3\.|TÉCNICAS:?)([\s\S]*?)(?=(?:4\.|EXERCÍCIOS|\Z))', re.IGNORECASE),
+        'exercises': re.compile(r'(?:4\.|EXERCÍCIOS:?)([\s\S]*?)\Z', re.IGNORECASE),
+    }
+    
+    for key, pattern in patterns.items():
+        match = pattern.search(response_text)
+        if match:
+            analysis[key] = match.group(1).strip()
+    
+    # Fallback se não conseguir parsear
+    if not analysis:
+        analysis['insights'] = response_text
+    
+    return analysis
+
+def _get_mood_analysis_fallback(mood, intensity, description, language):
+    """Obter análise de humor de fallback quando Gemma-3 não está disponível"""
+    
+    # Templates de análise baseados no humor
+    mood_templates = {
+        'happy': {
+            'insights': 'Você está experimentando um estado emocional positivo, o que é excelente para seu bem-estar geral. A felicidade contribui para melhor saúde física e mental, fortalece relacionamentos e aumenta a resiliência.',
+            'recommendations': '• Compartilhe sua alegria com pessoas queridas\n• Pratique gratidão diariamente\n• Mantenha atividades que lhe trazem prazer\n• Use este momento positivo para estabelecer metas',
+            'coping_techniques': '• Técnica do diário de gratidão\n• Meditação da bondade amorosa\n• Exercícios de visualização positiva',
+            'exercises': '• Caminhada ao ar livre\n• Dança ou movimento livre\n• Respiração energizante (4-4-4)\n• Meditação de alegria'
+        },
+        'sad': {
+            'insights': 'A tristeza é uma emoção natural e importante que nos ajuda a processar perdas e mudanças. É importante permitir-se sentir essa emoção enquanto busca apoio e estratégias saudáveis de enfrentamento.',
+            'recommendations': '• Busque apoio de familiares e amigos\n• Mantenha rotinas básicas de autocuidado\n• Pratique atividades que antes lhe davam prazer\n• Considere conversar com um conselheiro',
+            'coping_techniques': '• Técnica de aceitação emocional\n• Journaling expressivo\n• Mindfulness para emoções difíceis',
+            'exercises': '• Respiração calmante (4-7-8)\n• Meditação de autocompaixão\n• Caminhada leve na natureza\n• Alongamentos suaves'
+        },
+        'anxious': {
+            'insights': 'A ansiedade pode ser uma resposta natural a situações desafiadoras, mas quando intensa pode interferir no bem-estar. É importante desenvolver estratégias para gerenciar esses sentimentos e reduzir sua intensidade.',
+            'recommendations': '• Pratique técnicas de relaxamento regularmente\n• Identifique e questione pensamentos ansiosos\n• Mantenha uma rotina estruturada\n• Limite exposição a fatores estressantes',
+            'coping_techniques': '• Técnica de grounding 5-4-3-2-1\n• Respiração diafragmática\n• Reestruturação cognitiva\n• Relaxamento muscular progressivo',
+            'exercises': '• Respiração quadrada (4-4-4-4)\n• Meditação mindfulness\n• Yoga suave\n• Exercícios de relaxamento'
+        },
+        'angry': {
+            'insights': 'A raiva pode ser uma emoção válida que sinaliza necessidades não atendidas ou injustiças percebidas. O importante é aprender a expressá-la de forma saudável e construtiva.',
+            'recommendations': '• Identifique os gatilhos da raiva\n• Pratique técnicas de autorregulação\n• Comunique-se de forma assertiva\n• Busque soluções construtivas para conflitos',
+            'coping_techniques': '• Técnica de pausa e respiração\n• Contagem regressiva\n• Exercício físico para liberar tensão\n• Comunicação não-violenta',
+            'exercises': '• Respiração de resfriamento\n• Exercícios físicos intensos\n• Meditação de perdão\n• Caminhada rápida'
+        }
+    }
+    
+    # Obter template baseado no humor ou usar neutro como fallback
+    template = mood_templates.get(mood, {
+        'insights': 'Você está passando por um momento de reflexão emocional. É importante reconhecer e validar seus sentimentos enquanto busca estratégias saudáveis de bem-estar.',
+        'recommendations': '• Pratique autocompaixão\n• Mantenha conexões sociais saudáveis\n• Estabeleça rotinas de autocuidado\n• Busque atividades prazerosas',
+        'coping_techniques': '• Mindfulness\n• Respiração consciente\n• Journaling\n• Técnicas de relaxamento',
+        'exercises': '• Respiração natural\n• Meditação básica\n• Caminhada tranquila\n• Alongamentos'
+    })
+    
+    # Ajustar baseado na intensidade
+    if intensity >= 8:
+        template['insights'] += ' A alta intensidade deste sentimento sugere que pode ser benéfico buscar apoio adicional ou técnicas mais intensivas de manejo emocional.'
+        template['recommendations'] += '\n• Considere buscar apoio profissional\n• Pratique técnicas intensivas de relaxamento'
+    
+    # Adaptar para idioma
+    if language == 'crioulo':
+        template['insights'] += ' (Na nha kultura, nos konxi ku emosion i natural i importante pa nos bem-estar.)'
+    
+    return template
+
+def _calculate_mood_score(mood, intensity):
+    """Calcular pontuação do humor (1-100)"""
+    # Mapeamento base de humor para pontuação
+    mood_base_scores = {
+        'happy': 85,
+        'motivated': 80,
+        'calm': 75,
+        'neutral': 60,
+        'tired': 45,
+        'sad': 35,
+        'anxious': 30,
+        'angry': 25
+    }
+    
+    base_score = mood_base_scores.get(mood, 50)
+    
+    # Ajustar baseado na intensidade
+    if mood in ['happy', 'motivated', 'calm']:
+        # Para humores positivos, maior intensidade = maior pontuação
+        score = base_score + (intensity - 5) * 3
+    else:
+        # Para humores negativos, maior intensidade = menor pontuação
+        score = base_score - (intensity - 5) * 3
+    
+    # Garantir que a pontuação esteja entre 1 e 100
+    return max(1, min(100, int(score)))
+
+def _assess_risk_level(mood, intensity, description):
+    """Avaliar nível de risco psicológico"""
+    # Palavras-chave de alto risco
+    high_risk_keywords = [
+        'suicídio', 'morrer', 'acabar', 'desistir', 'sem esperança',
+        'não aguento', 'sem saída', 'inútil', 'sozinho', 'abandonado'
+    ]
+    
+    # Verificar palavras de alto risco na descrição
+    if description and any(keyword in description.lower() for keyword in high_risk_keywords):
+        return 'high'
+    
+    # Avaliar baseado no humor e intensidade
+    if mood in ['sad', 'anxious', 'angry'] and intensity >= 8:
+        return 'high'
+    elif mood in ['sad', 'anxious', 'angry'] and intensity >= 6:
+        return 'medium'
+    elif mood == 'tired' and intensity >= 8:
+        return 'medium'
+    else:
+        return 'low'

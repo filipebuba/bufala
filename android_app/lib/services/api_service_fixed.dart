@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import '../config/app_config.dart';
 
 /// Classe de serviço para comunicação com a API
 class ApiService {
@@ -14,7 +16,7 @@ class ApiService {
   /// Inicializa o serviço
   void initialize() {
     _dio = Dio(BaseOptions(
-      baseUrl: 'http://10.0.2.2:5000',
+      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(minutes: 2),
       sendTimeout: const Duration(minutes: 2),
@@ -44,7 +46,7 @@ class ApiService {
   /// Health check da API
   Future<ApiResponse<Map<String, dynamic>>> healthCheck() async {
     try {
-      final response = await _dio.get('/health');
+      final response = await _dio.get(AppConfig.buildUrl('health'));
       return ApiResponse.success(response.data as Map<String, dynamic>);
     } catch (e) {
       print('Erro no health check: $e');
@@ -62,7 +64,7 @@ class ApiService {
       print('[API] 🏥 Enviando pergunta médica: $question');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/medical',
+        AppConfig.buildUrl('medical'),
         data: {
           'question': question,
           'language': language,
@@ -96,7 +98,7 @@ class ApiService {
       print('[API] 📚 Enviando pergunta educacional: $question');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/education',
+        AppConfig.buildUrl('education'),
         data: {
           'question': question,
           'language': language,
@@ -135,7 +137,7 @@ class ApiService {
       print('[API] 🌱 Enviando pergunta sobre agricultura: $question');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/agriculture',
+        AppConfig.buildUrl('agriculture'),
         data: {
           'question': question,
           'language': language,
@@ -174,7 +176,7 @@ class ApiService {
       });
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/multimodal/image',
+        AppConfig.buildUrl('multimodal/image'),
         data: formData,
       );
 
@@ -208,7 +210,7 @@ class ApiService {
       });
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/multimodal/audio',
+        AppConfig.buildUrl('multimodal/audio'),
         data: formData,
       );
 
@@ -236,7 +238,7 @@ class ApiService {
       print('[API] 🔤 Traduzindo texto: $text');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/translate',
+        AppConfig.buildUrl('translate'),
         data: {
           'text': text,
           'source_language': sourceLanguage,

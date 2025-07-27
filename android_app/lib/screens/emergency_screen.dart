@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/crisis_response_models.dart';
 import '../services/crisis_response_service.dart';
 import '../services/gemma3_backend_service.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 import '../utils/app_colors.dart';
 import '../widgets/emergency_details_view.dart';
 
@@ -19,7 +19,7 @@ class EmergencyScreen extends StatefulWidget {
 }
 
 class _EmergencyScreenState extends State<EmergencyScreen> {
-  final SmartApiService _apiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   final CrisisResponseService _crisisService = CrisisResponseService();
   final Gemma3BackendService _gemmaService = Gemma3BackendService();
 

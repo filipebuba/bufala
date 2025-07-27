@@ -37,6 +37,7 @@ dependencies:
   
   # Utilitários
   path_provider: ^2.1.1
+  flutter_dotenv: ^5.1.0
   
   # AI e Machine Learning
   # tflite_flutter: ^0.9.0  # Comentado para build offline sem TFLite
@@ -50,7 +51,7 @@ dependencies:
   # Processamento de Imagem e Câmera
   camera: ^0.10.5+5
   image: ^3.0.2
-  image_picker: ^1.0.4
+  image_picker: ^1.1.2
   
   # Video Player
   video_player: ^2.8.1
@@ -100,6 +101,7 @@ flutter:
   uses-material-design: true
   
   assets:
+    - .env
     - assets/images/
     - assets/icons/
     - assets/audio/

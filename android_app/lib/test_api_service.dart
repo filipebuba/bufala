@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'services/smart_api_service.dart';
+import 'services/integrated_api_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,7 +22,7 @@ class ApiTestScreen extends StatefulWidget {
 }
 
 class _ApiTestScreenState extends State<ApiTestScreen> {
-  final SmartApiService _apiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   String _result = '';
   bool _isLoading = false;
 
@@ -34,15 +34,15 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
     try {
       final response = await _apiService.askEducationQuestion(
-        question: 'Ensine-me sobre matemática básica',
+        'Ensine-me sobre matemática básica',
         subject: 'mathematics',
       );
 
       setState(() {
-        if (response.success) {
-          _result = 'SUCCESS - Education:\n${response.data ?? 'No answer'}';
+        if (response['success'] == true) {
+          _result = 'SUCCESS - Education:\n${response['data'] ?? 'No answer'}';
         } else {
-          _result = 'ERROR - Education: ${response.error}';
+          _result = 'ERROR - Education: ${response['error']}';
         }
       });
     } catch (e) {
@@ -64,16 +64,16 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
     try {
       final response = await _apiService.askAgricultureQuestion(
-        question: 'Como plantar arroz?',
+        'Como plantar arroz?',
         cropType: 'rice',
         season: 'rainy',
       );
 
       setState(() {
-        if (response.success) {
-          _result = 'SUCCESS - Agriculture:\n${response.data ?? 'No answer'}';
+        if (response['success'] == true) {
+          _result = 'SUCCESS - Agriculture:\n${response['data'] ?? 'No answer'}';
         } else {
-          _result = 'ERROR - Agriculture: ${response.error}';
+          _result = 'ERROR - Agriculture: ${response['error']}';
         }
       });
     } catch (e) {
@@ -95,17 +95,17 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
     try {
       final response = await _apiService.translateText(
-        text: 'Olá, como está?',
-        sourceLanguage: 'pt-BR',
-        targetLanguage: 'crioulo-gb',
+        'Olá, como está?',
+        fromLanguage: 'pt-BR',
+        toLanguage: 'crioulo-gb',
       );
 
       setState(() {
-        if (response.success) {
+        if (response['success'] == true) {
           _result =
-              'SUCCESS - Translate:\n${response.data ?? 'No translation'}';
+              'SUCCESS - Translate:\n${response['data'] ?? 'No translation'}';
         } else {
-          _result = 'ERROR - Translate: ${response.error}';
+          _result = 'ERROR - Translate: ${response['error']}';
         }
       });
     } catch (e) {
