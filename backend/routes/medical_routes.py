@@ -179,6 +179,7 @@ def emergency_guidance():
         
         emergency_type = data.get('emergency_type')
         description = data.get('description', '')
+        location = data.get('location', '')
         
         if not emergency_type:
             return jsonify(create_error_response(
@@ -187,17 +188,42 @@ def emergency_guidance():
                 400
             )), 400
         
-        # Obter orientações de emergência
-        emergency_guidance = _get_emergency_guidance(emergency_type, description)
+        # Preparar contexto de emergência para o Gemma
+        emergency_context = _prepare_emergency_context(emergency_type, description, location)
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar resposta usando Gemma
+            response = gemma_service.generate_response(
+                emergency_context,
+                SystemPrompts.MEDICAL,
+                temperature=0.2,  # Baixa temperatura para emergências
+                max_new_tokens=300
+            )
+            
+            if response.get('success'):
+                # Adicionar informações específicas de emergência
+                emergency_data = {
+                    'emergency_type': emergency_type,
+                    'ai_guidance': response.get('response', ''),
+                    'basic_steps': _get_emergency_guidance(emergency_type, description),
+                    'priority': 'ALTA',
+                    'warning': 'EMERGÊNCIA: Procure imediatamente ajuda médica profissional.',
+                    'disclaimer': 'Esta orientação de IA não substitui atendimento médico profissional.',
+                    'gemma_used': True
+                }
+            else:
+                # Fallback se Gemma falhar
+                emergency_data = _get_emergency_fallback_response(emergency_type, description)
+        else:
+            # Resposta de fallback se Gemma não estiver disponível
+            emergency_data = _get_emergency_fallback_response(emergency_type, description)
         
         return jsonify({
             'success': True,
-            'data': {
-                'emergency_type': emergency_type,
-                'guidance': emergency_guidance,
-                'priority': 'ALTA',
-                'disclaimer': "EMERGÊNCIA: Procure imediatamente ajuda médica profissional. Estas são orientações básicas apenas."
-            },
+            'data': emergency_data,
             'timestamp': datetime.now().isoformat()
         })
         
@@ -345,6 +371,39 @@ def _get_emergency_guidance(emergency_type, description):
         "Garanta a segurança",
         "Procure ajuda médica imediatamente"
     ])
+
+def _prepare_emergency_context(emergency_type, description, location):
+    """Preparar contexto específico para emergências médicas"""
+    context = f"EMERGÊNCIA MÉDICA: {emergency_type}"
+    
+    if description:
+        context += f"\nDescrição da situação: {description}"
+    
+    if location:
+        context += f"\nLocalização: {location}"
+    
+    context += "\n\nPor favor, forneça orientações IMEDIATAS de primeiros socorros para esta emergência, considerando:"
+    context += "\n- Comunidades rurais da Guiné-Bissau com acesso limitado a recursos médicos"
+    context += "\n- Necessidade de ações rápidas e práticas"
+    context += "\n- Uso de materiais básicos disponíveis localmente"
+    context += "\n- Instruções claras e simples"
+    context += "\n\nResposta em português, com passos numerados e claros."
+    
+    return context
+
+def _get_emergency_fallback_response(emergency_type, description):
+    """Resposta de fallback para emergências quando Gemma não está disponível"""
+    basic_steps = _get_emergency_guidance(emergency_type, description)
+    
+    return {
+        'emergency_type': emergency_type,
+        'ai_guidance': 'Serviço de IA temporariamente indisponível. Seguindo orientações básicas de emergência.',
+        'basic_steps': basic_steps,
+        'priority': 'ALTA',
+        'warning': 'EMERGÊNCIA: Procure imediatamente ajuda médica profissional.',
+        'disclaimer': 'Estas são orientações básicas de emergência. Procure atendimento médico imediatamente.',
+        'fallback': True
+    }
 
 def _get_first_aid_steps(situation):
     """Obter passos de primeiros socorros para situações específicas"""
