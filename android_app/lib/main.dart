@@ -125,9 +125,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const EducationScreen(),
-    const AgricultureNavigationScreen(), // NOVA: Navegação de agricultura
-    const VoiceGuideAccessibilityScreen(), // ADICIONADO: Tela de acessibilidade
-    const VoiceGuideNavigationScreen(), // ADICIONADO: Tela de navegação VoiceGuide
+    const AgricultureNavigationScreen(), // Navegação de agricultura unificada
+    const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade
     const SettingsScreen(),
   ];
 
@@ -163,10 +162,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.accessibility_new),
               label: 'Acessibilidade',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.navigation),
-              label: 'Navegação',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),
