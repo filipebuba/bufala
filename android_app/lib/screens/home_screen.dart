@@ -13,7 +13,7 @@ import 'agriculture_screen.dart';
 import 'api_test_screen.dart'; // NOVO: Import da tela de teste
 import 'education_screen_enhanced_international.dart';
 import 'environmental_menu_screen.dart';
-import 'medical_screen.dart';
+import 'medical_emergency_unified_screen.dart';
 import 'plant_diagnosis_screen.dart';
 import 'wellness_coaching_screen.dart';
 
@@ -510,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => const MedicalScreen(),
+        builder: (context) => const MedicalEmergencyUnifiedScreen(),
       ),
     );
   }

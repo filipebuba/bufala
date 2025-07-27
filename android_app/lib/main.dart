@@ -8,9 +8,7 @@ import 'constants/app_colors.dart';
 import 'constants/app_strings.dart';
 import 'providers/app_provider.dart';
 import 'screens/education_screen.dart';
-import 'screens/emergency_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/medical_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_agriculture_screen.dart';
 import 'screens/voice_guide_navigation_screen.dart';
@@ -124,8 +122,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const EmergencyScreen(),
-    const MedicalScreen(),
     const EducationScreen(),
     const SmartAgricultureScreen(),
     const VoiceGuideAccessibilityScreen(), // ADICIONADO: Tela de acessibilidade
@@ -153,14 +149,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: AppStrings.home,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.emergency),
-              label: 'Emergência',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.medical_services),
-              label: AppStrings.medical,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.school),
