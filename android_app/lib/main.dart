@@ -11,12 +11,8 @@ import 'screens/education_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_agriculture_screen.dart';
-<<<<<<< HEAD
-=======
 import 'screens/agriculture_family_screen.dart';
 import 'screens/agriculture_navigation_screen.dart';
-import 'screens/voice_guide_navigation_screen.dart';
->>>>>>> d03e3c4e0ea1949f3f8744dc77d9bbd6eb6e46fa
 import 'screens/voiceguide_accessibility_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
@@ -72,6 +68,7 @@ class MoranaApp extends StatelessWidget {
               primaryColor: AppColors.primary,
               colorScheme: ColorScheme.fromSeed(
                 seedColor: AppColors.primary,
+                brightness: Brightness.light,
               ),
               fontFamily: 'Roboto',
               appBarTheme: const AppBarTheme(
@@ -99,6 +96,40 @@ class MoranaApp extends StatelessWidget {
                 ),
               ),
             ),
+            darkTheme: ThemeData(
+              primarySwatch: AppColors.primarySwatch,
+              primaryColor: AppColors.primary,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.primary,
+                brightness: Brightness.dark,
+              ),
+              fontFamily: 'Roboto',
+              appBarTheme: AppBarTheme(
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white,
+                elevation: 2,
+              ),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              cardTheme: CardTheme(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            themeMode: appProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
@@ -128,13 +159,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const EducationScreen(),
-<<<<<<< HEAD
-    const SmartAgricultureScreen(),
-    const VoiceGuideAccessibilityScreen(),
-=======
     const AgricultureNavigationScreen(), // Navegação de agricultura unificada
     const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade
->>>>>>> d03e3c4e0ea1949f3f8744dc77d9bbd6eb6e46fa
     const SettingsScreen(),
   ];
 
@@ -169,11 +195,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.accessibility_new),
-<<<<<<< HEAD
-              label: 'VoiceGuide IA',
-=======
               label: 'Acessibilidade',
->>>>>>> d03e3c4e0ea1949f3f8744dc77d9bbd6eb6e46fa
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),
