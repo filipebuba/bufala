@@ -11,9 +11,12 @@ import 'screens/education_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_agriculture_screen.dart';
+<<<<<<< HEAD
+=======
 import 'screens/agriculture_family_screen.dart';
 import 'screens/agriculture_navigation_screen.dart';
 import 'screens/voice_guide_navigation_screen.dart';
+>>>>>>> d03e3c4e0ea1949f3f8744dc77d9bbd6eb6e46fa
 import 'screens/voiceguide_accessibility_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
@@ -125,8 +128,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const EducationScreen(),
+<<<<<<< HEAD
+    const SmartAgricultureScreen(),
+    const VoiceGuideAccessibilityScreen(),
+=======
     const AgricultureNavigationScreen(), // Navegação de agricultura unificada
     const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade
+>>>>>>> d03e3c4e0ea1949f3f8744dc77d9bbd6eb6e46fa
     const SettingsScreen(),
   ];
 
@@ -161,7 +169,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.accessibility_new),
+<<<<<<< HEAD
+              label: 'VoiceGuide IA',
+=======
               label: 'Acessibilidade',
+>>>>>>> d03e3c4e0ea1949f3f8744dc77d9bbd6eb6e46fa
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),

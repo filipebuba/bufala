@@ -20,6 +20,11 @@ from utils.error_handler import create_error_response, log_error
 multimodal_bp = Blueprint('multimodal', __name__)
 logger = logging.getLogger(__name__)
 
+@multimodal_bp.route('/multimodal', methods=['POST'])
+def multimodal_default():
+    """Rota padrão multimodal - redireciona para análise"""
+    return analyze_multimodal_content()
+
 @multimodal_bp.route('/multimodal/health', methods=['GET'])
 def multimodal_health():
     """Verificar saúde do sistema multimodal"""
