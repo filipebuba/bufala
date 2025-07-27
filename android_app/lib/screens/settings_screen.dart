@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../providers/app_provider.dart';
 import '../services/language_service.dart';
 import '../services/storage_service.dart';
+import '../services/offline_service.dart';
 import '../services/api_service.dart';
 import '../config/app_config.dart';
 
@@ -82,8 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final response = await http.get(
         Uri.parse('${AppConfig.apiBaseUrl}/health'),
-        timeout: const Duration(seconds: 5),
-      );
+      ).timeout(const Duration(seconds: 5));
       
       setState(() {
         _isConnected = response.statusCode == 200;
@@ -395,7 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            if (_backendConfig.isNotEmpty) ..[
+            if (_backendConfig.isNotEmpty) ...[
               _buildBackendConfigTile(
                 'Modelo de IA',
                 _backendConfig['model_name'] ?? 'Não configurado',
