@@ -398,6 +398,44 @@ class Gemma3BackendService {
     }
   }
 
+  /// Gerar conteúdo de bem-estar com Gemma-3
+  Future<Map<String, dynamic>> generateWellnessContent({
+    required String prompt,
+    String language = 'pt-BR',
+    String? sessionType,
+    Map<String, dynamic>? userContext,
+  }) async {
+    if (!_isInitialized) {
+      throw Exception(
+        'Serviço não inicializado. Execute initialize() primeiro.',
+      );
+    }
+
+    try {
+      final requestData = {
+        'prompt': prompt,
+        'language': language,
+        'context': 'wellness_coaching',
+        if (sessionType != null) 'session_type': sessionType,
+        if (userContext != null) 'user_context': userContext,
+      };
+
+      final response = await _dio.post<Map<String, dynamic>>(
+        AppConfig.buildUrl('wellness'),
+        data: requestData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data ?? {};
+      } else {
+        throw Exception('Erro na resposta do servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Erro ao gerar conteúdo de bem-estar: $e');
+      rethrow;
+    }
+  }
+
   /// Chat genérico com Gemma-3
   Future<Map<String, dynamic>> sendChatMessage({
     required String message,
