@@ -1184,13 +1184,14 @@ class WellnessCoachingService {
 
       // Preparar dados para enviar ao backend
       final requestData = {
-        'session_type': type,
-        'user_data': {
-          'mood_rating': 7.0,
-          'stress_level': 0.3,
-          'energy_level': 0.7,
-        },
-        'language': 'pt-BR',
+        'prompt': _getPromptForSessionType(type),
+        'wellness_area': _getWellnessAreaForType(type),
+        'urgency_level': 'normal',
+        'age_group': 'adulto',
+        'context': 'comunidade',
+        'mood': 'neutro',
+        'stress_level': 3,
+        'language': 'português',
       };
 
       // Enviar requisição para o backend com timeout maior
@@ -1285,6 +1286,40 @@ class WellnessCoachingService {
     } catch (e) {
       print('❌ Erro ao criar sessão offline: $e');
       return null;
+    }
+  }
+
+  /// Obter prompt apropriado para o tipo de sessão
+  String _getPromptForSessionType(String type) {
+    switch (type) {
+      case 'breathing':
+        return 'Preciso de orientação para exercícios de respiração para reduzir o estresse';
+      case 'meditation':
+        return 'Gostaria de aprender técnicas de meditação para melhorar meu bem-estar mental';
+      case 'voice_check':
+        return 'Quero fazer uma análise vocal para verificar meu estado emocional atual';
+      case 'mood_tracking':
+        return 'Preciso de ajuda para entender e acompanhar meu humor diário';
+      case 'stress_relief':
+        return 'Estou me sentindo estressado e preciso de técnicas para alívio do estresse';
+      default:
+        return 'Preciso de orientação geral sobre bem-estar e saúde mental';
+    }
+  }
+
+  /// Obter área de bem-estar para o tipo de sessão
+  String _getWellnessAreaForType(String type) {
+    switch (type) {
+      case 'breathing':
+      case 'meditation':
+      case 'stress_relief':
+        return 'mental';
+      case 'voice_check':
+        return 'emocional';
+      case 'mood_tracking':
+        return 'psicologico';
+      default:
+        return 'geral';
     }
   }
 

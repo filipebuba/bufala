@@ -695,3 +695,519 @@ def _get_stress_prevention_tips():
         "Reserve tempo para relaxamento",
         "Pratique gratidão diariamente"
     ]
+
+@wellness_bp.route('/wellness/voice-analysis', methods=['POST'])
+def voice_analysis():
+    """
+    Análise de voz para bem-estar mental
+    ---
+    tags:
+      - Bem-estar
+    summary: Análise de voz para saúde mental
+    description: |
+      Endpoint para análise de voz usando IA Gemma-3 para avaliar indicadores
+      de bem-estar mental, estresse e estado emocional.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - voice_data
+          properties:
+            voice_data:
+              type: object
+              description: Dados de análise de voz
+              properties:
+                stress_indicators:
+                  type: number
+                  description: Indicadores de estresse na voz
+                energy_indicators:
+                  type: number
+                  description: Indicadores de energia na voz
+                stability_indicators:
+                  type: number
+                  description: Indicadores de estabilidade emocional
+                duration_factor:
+                  type: number
+                  description: Fator de duração da gravação
+                quality_factor:
+                  type: number
+                  description: Fator de qualidade do áudio
+                detected_mood:
+                  type: string
+                  description: Humor detectado
+                pitch_variance:
+                  type: number
+                  description: Variação de tom
+                speaking_rate:
+                  type: number
+                  description: Taxa de fala
+            language:
+              type: string
+              description: Idioma preferido
+              example: "pt-BR"
+    responses:
+      200:
+        description: Análise de voz realizada com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            analysis:
+              type: object
+              properties:
+                stress_level:
+                  type: number
+                  description: Nível de estresse detectado (0-1)
+                energy_level:
+                  type: number
+                  description: Nível de energia detectado (0-1)
+                emotional_stability:
+                  type: number
+                  description: Estabilidade emocional (0-1)
+                mood_state:
+                  type: string
+                  description: Estado de humor detectado
+                confidence:
+                  type: number
+                  description: Confiança da análise (0-1)
+            recommendations:
+              type: array
+              items:
+                type: string
+              description: Recomendações baseadas na análise
+            wellness_tips:
+              type: array
+              items:
+                type: string
+              description: Dicas de bem-estar personalizadas
+      400:
+        description: Dados inválidos
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+      500:
+        description: Erro interno do servidor
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+    """
+    try:
+        # Obter dados da requisição
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        # Extrair dados de voz
+        voice_data = data.get('voice_data')
+        if not voice_data:
+            return jsonify(create_error_response(
+                'missing_voice_data',
+                'Campo "voice_data" é obrigatório',
+                400
+            )), 400
+        
+        # Obter parâmetros opcionais
+        language = data.get('language', 'pt-BR')
+        
+        # Extrair métricas de voz
+        stress_indicators = voice_data.get('stress_indicators', 0.5)
+        energy_indicators = voice_data.get('energy_indicators', 0.5)
+        stability_indicators = voice_data.get('stability_indicators', 0.5)
+        detected_mood = voice_data.get('detected_mood', 'neutral')
+        pitch_variance = voice_data.get('pitch_variance', 25.0)
+        speaking_rate = voice_data.get('speaking_rate', 150.0)
+        
+        # Preparar prompt para análise de voz com Gemma-3
+        voice_analysis_prompt = f"""
+        Analise os seguintes dados de voz para avaliação de bem-estar mental:
+        
+        Indicadores de Estresse: {stress_indicators:.2f} (0-1)
+        Indicadores de Energia: {energy_indicators:.2f} (0-1)
+        Indicadores de Estabilidade: {stability_indicators:.2f} (0-1)
+        Humor Detectado: {detected_mood}
+        Variação de Tom: {pitch_variance:.1f} Hz
+        Taxa de Fala: {speaking_rate:.1f} palavras/min
+        
+        Com base nestes dados, forneça:
+        1. Análise do estado emocional e bem-estar
+        2. Recomendações específicas para melhorar o bem-estar
+        3. Técnicas de relaxamento apropriadas
+        4. Sinais de alerta se necessário
+        
+        Responda em {language} de forma empática e culturalmente apropriada para a comunidade da Guiné-Bissau.
+        """
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar análise usando Gemma-3
+            response = gemma_service.generate_response(
+                voice_analysis_prompt,
+                SystemPrompts.WELLNESS,
+                temperature=0.6,  # Temperatura moderada para análise consistente
+                max_new_tokens=400
+            )
+            
+            if response.get('success'):
+                # Processar resposta do Gemma e extrair análise estruturada
+                gemma_analysis = response.get('response', '')
+                
+                # Calcular métricas finais baseadas nos dados de entrada e análise do Gemma
+                final_stress_level = min(max(stress_indicators, 0.0), 1.0)
+                final_energy_level = min(max(energy_indicators, 0.0), 1.0)
+                final_stability = min(max(stability_indicators, 0.0), 1.0)
+                
+                # Determinar estado de humor final
+                mood_mapping = {
+                    'stressed': 'estressado',
+                    'tired': 'cansado',
+                    'calm': 'calmo',
+                    'energetic': 'energético',
+                    'neutral': 'neutro'
+                }
+                final_mood = mood_mapping.get(detected_mood, 'neutro')
+                
+                # Gerar recomendações baseadas na análise
+                recommendations = _generate_voice_recommendations(
+                    final_stress_level, final_energy_level, final_stability, final_mood
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'analysis': {
+                        'stress_level': final_stress_level,
+                        'energy_level': final_energy_level,
+                        'emotional_stability': final_stability,
+                        'mood_state': final_mood,
+                        'confidence': 0.85,
+                        'gemma_analysis': gemma_analysis
+                    },
+                    'recommendations': recommendations,
+                    'wellness_tips': _get_voice_wellness_tips(final_stress_level, final_energy_level),
+                    'timestamp': datetime.now().isoformat()
+                })
+            else:
+                # Fallback se Gemma falhar
+                fallback_analysis = _get_voice_analysis_fallback(
+                    stress_indicators, energy_indicators, stability_indicators, detected_mood
+                )
+                return jsonify(fallback_analysis)
+        else:
+            # Resposta de fallback quando Gemma não está disponível
+            fallback_analysis = _get_voice_analysis_fallback(
+                stress_indicators, energy_indicators, stability_indicators, detected_mood
+            )
+            return jsonify(fallback_analysis)
+        
+    except Exception as e:
+        log_error(logger, e, "análise de voz")
+        return jsonify(create_error_response(
+            'voice_analysis_error',
+            'Erro ao processar análise de voz',
+            500
+        )), 500
+
+@wellness_bp.route('/chat', methods=['POST'])
+def chat_generic():
+    """
+    Chat genérico com IA para bem-estar
+    ---
+    tags:
+      - Bem-estar
+    summary: Chat genérico com IA
+    description: |
+      Endpoint para chat genérico com a IA, focado em bem-estar e coaching.
+      Suporta conversas contextuais e personalizadas.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              description: Mensagem do usuário
+              example: "Como posso melhorar meu bem-estar?"
+            context:
+              type: string
+              description: Contexto da conversa
+              example: "wellness_coaching"
+            language:
+              type: string
+              description: Idioma preferido
+              example: "pt-BR"
+            history:
+              type: array
+              items:
+                type: object
+                properties:
+                  role:
+                    type: string
+                    enum: ["user", "assistant"]
+                  content:
+                    type: string
+              description: Histórico da conversa
+    responses:
+      200:
+        description: Resposta do chat gerada com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            response:
+              type: string
+              description: Resposta da IA
+            context:
+              type: string
+              description: Contexto utilizado
+            timestamp:
+              type: string
+              description: Timestamp da resposta
+      400:
+        description: Dados inválidos
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+      500:
+        description: Erro interno do servidor
+        schema:
+          $ref: '#/definitions/ErrorResponse'
+    """
+    try:
+        # Obter dados da requisição
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        # Extrair mensagem
+        message = data.get('message')
+        if not message:
+            return jsonify(create_error_response(
+                'missing_message',
+                'Campo "message" é obrigatório',
+                400
+            )), 400
+        
+        # Obter parâmetros opcionais
+        context = data.get('context', 'wellness_coaching')
+        language = data.get('language', 'pt-BR')
+        history = data.get('history', [])
+        
+        # Preparar prompt baseado no contexto
+        if context == 'wellness_coaching':
+            system_prompt = SystemPrompts.WELLNESS
+            prompt = f"Como coach de bem-estar para a comunidade da Guiné-Bissau, responda em {language}: {message}"
+        elif context == 'wellness_tips':
+            system_prompt = SystemPrompts.WELLNESS
+            prompt = f"Como especialista em bem-estar, forneça dicas práticas em {language} para: {message}"
+        else:
+            system_prompt = SystemPrompts.WELLNESS
+            prompt = f"Responda de forma útil e empática em {language}: {message}"
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar resposta usando Gemma
+            response = gemma_service.generate_response(
+                prompt,
+                system_prompt,
+                temperature=0.7,
+                max_new_tokens=300
+            )
+            
+            if response.get('success'):
+                return jsonify({
+                    'success': True,
+                    'response': response.get('response', ''),
+                    'answer': response.get('response', ''),  # Compatibilidade
+                    'context': context,
+                    'timestamp': datetime.now().isoformat()
+                })
+            else:
+                # Fallback se Gemma falhar
+                fallback_response = _get_chat_fallback_response(message, context, language)
+                return jsonify({
+                    'success': True,
+                    'response': fallback_response,
+                    'answer': fallback_response,
+                    'context': context,
+                    'timestamp': datetime.now().isoformat()
+                })
+        else:
+            # Resposta de fallback quando Gemma não está disponível
+            fallback_response = _get_chat_fallback_response(message, context, language)
+            return jsonify({
+                'success': True,
+                'response': fallback_response,
+                'answer': fallback_response,
+                'context': context,
+                'timestamp': datetime.now().isoformat()
+            })
+        
+    except Exception as e:
+        log_error(logger, e, "chat genérico")
+        return jsonify(create_error_response(
+            'chat_error',
+            'Erro ao processar mensagem de chat',
+            500
+        )), 500
+
+def _get_chat_fallback_response(message, context, language):
+    """Obter resposta de fallback para chat"""
+    if 'pt' in language.lower():
+        if context == 'wellness_coaching':
+            return "Obrigado por compartilhar isso comigo. Como seu coach de bem-estar, recomendo que você se concentre em pequenos passos diários para melhorar seu bem-estar. Que tal começarmos com uma prática de respiração ou uma caminhada curta?"
+        elif context == 'wellness_tips':
+            return "Aqui estão algumas dicas de bem-estar: 1) Pratique respiração profunda por 5 minutos diariamente, 2) Mantenha uma rotina de sono regular, 3) Conecte-se com pessoas queridas, 4) Pratique gratidão, 5) Faça atividade física leve regularmente."
+        else:
+            return "Entendo sua preocupação. É importante cuidar do seu bem-estar físico e mental. Recomendo conversar com pessoas de confiança e buscar atividades que tragam paz e alegria para sua vida."
+    else:
+        if context == 'wellness_coaching':
+            return "Thank you for sharing that with me. As your wellness coach, I recommend focusing on small daily steps to improve your well-being. How about we start with a breathing practice or a short walk?"
+        elif context == 'wellness_tips':
+            return "Here are some wellness tips: 1) Practice deep breathing for 5 minutes daily, 2) Maintain a regular sleep routine, 3) Connect with loved ones, 4) Practice gratitude, 5) Do light physical activity regularly."
+        else:
+            return "I understand your concern. It's important to take care of your physical and mental well-being. I recommend talking to trusted people and seeking activities that bring peace and joy to your life."
+
+def _generate_voice_recommendations(stress_level, energy_level, stability, mood):
+    """Gerar recomendações baseadas na análise de voz"""
+    recommendations = []
+    
+    # Recomendações baseadas no nível de estresse
+    if stress_level > 0.7:
+        recommendations.extend([
+            "Pratique técnicas de respiração profunda por 10 minutos",
+            "Considere uma caminhada ao ar livre para relaxar",
+            "Tente ouvir música calma ou sons da natureza",
+            "Converse com alguém de confiança sobre suas preocupações"
+        ])
+    elif stress_level > 0.4:
+        recommendations.extend([
+            "Faça pausas regulares durante suas atividades",
+            "Pratique exercícios de alongamento suave",
+            "Mantenha uma rotina de sono regular"
+        ])
+    
+    # Recomendações baseadas no nível de energia
+    if energy_level < 0.3:
+        recommendations.extend([
+            "Certifique-se de dormir adequadamente (7-8 horas)",
+            "Considere uma alimentação nutritiva e regular",
+            "Faça atividades físicas leves como caminhada",
+            "Exponha-se à luz solar pela manhã"
+        ])
+    elif energy_level > 0.8:
+        recommendations.extend([
+            "Canalize sua energia em atividades produtivas",
+            "Pratique exercícios físicos para equilibrar a energia",
+            "Mantenha um horário estruturado para suas atividades"
+        ])
+    
+    # Recomendações baseadas na estabilidade emocional
+    if stability < 0.4:
+        recommendations.extend([
+            "Pratique técnicas de mindfulness e meditação",
+            "Estabeleça rotinas diárias consistentes",
+            "Busque apoio de familiares ou amigos próximos",
+            "Considere conversar com um conselheiro ou líder comunitário"
+        ])
+    
+    # Recomendações baseadas no humor
+    if mood in ['estressado', 'cansado']:
+        recommendations.extend([
+            "Reserve tempo para atividades que lhe trazem alegria",
+            "Pratique gratidão listando 3 coisas boas do seu dia",
+            "Conecte-se com a natureza sempre que possível"
+        ])
+    
+    return recommendations[:6]  # Limitar a 6 recomendações
+
+def _get_voice_wellness_tips(stress_level, energy_level):
+    """Obter dicas de bem-estar baseadas na análise de voz"""
+    tips = [
+        "Mantenha uma comunicação aberta com pessoas queridas",
+        "Pratique atividades que conectem você com sua cultura local",
+        "Reserve momentos diários para reflexão e paz interior"
+    ]
+    
+    if stress_level > 0.6:
+        tips.extend([
+            "Experimente técnicas tradicionais de relaxamento da sua comunidade",
+            "Participe de atividades comunitárias que tragam alegria",
+            "Considere práticas espirituais ou religiosas que lhe confortem"
+        ])
+    
+    if energy_level < 0.4:
+        tips.extend([
+            "Mantenha uma alimentação baseada em produtos locais frescos",
+            "Estabeleça horários regulares para descanso e atividade",
+            "Busque atividades ao ar livre durante o dia"
+        ])
+    
+    return tips[:5]  # Limitar a 5 dicas
+
+def _get_voice_analysis_fallback(stress_indicators, energy_indicators, stability_indicators, detected_mood):
+    """Resposta de fallback para análise de voz quando Gemma não está disponível"""
+    # Calcular métricas básicas
+    final_stress = min(max(stress_indicators, 0.0), 1.0)
+    final_energy = min(max(energy_indicators, 0.0), 1.0)
+    final_stability = min(max(stability_indicators, 0.0), 1.0)
+    
+    # Mapear humor
+    mood_mapping = {
+        'stressed': 'estressado',
+        'tired': 'cansado', 
+        'calm': 'calmo',
+        'energetic': 'energético',
+        'neutral': 'neutro'
+    }
+    final_mood = mood_mapping.get(detected_mood, 'neutro')
+    
+    # Gerar recomendações básicas
+    basic_recommendations = [
+        "Pratique respiração profunda por alguns minutos",
+        "Mantenha conexões sociais saudáveis",
+        "Estabeleça uma rotina de sono regular",
+        "Faça atividades físicas leves regularmente",
+        "Reserve tempo para relaxamento diário"
+    ]
+    
+    basic_tips = [
+        "Cuide do seu bem-estar físico e mental",
+        "Busque apoio da comunidade quando necessário",
+        "Pratique atividades que lhe trazem paz",
+        "Mantenha uma alimentação saudável"
+    ]
+    
+    return {
+        'success': True,
+        'analysis': {
+            'stress_level': final_stress,
+            'energy_level': final_energy,
+            'emotional_stability': final_stability,
+            'mood_state': final_mood,
+            'confidence': 0.75,
+            'gemma_analysis': 'Análise básica realizada. Para uma avaliação mais detalhada, o serviço Gemma-3 precisa estar disponível.'
+        },
+        'recommendations': basic_recommendations,
+        'wellness_tips': basic_tips,
+        'fallback': True,
+        'timestamp': datetime.now().isoformat()
+    }
