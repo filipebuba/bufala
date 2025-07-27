@@ -15,6 +15,7 @@ import 'education_screen_enhanced_international.dart';
 import 'environmental_menu_screen.dart';
 import 'medical_emergency_unified_screen.dart';
 import 'plant_diagnosis_screen.dart';
+import 'translation_screen.dart';
 import 'wellness_coaching_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -114,32 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                FeatureCard(
-                  icon: Icons.medical_services,
-                  title: 'Primeiros Socorros',
-                  description:
-                      'Assistência médica de emergência para áreas remotas',
-                  color: Colors.red,
-                  onTap: _navigateToMedical,
-                ),
-                const SizedBox(height: 12),
-                FeatureCard(
-                  icon: Icons.school,
-                  title: 'Educação Revolucionária',
-                  description:
-                      'Experiências interativas e offline para regiões de baixa conectividade',
-                  color: Colors.blue,
-                  onTap: _navigateToEducation,
-                ),
-                const SizedBox(height: 12),
-                FeatureCard(
-                  icon: Icons.agriculture,
-                  title: 'Agricultura',
-                  description: 'Proteção de culturas e técnicas agrícolas',
-                  color: Colors.green,
-                  onTap: _navigateToAgriculture,
-                ),
-                const SizedBox(height: 12),
+
                 FeatureCard(
                   icon: Icons.self_improvement,
                   title: 'Wellness Coaching',
@@ -156,6 +132,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Diagnóstico de plantas, biodiversidade, reciclagem e mais',
                   color: Colors.teal,
                   onTap: _navigateToEnvironmental,
+                ),
+                const SizedBox(height: 12),
+                FeatureCard(
+                  icon: Icons.school_outlined,
+                  title: 'Ensine o Bu Fala - Sistema Colaborativo',
+                  description:
+                      'Sistema de ensino colaborativo para aprendizado de idiomas locais',
+                  color: Colors.green,
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Sistema de Ensino Colaborativo em desenvolvimento'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
 
@@ -292,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _isConnected ? 'Conectado ao Servidor' : 'Modo Offline',
+                    _isConnected ? 'Sistema Online' : 'Modo Offline',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -324,79 +317,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          // NOVO: Botão para teste de API
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => const ApiTestScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.bug_report),
-              label: const Text('🔧 Testar Comunicação Backend'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.all(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // NOVO: Botão destacado para "Ensine o Bu Fala"
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withValues(alpha: 0.3),
-                  spreadRadius: 2,
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // Temporariamente mostra mensagem até que o sistema colaborativo seja corrigido
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                        'Sistema de Ensino Colaborativo em desenvolvimento'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.school_outlined, size: 24),
-              label: const Text(
-                '🎓 Ensine o Bu Fala - Sistema Colaborativo',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
+
+
           Row(
             children: [
               Expanded(
@@ -544,18 +466,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _analyzeImage() {
-    final apiService =
-        EnvironmentalApiService(baseUrl: AppConfig.apiBaseUrl);
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => PlantDiagnosisScreen(apiService: apiService),
+        builder: (context) => const PlantDiagnosisScreen(),
       ),
     );
   }
 
   void _translateText() {
-    // TODO(dev): Implementar tradução
-    debugPrint('Iniciando tradução');
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const TranslationScreen(),
+      ),
+    );
   }
 }
