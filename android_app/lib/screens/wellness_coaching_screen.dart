@@ -6,6 +6,8 @@ import '../services/wellness_coaching_service.dart';
 import '../services/gemma3_backend_service.dart';
 import 'wellness_profile_setup_screen.dart';
 import 'chat_screen.dart';
+import 'voice_guided_breathing_screen.dart';
+import 'mood_tracking_screen.dart';
 
 class WellnessCoachingScreen extends StatefulWidget {
   const WellnessCoachingScreen({super.key});
@@ -131,8 +133,19 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
                     );
 
                     if (result == true) {
-                      // Perfil criado com sucesso, reinicializar
-                      await _initializeServices();
+                      // Perfil criado com sucesso, recarregar apenas os dados
+                      setState(() => _isLoading = true);
+                      try {
+                        await _coachingService.reloadUserData();
+                        _hasProfile = _coachingService.currentProfile != null;
+                        if (_hasProfile) {
+                          await _loadWellnessData();
+                        }
+                      } catch (e) {
+                        debugPrint('❌ Erro ao recarregar dados: $e');
+                      } finally {
+                        setState(() => _isLoading = false);
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -797,28 +810,47 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   }
 
   Future<void> _startBreathingSession() async {
-    final session = await _coachingService.startCoachingSession('breathing');
-    if (session != null) {
-      _showSessionResultDialog(session);
-      await _loadWellnessData();
-    }
+    // Navegar para a tela de respiração guiada por voz
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const VoiceGuidedBreathingScreen(
+          sessionType: 'breathing',
+          durationMinutes: 5,
+          personalizedPrompt: 'Sessão de respiração para relaxamento e redução do estresse',
+        ),
+      ),
+    ).then((_) {
+      // Recarregar dados quando voltar da sessão
+      _loadWellnessData();
+    });
   }
 
   Future<void> _startMeditationSession() async {
-    final session = await _coachingService.startCoachingSession('meditation');
-    if (session != null) {
-      _showSessionResultDialog(session);
-      await _loadWellnessData();
-    }
+    // Navegar para a tela de meditação guiada por voz
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const VoiceGuidedBreathingScreen(
+          sessionType: 'meditation',
+          durationMinutes: 10,
+          personalizedPrompt: 'Sessão de meditação para relaxamento e foco mental',
+        ),
+      ),
+    ).then((_) {
+      // Recarregar dados quando voltar da sessão
+      _loadWellnessData();
+    });
   }
 
   Future<void> _startMoodTracking() async {
-    final session =
-        await _coachingService.startCoachingSession('mood_tracking');
-    if (session != null) {
-      _showSessionResultDialog(session);
-      await _loadWellnessData();
-    }
+    // Navegar para a tela de mood tracking
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const MoodTrackingScreen(),
+      ),
+    ).then((_) {
+      // Recarregar dados quando voltar da sessão
+      _loadWellnessData();
+    });
   }
 
   void _showQuickActionDialog() {
