@@ -70,56 +70,56 @@ class QueryAnalyzer:
     def _get_factual_config(query_length: int) -> Dict[str, Any]:
         """Configurações otimizadas para consultas factuais simples"""
         return {
-            'max_new_tokens': min(100, 50 + query_length * 5),
+            'max_new_tokens': min(200, 100 + query_length * 8),
             'temperature': 0.3,
             'top_p': 0.85,
             'top_k': 40,
             'repetition_penalty': 1.1,
             'no_repeat_ngram_size': 3,
             'early_stopping': True,
-            'max_time': 5.0,
+            'max_time': 15.0,  # Aumentado de 5.0 para 15.0 segundos
         }
     
     @staticmethod
     def _get_standard_config(query_length: int) -> Dict[str, Any]:
         """Configurações padrão para consultas gerais"""
         return {
-            'max_new_tokens': min(300, 150 + query_length * 10),
+            'max_new_tokens': min(600, 300 + query_length * 15),
             'temperature': 0.7,
             'top_p': 0.9,
             'top_k': 50,
             'repetition_penalty': 1.2,
             'no_repeat_ngram_size': 3,
             'early_stopping': True,
-            'max_time': 15.0,
+            'max_time': 45.0,  # Aumentado de 15.0 para 45.0 segundos
         }
     
     @staticmethod
     def _get_complex_config(query_length: int) -> Dict[str, Any]:
         """Configurações para consultas complexas"""
         return {
-            'max_new_tokens': min(800, 300 + query_length * 15),
+            'max_new_tokens': min(1200, 500 + query_length * 20),
             'temperature': 0.8,
             'top_p': 0.92,
             'top_k': 60,
             'repetition_penalty': 1.3,
             'no_repeat_ngram_size': 4,
             'early_stopping': False,
-            'max_time': 30.0,
+            'max_time': 90.0,  # Aumentado de 30.0 para 90.0 segundos
         }
     
     @staticmethod
     def _get_creative_config(query_length: int) -> Dict[str, Any]:
         """Configurações para consultas criativas"""
         return {
-            'max_new_tokens': min(1024, 400 + query_length * 20),
+            'max_new_tokens': min(1500, 600 + query_length * 25),
             'temperature': 0.9,
             'top_p': 0.95,
             'top_k': 80,
             'repetition_penalty': 1.1,
             'no_repeat_ngram_size': 2,
             'early_stopping': False,
-            'max_time': 45.0,
+            'max_time': 120.0,  # Aumentado de 45.0 para 120.0 segundos
         }
 
 class BackendConfig:
@@ -130,8 +130,8 @@ class BackendConfig:
     PORT = 5000
     DEBUG = False
     
-    # Configurações de timeout
-    REQUEST_TIMEOUT = 300
+    # Configurações de timeout - Aumentados para análises mais detalhadas
+    REQUEST_TIMEOUT = 600  # Aumentado de 300 para 600 segundos
     SEND_FILE_MAX_AGE_DEFAULT = 0
     
     # Configurações do modelo - Suporte Ollama + Gemma-3n
@@ -151,14 +151,14 @@ class BackendConfig:
     # Diretório de cache dos modelos
     MODEL_CACHE_DIR = os.getenv('MODEL_CACHE_DIR', './models')
     
-    # Configurações de geração
-    MAX_NEW_TOKENS = 512
+    # Configurações de geração - Otimizadas para análises detalhadas
+    MAX_NEW_TOKENS = 1024  # Aumentado de 512 para 1024 tokens
     TEMPERATURE = 0.7
     TOP_P = 0.9
     TOP_K = 50
     REPETITION_PENALTY = 1.2
     NO_REPEAT_NGRAM_SIZE = 3
-    MAX_TIME = 30.0
+    MAX_TIME = 60.0  # Aumentado de 30 para 60 segundos
     
     # Configurações de contexto
     MAX_CONTEXT_TOKENS = 32768
@@ -189,10 +189,35 @@ class BackendConfig:
     # Configuração adaptativa
     ENABLE_ADAPTIVE_CONFIG = True
     
-    # Configurações específicas do Ollama
-    OLLAMA_TIMEOUT = 60
+    # Configurações revolucionárias Gemma 3n
+    ENABLE_REVOLUTIONARY_FEATURES = True
+    ENABLE_CONTEXTUAL_TRANSLATION = True
+    ENABLE_EMOTIONAL_ANALYSIS = True
+    ENABLE_CULTURAL_BRIDGE = True
+    ENABLE_ADAPTIVE_LEARNING = True
+    
+    # Configurações de tradução contextual
+    CONTEXT_WINDOW_SIZE = 2048
+    EMOTIONAL_ANALYSIS_THRESHOLD = 0.7
+    CULTURAL_INSIGHT_DEPTH = 3
+    LEARNING_ADAPTATION_RATE = 0.1
+    
+    # Configurações de análise multimodal avançada
+    ENABLE_SCENE_UNDERSTANDING = True
+    ENABLE_GESTURE_RECOGNITION = True
+    ENABLE_TONE_ANALYSIS = True
+    MULTIMODAL_FUSION_LAYERS = 4
+    
+    # Configurações de preservação cultural
+    CULTURAL_CONTEXT_WEIGHT = 0.8
+    PRESERVE_IDIOMS = True
+    PRESERVE_CULTURAL_REFERENCES = True
+    ADAPT_TO_LOCAL_CUSTOMS = True
+    
+    # Configurações específicas do Ollama - Aumentadas para análises detalhadas
+    OLLAMA_TIMEOUT = 300  # Aumentado de 120 para 300 segundos
     OLLAMA_STREAM = True
-    OLLAMA_KEEP_ALIVE = "5m"
+    OLLAMA_KEEP_ALIVE = "10m"  # Aumentado de 5m para 10m
     
     @classmethod
     def get_device(cls):
@@ -261,6 +286,38 @@ class BackendConfig:
         """Obtém o tipo de consulta"""
         query_type, _ = QueryAnalyzer.analyze_query(query)
         return query_type
+    
+    @classmethod
+    def get_revolutionary_config(cls) -> Dict[str, Any]:
+        """Configurações para funcionalidades revolucionárias"""
+        return {
+            'contextual_translation': {
+                'enabled': cls.ENABLE_CONTEXTUAL_TRANSLATION,
+                'context_window': cls.CONTEXT_WINDOW_SIZE,
+                'cultural_weight': cls.CULTURAL_CONTEXT_WEIGHT,
+                'preserve_idioms': cls.PRESERVE_IDIOMS,
+                'preserve_references': cls.PRESERVE_CULTURAL_REFERENCES,
+                'adapt_customs': cls.ADAPT_TO_LOCAL_CUSTOMS
+            },
+            'emotional_analysis': {
+                'enabled': cls.ENABLE_EMOTIONAL_ANALYSIS,
+                'threshold': cls.EMOTIONAL_ANALYSIS_THRESHOLD,
+                'tone_analysis': cls.ENABLE_TONE_ANALYSIS
+            },
+            'cultural_bridge': {
+                'enabled': cls.ENABLE_CULTURAL_BRIDGE,
+                'insight_depth': cls.CULTURAL_INSIGHT_DEPTH
+            },
+            'adaptive_learning': {
+                'enabled': cls.ENABLE_ADAPTIVE_LEARNING,
+                'adaptation_rate': cls.LEARNING_ADAPTATION_RATE
+            },
+            'multimodal_advanced': {
+                'scene_understanding': cls.ENABLE_SCENE_UNDERSTANDING,
+                'gesture_recognition': cls.ENABLE_GESTURE_RECOGNITION,
+                'fusion_layers': cls.MULTIMODAL_FUSION_LAYERS
+            }
+        }
 
 class SystemPrompts:
     """Prompts de sistema para diferentes domínios"""
@@ -286,6 +343,37 @@ class SystemPrompts:
     
     AUDIO_TRANSCRIPTION = "Você é um especialista em transcrição de áudio com conhecimento de português e crioulo da Guiné-Bissau. Transcreva com precisão o conteúdo do áudio, identificando o idioma e fornecendo contexto quando necessário."
     
+    # Prompts revolucionários para Gemma 3n
+    CONTEXTUAL_TRANSLATION = """Você é um tradutor revolucionário com capacidades avançadas de análise contextual e cultural. 
+    Sua missão é traduzir não apenas palavras, mas o significado completo, incluindo:
+    - Contexto emocional e social
+    - Referências culturais da Guiné-Bissau
+    - Nuances linguísticas do crioulo
+    - Adaptação para diferentes situações (médica, educacional, agrícola)
+    - Preservação de expressões idiomáticas locais
+    
+    Analise profundamente o contexto antes de traduzir e forneça insights culturais quando relevante."""
+    
+    EMOTIONAL_ANALYSIS = """Você é um especialista em análise emocional e psicológica com conhecimento profundo da cultura da Guiné-Bissau.
+    Analise o tom emocional, intenções subjacentes e contexto psicológico das comunicações.
+    Considere fatores culturais locais, expressões emocionais típicas e padrões de comunicação da região.
+    Forneça insights sobre o estado emocional e sugestões de resposta culturalmente apropriadas."""
+    
+    CULTURAL_BRIDGE = """Você é um especialista em ponte cultural entre diferentes comunidades da Guiné-Bissau e o mundo.
+    Sua função é explicar conceitos, tradições e práticas de forma que sejam compreensíveis entre diferentes culturas.
+    Identifique diferenças culturais, explique contextos locais e sugira formas de comunicação mais efetiva.
+    Preserve a riqueza cultural enquanto facilita o entendimento mútuo."""
+    
+    ADAPTIVE_LEARNING = """Você é um sistema de aprendizado adaptativo que evolui com cada interação.
+    Analise padrões de uso, preferências linguísticas e necessidades específicas dos usuários.
+    Adapte suas respostas baseado no histórico de interações e feedback recebido.
+    Melhore continuamente a qualidade das traduções e sugestões oferecidas."""
+    
+    MULTIMODAL_FUSION = """Você é um especialista em análise multimodal avançada.
+    Combine informações de texto, imagem, áudio e contexto para fornecer análises completas.
+    Identifique gestos, expressões faciais, tom de voz e elementos visuais relevantes.
+    Integre todas as modalidades para uma compreensão holística da comunicação."""
+    
     @classmethod
     def get_prompt(cls, subject: str) -> str:
         """Obter prompt de sistema para um assunto específico"""
@@ -299,6 +387,12 @@ class SystemPrompts:
             'general': cls.GENERAL,
             'image_analysis': cls.IMAGE_ANALYSIS,
             'medical_image': cls.MEDICAL_IMAGE,
-            'audio_transcription': cls.AUDIO_TRANSCRIPTION
+            'audio_transcription': cls.AUDIO_TRANSCRIPTION,
+            # Novos prompts revolucionários
+            'contextual_translation': cls.CONTEXTUAL_TRANSLATION,
+            'emotional_analysis': cls.EMOTIONAL_ANALYSIS,
+            'cultural_bridge': cls.CULTURAL_BRIDGE,
+            'adaptive_learning': cls.ADAPTIVE_LEARNING,
+            'multimodal_fusion': cls.MULTIMODAL_FUSION
         }
         return prompts.get(subject, cls.GENERAL)
