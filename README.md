@@ -1,13 +1,13 @@
-# Bu Fala - Assistente de IA para Comunidades Rurais da Guiné-Bissau
+# Moransa - Assistente de IA para Comunidades Rurais da Guiné-Bissau
 
-![Bu Fala](https://img.shields.io/badge/Bu%20Fala-AI%20Assistant-green?style=for-the-badge)
+![Moransa](https://img.shields.io/badge/Bu%20Fala-AI%20Assistant-green?style=for-the-badge)
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ## 🌍 Sobre o Projeto
 
-O **Bu Fala** é um assistente de inteligência artificial desenvolvido para ajudar comunidades rurais da Guiné-Bissau que enfrentam desafios críticos em áreas remotas sem acesso adequado a serviços essenciais.
+O **Moransa** é um assistente de inteligência artificial desenvolvido para ajudar comunidades rurais da Guiné-Bissau que enfrentam desafios críticos em áreas remotas sem acesso adequado a serviços essenciais.
 
 ### 🎯 Problemas que Resolvemos
 
@@ -174,4 +174,4 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 ---
 
-**Bu Fala** - Falando a língua da sua comunidade, resolvendo problemas reais.
+**Moransa** - Falando a língua da sua comunidade, resolvendo problemas reais.

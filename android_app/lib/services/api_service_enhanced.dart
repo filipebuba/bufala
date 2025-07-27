@@ -1,12 +1,16 @@
 
+import 'dart:convert';
+import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import '../config/app_config.dart';
 
 class ApiService {
   ApiService() {
     // FORÇAR criação de nova instância Dio com configuração para emulador
     _dio = Dio(BaseOptions(
-      baseUrl: 'http://10.0.2.2:5000',
+      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
       connectTimeout: timeoutDuration,
       receiveTimeout: timeoutDuration,
       headers: {
@@ -29,7 +33,7 @@ class ApiService {
     );
   }
 
-  static const String baseUrl = 'http://10.0.2.2:5000'; // Emulador Android
+
   static const Duration timeoutDuration = Duration(seconds: 30);
   static const Duration longTimeoutDuration =
       Duration(minutes: 5); // AUMENTADO para Docs Gemma
@@ -49,7 +53,7 @@ class ApiService {
   // Health check do servidor
   Future<Map<String, dynamic>?> healthCheck() async {
     try {
-      final response = await _dio.get('/health');
+      final response = await _dio.get(AppConfig.buildUrl('health'));
       return response.data as Map<String, dynamic>?;
     } catch (e) {
       print('Erro no health check: $e');
@@ -67,7 +71,7 @@ class ApiService {
       print('[API] 📋 Usando Docs Gemma Service otimizado');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/medical',
+        AppConfig.buildUrl('medical'),
         data: {
           'question': question,
           'language': language,
@@ -106,7 +110,7 @@ class ApiService {
       print('[API] 📋 Usando Docs Gemma Service otimizado');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/education',
+        AppConfig.buildUrl('education'),
         data: {
           'question': question,
           'language': language,
@@ -147,7 +151,7 @@ class ApiService {
       print('[API] 📋 Usando Docs Gemma Service otimizado');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/agriculture',
+        AppConfig.buildUrl('agriculture'),
         data: {
           'question': question,
           'language': language,
@@ -182,7 +186,7 @@ class ApiService {
   }) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        '/multimodal',
+        AppConfig.buildUrl('multimodal'),
         data: {
           'image_url': imageUrl,
           'text': text,

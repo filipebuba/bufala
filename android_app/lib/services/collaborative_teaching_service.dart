@@ -3,7 +3,7 @@
 library;
 
 import '../models/collaborative_teaching_models.dart';
-import 'smart_api_service.dart';
+import 'integrated_api_service.dart';
 
 /// Serviço principal para o sistema de ensino colaborativo
 class CollaborativeTeachingService {
@@ -13,7 +13,7 @@ class CollaborativeTeachingService {
   static final CollaborativeTeachingService _instance =
       CollaborativeTeachingService._internal();
 
-  final SmartApiService _apiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
 
   // Cache local para melhor performance
   List<TeachableLanguage>? _cachedLanguages;

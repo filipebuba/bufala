@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moransa - Demonstração da API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        .section h2 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            background: #ffe8e8;
+            border-left-color: #f44336;
+            color: #d32f2f;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Moransa - Assistente de Saúde Comunitária</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Demonstração da API com Gemma-3n para assistência médica, educacional e agrícola
+        </p>
+
+        <!-- Seção Médica -->
+        <div class="section">
+            <h2>🚑 Assistência Médica de Emergência</h2>
+            <div class="input-group">
+                <textarea id="medicalPrompt" placeholder="Descreva a situação médica ou emergência...">Como tratar uma hemorragia durante o parto?</textarea>
+            </div>
+            <button onclick="testMedical()">Consultar Assistente Médico</button>
+            <div id="medicalResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Seção Educacional -->
+        <div class="section">
+            <h2>📚 Assistência Educacional</h2>
+            <div class="input-group">
+                <textarea id="educationPrompt" placeholder="Faça uma pergunta educacional...">Como ensinar matemática básica sem materiais?\</textarea>
+            </div>
+            <button onclick="testEducation()">Consultar Assistente Educacional</button>
+            <div id="educationResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Seção Agrícola -->
+        <div class="section">
+            <h2>🌱 Assistência Agrícola</h2>
+            <div class="input-group">
+                <textarea id="agriculturePrompt" placeholder="Descreva o problema agrícola...">Como proteger a colheita de pragas sem pesticidas?</textarea>
+            </div>
+            <button onclick="testAgriculture()">Consultar Assistente Agrícola</button>
+            <div id="agricultureResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Teste Geral -->
+        <div class="section">
+            <h2>🤖 Teste Personalizado</h2>
+            <div class="input-group">
+                <input type="text" id="customContext" placeholder="Contexto (medical, education, agriculture)" value="general">
+            </div>
+            <div class="input-group">
+                <textarea id="customPrompt" placeholder="Sua pergunta personalizada...">Olá, como você pode me ajudar?</textarea>
+            </div>
+            <button onclick="testCustom()">Enviar Pergunta</button>
+            <div id="customResponse" class="response" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        async function makeRequest(endpoint, prompt, context) {
+            try {
+                const response = await fetch(`${API_BASE}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        context: context
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            if (isError) {
+                element.className = 'response error';
+                element.textContent = `Erro: ${data}`;
+            } else {
+                element.className = 'response';
+                element.textContent = `Resposta do Gemma-3n:\n\n${data.response || data.message || JSON.stringify(data, null, 2)}`;
+            }
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'response loading';
+            element.textContent = 'Consultando Gemma-3n... Por favor, aguarde.';
+        }
+
+        async function testMedical() {
+            const prompt = document.getElementById('medicalPrompt').value;
+            const responseId = 'medicalResponse';
+            
+            showLoading(responseId);
+            
+            try {
+                const data = await makeRequest('medical', prompt, 'emergency');
+                showResponse(responseId, data);
+            } catch (error) {
+                showResponse(responseId, error.message, true);
+            }
+        }
+
+        async function testEducation() {
+            const prompt = document.getElementById('educationPrompt').value;
+            const responseId = 'educationResponse';
+            
+            showLoading(responseId);
+            
+            try {
+                const data = await makeRequest('education', prompt, 'teaching');
+                showResponse(responseId, data);
+            } catch (error) {
+                showResponse(responseId, error.message, true);
+            }
+        }
+
+        async function testAgriculture() {
+            const prompt = document.getElementById('agriculturePrompt').value;
+            const responseId = 'agricultureResponse';
+            
+            showLoading(responseId);
+            
+            try {
+                const data = await makeRequest('agriculture', prompt, 'farming');
+                showResponse(responseId, data);
+            } catch (error) {
+                showResponse(responseId, error.message, true);
+            }
+        }
+
+        async function testCustom() {
+            const prompt = document.getElementById('customPrompt').value;
+            const context = document.getElementById('customContext').value;
+            const responseId = 'customResponse';
+            
+            showLoading(responseId);
+            
+            try {
+                const endpoint = context === 'medical' ? 'medical' : 
+                                context === 'education' ? 'education' : 
+                                context === 'agriculture' ? 'agriculture' : 'medical';
+                const data = await makeRequest(endpoint, prompt, context);
+                showResponse(responseId, data);
+            } catch (error) {
+                showResponse(responseId, error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>

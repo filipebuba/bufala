@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas Ambientais - Bu Fala Backend
+Rotas Ambientais - Moransa Backend
 Hackathon Gemma 3n
 
 Sistema de monitoramento e análise ambiental

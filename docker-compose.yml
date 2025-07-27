@@ -44,9 +44,8 @@ services:
   # Backend Python Flask
   backend:
     build:
-      context: ./backend
+      context: ./backend_novo
       dockerfile: Dockerfile
-      target: production
     container_name: moransa-backend
     ports:
       - "5000:5000"
@@ -58,7 +57,6 @@ services:
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jwt-secret-change-in-production}
     volumes:
-      - ./backend:/app
       - backend_cache:/root/.cache
       - backend_logs:/app/logs
     networks:

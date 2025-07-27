@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas Médicas - Bu Fala Backend
+Rotas Médicas - Moransa Backend
 Hackathon Gemma 3n
 
 Especializado em primeiros socorros e cuidados básicos de saúde

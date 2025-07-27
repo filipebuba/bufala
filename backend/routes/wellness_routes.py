@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas de Bem-estar - Bu Fala Backend
+Rotas de Bem-estar - Moransa Backend
 Hackathon Gemma 3n
 
 Especializado em bem-estar mental, físico e social,

@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import '../config/app_config.dart';
 
 /// Serviço de API Inteligente para o Bu Fala
 /// Otimizado para trabalhar com o DocsGemmaService
@@ -8,7 +12,7 @@ class SmartApiService {
 
   SmartApiService() {
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
       connectTimeout: const Duration(seconds: 45),
       receiveTimeout: const Duration(minutes: 8), // Tempo estendido para Gemma-3n
       sendTimeout: const Duration(minutes: 2),
@@ -54,7 +58,7 @@ class SmartApiService {
       ),
     );
   }
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  // URL base agora vem do AppConfig
 
   late final Dio _dio;
 
@@ -72,7 +76,7 @@ class SmartApiService {
   /// Health check otimizado
   Future<SmartApiResponse<Map<String, dynamic>>> healthCheck() async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/health');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('health'));
 
       if (response.statusCode == 200 && response.data != null) {
         return SmartApiResponse.success(
@@ -101,14 +105,14 @@ class SmartApiService {
 
       // Criar instância temporária com timeout menor
       final tempDio = Dio(BaseOptions(
-        baseUrl: baseUrl,
+        baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(minutes: 3),
         headers: _dio.options.headers,
       ));
 
       final response = await tempDio.post<Map<String, dynamic>>(
-        '/medical',
+        AppConfig.buildUrl('medical'),
         data: {
           'question': question,
           'language': language,
@@ -176,7 +180,7 @@ class SmartApiService {
       final stopwatch = Stopwatch()..start();
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/education',
+        AppConfig.buildUrl('education'),
         data: {
           'question': question,
           'language': language,
@@ -226,7 +230,7 @@ class SmartApiService {
       final stopwatch = Stopwatch()..start();
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/agriculture',
+        AppConfig.buildUrl('agriculture'),
         data: {
           'question': question,
           'language': language,
@@ -280,7 +284,7 @@ class SmartApiService {
       final stopwatch = Stopwatch()..start();
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/accessibility/visual/describe',
+        AppConfig.buildUrl('accessibility/visual/describe'),
         data: {
           'image_base64': imageBase64,
           'language': language,
@@ -329,7 +333,7 @@ class SmartApiService {
       final stopwatch = Stopwatch()..start();
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/accessibility/navigation/voice',
+        AppConfig.buildUrl('accessibility/navigation/voice'),
         data: {
           'audio_text': audioText,
           'current_location': currentLocation,
@@ -376,7 +380,7 @@ class SmartApiService {
       print('[🎤 SMART-API] Iniciando transcrição contínua...');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/accessibility/transcription/start',
+        AppConfig.buildUrl('accessibility/transcription/start'),
         data: {
           'language': language,
           'session_id': sessionId.isEmpty
@@ -412,7 +416,7 @@ class SmartApiService {
       print('[⏹️ SMART-API] Parando transcrição...');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/accessibility/transcription/stop',
+        AppConfig.buildUrl('accessibility/transcription/stop'),
         data: {
           'session_id': sessionId,
           'timestamp': DateTime.now().toIso8601String(),
@@ -443,7 +447,7 @@ class SmartApiService {
       print('[📜 SMART-API] Buscando transcrições recentes...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '/accessibility/transcription/recent',
+        AppConfig.buildUrl('accessibility/transcription/recent'),
         queryParameters: {
           'limit': limit,
           'session_id': sessionId,
@@ -485,7 +489,7 @@ class SmartApiService {
       final stopwatch = Stopwatch()..start();
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/accessibility/translation/translate',
+        AppConfig.buildUrl('accessibility/translation/translate'),
         data: {
           'text': text,
           'source_language': sourceLanguage,
@@ -527,7 +531,7 @@ class SmartApiService {
       print('[🗣️ SMART-API] Buscando idiomas suportados...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '/accessibility/translation/languages',
+        AppConfig.buildUrl('accessibility/translation/languages'),
       );
 
       if (response.statusCode == 200 && response.data != null) {
@@ -562,7 +566,7 @@ class SmartApiService {
       print('[⚡ SMART-API] Processando áudio em tempo real...');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/accessibility/transcription/realtime',
+        AppConfig.buildUrl('accessibility/transcription/realtime'),
         data: {
           'audio_base64': audioBase64,
           'language': language,
@@ -601,7 +605,7 @@ class SmartApiService {
       print('[ℹ️ SMART-API] Buscando informações de acessibilidade...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '/accessibility/help',
+        AppConfig.buildUrl('accessibility/help'),
         queryParameters: {
           'language': language,
         },
@@ -630,7 +634,7 @@ class SmartApiService {
       print('[📊 SMART-API] Verificando status de acessibilidade...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '/accessibility/status',
+        AppConfig.buildUrl('accessibility/status'),
       );
 
       if (response.statusCode == 200 && response.data != null) {
@@ -928,7 +932,7 @@ class SmartApiService {
     try {
       // Tentar um endpoint mais simples ou cache local
       final response = await _dio.post<Map<String, dynamic>>(
-        '/medical/simple',
+        AppConfig.buildUrl('medical/simple'),
         data: {
           'question': question,
           'language': language,

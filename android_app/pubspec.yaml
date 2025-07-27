@@ -37,6 +37,7 @@ dependencies:
   
   # Utilitários
   path_provider: ^2.1.1
+  flutter_dotenv: ^5.1.0
   
   # AI e Machine Learning
   # tflite_flutter: ^0.9.0  # Comentado para build offline sem TFLite
@@ -100,6 +101,7 @@ flutter:
   uses-material-design: true
   
   assets:
+    - .env
     - assets/images/
     - assets/icons/
     - assets/audio/

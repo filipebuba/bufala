@@ -30,7 +30,7 @@ class WellnessCoachingService {
 
   // Configuração do backend
   static const String _backendUrl =
-      'http://10.0.2.2:5000'; // CORRIGIDO: emulador Android
+      'http://10.0.2.2:5000/api'; // CORRIGIDO: emulador Android
   bool _backendAvailable = false;
 
   WellnessProfile? _currentProfile;

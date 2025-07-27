@@ -1,12 +1,13 @@
 import 'package:dio/dio.dart';
 import '../models/collaborative_learning_models.dart';
-import 'smart_api_service.dart';
+import 'integrated_api_service.dart';
+import '../config/app_config.dart';
 
 /// Serviço para o Sistema de Aprendizado Colaborativo - "Ensine o Bu Fala"
 class CollaborativeLearningService {
   CollaborativeLearningService() {
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(minutes: 3),
       headers: {
@@ -34,9 +35,9 @@ class CollaborativeLearningService {
       ),
     );
   }
-  static const String baseUrl = 'http://10.0.2.2:5000';
+
   late final Dio _dio;
-  final SmartApiService _smartApi = SmartApiService();
+  final IntegratedApiService _smartApi = IntegratedApiService();
 
   // ========================================
   // 🎯 PERFIL DE PROFESSOR
@@ -47,7 +48,7 @@ class CollaborativeLearningService {
       String teacherId) async {
     try {
       final response = await _dio.get(
-        '/api/collaborative/teacher/profile',
+        AppConfig.buildUrl('collaborative/teacher/profile'),
         queryParameters: {'teacher_id': teacherId},
       );
 
@@ -74,7 +75,7 @@ class CollaborativeLearningService {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/collaborative/teacher/create',
+        AppConfig.buildUrl('collaborative/teacher/create'),
         data: {
           'name': name,
           'languages_teaching': languagesTeaching,
@@ -112,7 +113,7 @@ class CollaborativeLearningService {
       }
 
       final response = await _dio.put(
-        '/api/collaborative/teacher/profile',
+        AppConfig.buildUrl('collaborative/teacher/profile'),
         data: data,
       );
 
@@ -161,7 +162,7 @@ class CollaborativeLearningService {
       };
 
       final response = await _dio.post(
-        '/api/collaborative/phrase/teach',
+        AppConfig.buildUrl('collaborative/phrase/teach'),
         data: data,
       );
 
@@ -198,7 +199,7 @@ class CollaborativeLearningService {
       };
 
       final response = await _dio.post(
-        '/api/collaborative/translation/validate',
+        AppConfig.buildUrl('collaborative/translation/validate'),
         data: data,
       );
 
@@ -236,7 +237,7 @@ class CollaborativeLearningService {
       if (limit != null) queryParams['limit'] = limit;
 
       final response = await _dio.get(
-        '/api/collaborative/validation/pending',
+        AppConfig.buildUrl('collaborative/validation/pending'),
         queryParameters: queryParams,
       );
 
@@ -264,7 +265,7 @@ class CollaborativeLearningService {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/collaborative/ranking',
+        AppConfig.buildUrl('collaborative/ranking'),
         queryParameters: {
           'period': period.name,
           if (limit != null) 'limit': limit,
@@ -300,7 +301,7 @@ class CollaborativeLearningService {
       };
 
       final response = await _dio.post(
-        '/api/collaborative/provocation',
+        AppConfig.buildUrl('collaborative/provocation'),
         data: data,
       );
 
@@ -338,7 +339,7 @@ class CollaborativeLearningService {
       };
 
       final response = await _dio.post(
-        '/api/collaborative/duel/create',
+        AppConfig.buildUrl('collaborative/duel/create'),
         data: data,
       );
 
@@ -364,7 +365,7 @@ class CollaborativeLearningService {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/collaborative/duel/join',
+        AppConfig.buildUrl('collaborative/duel/join'),
         data: {
           'duel_id': duelId,
           'participant_id': participantId,
@@ -399,7 +400,7 @@ class CollaborativeLearningService {
       if (type != null) queryParams['type'] = type.name;
 
       final response = await _dio.get(
-        '/api/collaborative/duel/available',
+        AppConfig.buildUrl('collaborative/duel/available'),
         queryParameters: queryParams,
       );
 
@@ -422,7 +423,7 @@ class CollaborativeLearningService {
   /// Obter estatísticas de aprendizado
   Future<SmartApiResponse<LearningStats>> getLearningStats() async {
     try {
-      final response = await _dio.get('/api/collaborative/stats');
+      final response = await _dio.get(AppConfig.buildUrl('collaborative/stats'));
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -444,7 +445,7 @@ class CollaborativeLearningService {
       String teacherId) async {
     try {
       final response = await _dio.get(
-        '/api/collaborative/progress',
+        AppConfig.buildUrl('collaborative/progress'),
         queryParameters: {'teacher_id': teacherId},
       );
 
@@ -479,7 +480,7 @@ class CollaborativeLearningService {
       if (category != null) queryParams['category'] = category;
 
       final response = await _dio.get(
-        '/api/collaborative/search',
+        AppConfig.buildUrl('collaborative/search'),
         queryParameters: queryParams,
       );
 
@@ -504,7 +505,7 @@ class CollaborativeLearningService {
   Future<SmartApiResponse<List<Map<String, dynamic>>>>
       getSupportedLanguages() async {
     try {
-      final response = await _dio.get('/api/collaborative/languages');
+      final response = await _dio.get(AppConfig.buildUrl('collaborative/languages'));
 
       if (response.statusCode == 200) {
         final data = response.data;

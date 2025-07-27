@@ -2,6 +2,8 @@
 /// Otimizado para o backend modular Bu Fala
 library;
 
+import '../config/app_config.dart';
+
 class BackendConnectionConfig {
   // URLs base para diferentes ambientes
   static const String _localUrl = 'http://10.0.2.2:5000';
@@ -33,42 +35,42 @@ class BackendConnectionConfig {
   static const Duration retryInterval = Duration(seconds: 2);
   
   // Endpoints disponíveis no backend modular
-  static const Map<String, String> endpoints = {
+  static Map<String, String> get endpoints => {
     // Endpoints principais
-    'health': '/health',
-    'medical': '/medical',
-    'education': '/education',
-    'agriculture': '/agriculture',
-    'translate': '/translate',
-    'multimodal': '/multimodal',
+    'health': AppConfig.buildUrl('health'),
+    'medical': AppConfig.buildUrl('medical'),
+    'education': AppConfig.buildUrl('education'),
+    'agriculture': AppConfig.buildUrl('agriculture'),
+    'translate': AppConfig.buildUrl('translate'),
+    'multimodal': AppConfig.buildUrl('multimodal'),
     
     // Novos endpoints do backend modular
-    'wellness': '/wellness',
-    'accessibility': '/accessibility',
-    'environmental': '/environmental',
-    'collaborative': '/collaborative',
-    'international': '/international',
+    'wellness': AppConfig.buildUrl('wellness'),
+    'accessibility': AppConfig.buildUrl('accessibility'),
+    'environmental': AppConfig.buildUrl('environmental'),
+    'collaborative': AppConfig.buildUrl('collaborative'),
+    'international': AppConfig.buildUrl('international'),
     
     // Endpoints específicos
-    'medical_emergency': '/medical/emergency',
-    'education_lesson': '/education/lesson',
-    'agriculture_diagnosis': '/agriculture/diagnosis',
-    'wellness_plan': '/wellness/plan',
-    'accessibility_voice': '/accessibility/voice',
-    'environmental_tips': '/environmental/tips',
+    'medical_emergency': AppConfig.buildUrl('medical/emergency'),
+    'education_lesson': AppConfig.buildUrl('education/lesson'),
+    'agriculture_diagnosis': AppConfig.buildUrl('agriculture/diagnosis'),
+    'wellness_plan': AppConfig.buildUrl('wellness/plan'),
+    'accessibility_voice': AppConfig.buildUrl('accessibility/voice'),
+    'environmental_tips': AppConfig.buildUrl('environmental/tips'),
   };
   
   // Configurações específicas por endpoint
   static Duration getTimeoutForEndpoint(String endpoint) {
     switch (endpoint) {
-      case '/health':
+      case String() when endpoint == AppConfig.buildUrl('health'):
         return receiveTimeoutShort;
-      case '/medical':
-      case '/education':
-      case '/agriculture':
+      case String() when endpoint == AppConfig.buildUrl('medical') ||
+                         endpoint == AppConfig.buildUrl('education') ||
+                         endpoint == AppConfig.buildUrl('agriculture'):
         return receiveTimeoutMedium;
-      case '/multimodal':
-      case '/accessibility/voice':
+      case String() when endpoint == AppConfig.buildUrl('multimodal') ||
+                         endpoint == AppConfig.buildUrl('accessibility/voice'):
         return receiveTimeoutLong;
       default:
         return receiveTimeoutMedium;

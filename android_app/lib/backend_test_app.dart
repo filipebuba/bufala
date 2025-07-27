@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'config/app_config.dart';
 
 void main() {
   runApp(const BackendTestApp());
@@ -78,7 +80,7 @@ class _BackendTestScreenState extends State<BackendTestScreen> {
   Future<void> _testHealthEndpoint() async {
     try {
       _addResult('🏥 Testando /health...');
-      final response = await _dio.get<Map<String, dynamic>>('/health');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('health'));
 
       if (response.statusCode == 200) {
         final data = response.data!;
@@ -97,7 +99,7 @@ class _BackendTestScreenState extends State<BackendTestScreen> {
     try {
       _addResult('🏥 Testando /medical...');
       final response = await _dio.post<Map<String, dynamic>>(
-        '/medical',
+        AppConfig.buildUrl('medical'),
         data: {'question': 'Como tratar febre?', 'language': 'pt-BR'},
       );
 
@@ -118,7 +120,7 @@ class _BackendTestScreenState extends State<BackendTestScreen> {
     try {
       _addResult('📚 Testando /education...');
       final response = await _dio.post<Map<String, dynamic>>(
-        '/education',
+        AppConfig.buildUrl('education'),
         data: {
           'question': 'Ensine sobre matemática básica',
           'subject': 'matemática',
@@ -144,7 +146,7 @@ class _BackendTestScreenState extends State<BackendTestScreen> {
     try {
       _addResult('🌱 Testando /agriculture...');
       final response = await _dio.post<Map<String, dynamic>>(
-        '/agriculture',
+        AppConfig.buildUrl('agriculture'),
         data: {
           'question': 'Como plantar arroz?',
           'crop_type': 'arroz',
@@ -169,7 +171,7 @@ class _BackendTestScreenState extends State<BackendTestScreen> {
     try {
       _addResult('🌐 Testando /translate...');
       final response = await _dio.post<Map<String, dynamic>>(
-        '/translate',
+        AppConfig.buildUrl('translate'),
         data: {
           'text': 'Olá, como você está?',
           'from_language': 'pt-BR',
@@ -194,7 +196,7 @@ class _BackendTestScreenState extends State<BackendTestScreen> {
     try {
       _addResult('🖼️ Testando /multimodal...');
       final response = await _dio.post<Map<String, dynamic>>(
-        '/multimodal',
+        AppConfig.buildUrl('multimodal'),
         data: {
           'text': 'Analise esta situação médica',
           'type': 'text_analysis',
