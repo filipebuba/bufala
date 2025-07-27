@@ -5,7 +5,7 @@ import 'services/connection_state.dart';
 import 'services/enhanced_api_service.dart';
 import 'services/modular_backend_service.dart';
 
-/// Tela de teste de conectividade com o backend Bu Fala
+/// Tela de teste de conectividade com o backend Moransa
 class ConnectionTestScreen extends StatefulWidget {
   const ConnectionTestScreen({super.key});
 
@@ -18,7 +18,7 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
   final ModularBackendService _modularService = ModularBackendService();
   final EnhancedApiService _enhancedService = EnhancedApiService();
   final ConnectionMonitor _monitor = ConnectionMonitor();
-  
+
   String _connectionStatus = 'Não testado';
   String _lastError = '';
   bool _isLoading = false;
@@ -84,7 +84,6 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
       await _enhancedService.initialize();
       final enhancedHealth = await _enhancedService.healthCheck();
       _testResults['enhanced_service'] = enhancedHealth;
-
     } catch (e) {
       setState(() {
         _lastError = 'Erro durante os testes: $e';
@@ -98,130 +97,133 @@ class _ConnectionTestScreenState extends State<ConnectionTestScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: const Text('Teste de Conectividade Bu Fala'),
-        backgroundColor: Colors.green,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Status da conexão
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Status da Conexão',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          _connectionStatus == 'Conectado'
-                              ? Icons.check_circle
-                              : Icons.error,
-                          color: _connectionStatus == 'Conectado'
-                              ? Colors.green
-                              : Colors.red,
+        appBar: AppBar(
+          title: const Text('Teste de Conectividade Moransa'),
+          backgroundColor: Colors.green,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Status da conexão
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Status da Conexão',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 8),
-                        Text(_connectionStatus),
-                      ],
-                    ),
-                    if (_lastError.isNotEmpty) ...[
+                      ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Último erro: $_lastError',
-                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      Row(
+                        children: [
+                          Icon(
+                            _connectionStatus == 'Conectado'
+                                ? Icons.check_circle
+                                : Icons.error,
+                            color: _connectionStatus == 'Conectado'
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(_connectionStatus),
+                        ],
                       ),
+                      if (_lastError.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Último erro: $_lastError',
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Botão de teste
-            ElevatedButton(
-              onPressed: _isLoading ? null : _testAllConnections,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: _isLoading
-                  ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        SizedBox(width: 8),
-                        Text('Testando...'),
-                      ],
-                    )
-                  : const Text('Testar Todas as Conexões'),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Resultados dos testes
-            if (_testResults.isNotEmpty)
-              Expanded(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Resultados dos Testes',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: ListView(
-                            children: _testResults.entries.map((entry) {
-                              final isSuccess = entry.value == true;
-                              return ListTile(
-                                leading: Icon(
-                                  isSuccess ? Icons.check : Icons.close,
-                                  color: isSuccess ? Colors.green : Colors.red,
-                                ),
-                                title: Text(_getTestName(entry.key)),
-                                subtitle: Text(
-                                  isSuccess ? 'Sucesso' : 'Falha',
-                                  style: TextStyle(
-                                    color: isSuccess ? Colors.green : Colors.red,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
-          ],
+
+              const SizedBox(height: 16),
+
+              // Botão de teste
+              ElevatedButton(
+                onPressed: _isLoading ? null : _testAllConnections,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Testando...'),
+                        ],
+                      )
+                    : const Text('Testar Todas as Conexões'),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Resultados dos testes
+              if (_testResults.isNotEmpty)
+                Expanded(
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Resultados dos Testes',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: ListView(
+                              children: _testResults.entries.map((entry) {
+                                final isSuccess = entry.value == true;
+                                return ListTile(
+                                  leading: Icon(
+                                    isSuccess ? Icons.check : Icons.close,
+                                    color:
+                                        isSuccess ? Colors.green : Colors.red,
+                                  ),
+                                  title: Text(_getTestName(entry.key)),
+                                  subtitle: Text(
+                                    isSuccess ? 'Sucesso' : 'Falha',
+                                    style: TextStyle(
+                                      color:
+                                          isSuccess ? Colors.green : Colors.red,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
   String _getTestName(String key) {
     switch (key) {
@@ -257,14 +259,14 @@ class ConnectionTestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-      title: 'Bu Fala Connection Test',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const ConnectionTestScreen(),
-      debugShowCheckedModeBanner: false,
-    );
+        title: 'Moransa Connection Test',
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: const ConnectionTestScreen(),
+        debugShowCheckedModeBanner: false,
+      );
 }
 
 /// Função main para executar apenas o teste de conectividade

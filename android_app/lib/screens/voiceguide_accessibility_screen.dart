@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 
 class VoiceGuideAccessibilityScreen extends StatefulWidget {
   const VoiceGuideAccessibilityScreen({super.key});
@@ -12,7 +12,7 @@ class VoiceGuideAccessibilityScreen extends StatefulWidget {
 
 class _VoiceGuideAccessibilityScreenState
     extends State<VoiceGuideAccessibilityScreen> with TickerProviderStateMixin {
-  final SmartApiService _apiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -73,10 +73,13 @@ class _VoiceGuideAccessibilityScreenState
     });
 
     try {
-      final response =
-          await _apiService.post('/accessibility/transcription/start', {});
+      final response = await _apiService.getAccessibilitySupport(
+        'Iniciar transcrição de voz',
+        accessibilityType: 'transcription',
+        userNeeds: 'start_transcription',
+      );
 
-      if (response.success) {
+      if (response['success'] == true) {
         setState(() {
           _isTranscribing = true;
         });
@@ -88,7 +91,7 @@ class _VoiceGuideAccessibilityScreenState
         // Simular polling de transcrições (em produção, usar WebSocket)
         _startTranscriptionPolling();
       } else {
-        _showSnackBar('Erro ao iniciar transcrição: ${response.error}',
+        _showSnackBar('Erro ao iniciar transcrição: ${response['error'] ?? 'Erro desconhecido'}',
             isError: true);
       }
     } catch (e) {
@@ -106,10 +109,13 @@ class _VoiceGuideAccessibilityScreenState
     });
 
     try {
-      final response =
-          await _apiService.post('/accessibility/transcription/stop', {});
+      final response = await _apiService.getAccessibilitySupport(
+        'Parar transcrição de voz',
+        accessibilityType: 'transcription',
+        userNeeds: 'stop_transcription',
+      );
 
-      if (response.success) {
+      if (response['success'] == true) {
         setState(() {
           _isTranscribing = false;
         });
@@ -139,11 +145,14 @@ class _VoiceGuideAccessibilityScreenState
 
   Future<void> _fetchRecentTranscriptions() async {
     try {
-      final response =
-          await _apiService.get('/accessibility/transcription/recent?limit=5');
+      final response = await _apiService.getAccessibilitySupport(
+        'Buscar transcrições recentes',
+        accessibilityType: 'transcription',
+        userNeeds: 'recent_transcriptions',
+      );
 
-      if (response.success && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
         final transcriptions = data['transcriptions'] as List<dynamic>? ?? [];
 
         for (final item in transcriptions) {
@@ -185,16 +194,15 @@ class _VoiceGuideAccessibilityScreenState
     });
 
     try {
-      final response =
-          await _apiService.post('/accessibility/translation/translate', {
-        'text': _textController.text.trim(),
-        'source_language': _sourceLanguage,
-        'target_language': _targetLanguage,
-      });
+      final response = await _apiService.translateText(
+        _textController.text.trim(),
+        fromLanguage: _sourceLanguage,
+        toLanguage: _targetLanguage,
+      );
 
-      if (response.success && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
-        final translatedText = data['translated_text'] as String? ?? '';
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        final translatedText = data['translated_text'] ?? data['response'] ?? data['answer'] ?? data.toString();
 
         setState(() {
           _lastTranslation = translatedText;
@@ -203,7 +211,7 @@ class _VoiceGuideAccessibilityScreenState
         _fadeController.forward();
         _showSnackBar('Texto traduzido com sucesso', isError: false);
       } else {
-        _showSnackBar('Erro na tradução: ${response.error}', isError: true);
+        _showSnackBar('Erro na tradução: ${response['error'] ?? 'Erro desconhecido'}', isError: true);
       }
     } catch (e) {
       _showSnackBar('Erro de conexão: $e', isError: true);
@@ -220,12 +228,15 @@ class _VoiceGuideAccessibilityScreenState
     });
 
     try {
-      final response =
-          await _apiService.post('/accessibility/visual/describe', {});
+      final response = await _apiService.getAccessibilitySupport(
+        'Descrever ambiente visual',
+        accessibilityType: 'visual',
+        userNeeds: 'descrição do ambiente',
+      );
 
-      if (response.success && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
-        final description = data['description'] as String? ?? '';
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        final description = data['response'] ?? data['answer'] ?? data.toString();
 
         setState(() {
           _visualDescription = description;
@@ -235,7 +246,7 @@ class _VoiceGuideAccessibilityScreenState
         _showSnackBar('Ambiente descrito - feedback por voz ativo',
             isError: false);
       } else {
-        _showSnackBar('Erro na descrição visual: ${response.error}',
+        _showSnackBar('Erro na descrição visual: ${response['error'] ?? 'Erro desconhecido'}',
             isError: true);
       }
     } catch (e) {

@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 import '../services/voice_guide_service.dart';
 
 // Modelo para itens de transcrição
@@ -42,7 +42,7 @@ class VoiceGuideNavigationScreen extends StatefulWidget {
 class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
     with TickerProviderStateMixin {
   final VoiceGuideService _voiceGuideService = VoiceGuideService();
-  final SmartApiService _smartApiService = SmartApiService();
+  final IntegratedApiService _apiService = IntegratedApiService();
   final FlutterTts _flutterTts = FlutterTts();
   final TextEditingController _destinationController = TextEditingController();
   final TextEditingController _commandController = TextEditingController();
@@ -356,12 +356,15 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
       final bytes = await _selectedImage!.readAsBytes();
       final imageBase64 = VoiceGuideService.imageToBase64(bytes);
 
-      final response = await _smartApiService.describeEnvironment(
-        imageBase64: imageBase64,
+      final response = await _apiService.getAccessibilitySupport(
+        'Descrever ambiente visual',
+        accessibilityType: 'visual',
+        userNeeds: 'descrição do ambiente',
       );
 
-      if (response.success && response.data != null) {
-        final description = response.data!;
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        final description = data['response'] ?? data['answer'] ?? data.toString();
         setState(() {
           _visualDescription = description;
         });
@@ -382,14 +385,15 @@ class _VoiceGuideNavigationScreenState extends State<VoiceGuideNavigationScreen>
     }
 
     try {
-      final response = await _smartApiService.translateText(
-        text: text,
-        sourceLanguage: _currentLanguage,
-        targetLanguage: 'pt-BR', // Traduzir sempre para português
+      final response = await _apiService.translateText(
+        text,
+        fromLanguage: _currentLanguage,
+        toLanguage: 'pt-BR', // Traduzir sempre para português
       );
 
-      if (response.success && response.data != null) {
-        final translatedText = response.data!;
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        final translatedText = data['translated_text'] ?? data['response'] ?? data['answer'] ?? data.toString();
         await _speak('Texto original: $text. Tradução: $translatedText');
 
         // Adicionar à lista de transcrições

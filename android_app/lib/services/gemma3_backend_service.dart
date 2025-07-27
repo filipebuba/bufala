@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 
 import '../models/crisis_response_models.dart';
 import '../models/offline_learning_models.dart';
+import '../config/app_config.dart';
 // import 'tflite_gemma_service.dart';
 
 /// Serviço para conectar ao backend Gemma-3
@@ -13,8 +14,7 @@ class Gemma3BackendService {
       Gemma3BackendService._internal();
 
   final Dio _dio = Dio();
-  static const String _baseUrl =
-      'http://10.0.2.2:5000'; // URL do backend para emulador Android
+  static String get _baseUrl => AppConfig.apiBaseUrl; // URL dinâmica do backend
   bool _isInitialized = false;
 
   // TensorFlow Lite para funcionamento offline
@@ -32,7 +32,7 @@ class Gemma3BackendService {
       _dio.options.receiveTimeout = const Duration(seconds: 60);
 
       // Testar conexão com o backend
-      final response = await _dio.get<Map<String, dynamic>>('/health');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('health'));
       if (response.statusCode == 200) {
         _isInitialized = true;
         _isOfflineMode = false;
@@ -114,7 +114,7 @@ class Gemma3BackendService {
       }
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/medical',
+        AppConfig.buildUrl('medical'),
         data: formData,
       );
 
@@ -169,7 +169,7 @@ class Gemma3BackendService {
         'language': language,
       };
 
-      final response = await _dio.post<Map<String, dynamic>>('/education',
+      final response = await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('education'),
           data: requestData);
 
       if (response.statusCode == 200) {
@@ -222,7 +222,7 @@ class Gemma3BackendService {
       );
 
       final response =
-          await _dio.post<Map<String, dynamic>>('/multimodal', data: formData);
+          await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('multimodal'), data: formData);
 
       if (response.statusCode == 200) {
         return response.data ?? {};
@@ -258,7 +258,7 @@ class Gemma3BackendService {
       );
 
       final response =
-          await _dio.post<Map<String, dynamic>>('/multimodal', data: formData);
+          await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('multimodal'), data: formData);
 
       if (response.statusCode == 200) {
         return response.data ?? {};
@@ -290,7 +290,7 @@ class Gemma3BackendService {
         'to_language': toLanguage,
       };
 
-      final response = await _dio.post<Map<String, dynamic>>('/translate',
+      final response = await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('translate'),
           data: requestData);
 
       if (response.statusCode == 200) {
@@ -307,7 +307,7 @@ class Gemma3BackendService {
   /// Verificar status de saúde do backend
   Future<Map<String, dynamic>> getHealthStatus() async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/health');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('health'));
       return response.data ?? {};
     } catch (e) {
       return {'status': 'error', 'message': e.toString()};
@@ -346,7 +346,7 @@ class Gemma3BackendService {
         if (location != null) 'location': location,
       };
 
-      final response = await _dio.post<Map<String, dynamic>>('/agriculture',
+      final response = await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('agriculture'),
           data: requestData);
 
       if (response.statusCode == 200) {
@@ -384,7 +384,7 @@ class Gemma3BackendService {
       };
 
       final response =
-          await _dio.post<Map<String, dynamic>>('/medical', data: requestData);
+          await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('medical'), data: requestData);
 
       if (response.statusCode == 200) {
         return response.data ?? {};
@@ -393,6 +393,44 @@ class Gemma3BackendService {
       }
     } catch (e) {
       print('❌ Erro ao consultar informações médicas: $e');
+      rethrow;
+    }
+  }
+
+  /// Gerar conteúdo de bem-estar com Gemma-3
+  Future<Map<String, dynamic>> generateWellnessContent({
+    required String prompt,
+    String language = 'pt-BR',
+    String? sessionType,
+    Map<String, dynamic>? userContext,
+  }) async {
+    if (!_isInitialized) {
+      throw Exception(
+        'Serviço não inicializado. Execute initialize() primeiro.',
+      );
+    }
+
+    try {
+      final requestData = {
+        'prompt': prompt,
+        'language': language,
+        'context': 'wellness_coaching',
+        if (sessionType != null) 'session_type': sessionType,
+        if (userContext != null) 'user_context': userContext,
+      };
+
+      final response = await _dio.post<Map<String, dynamic>>(
+        AppConfig.buildUrl('wellness'),
+        data: requestData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data ?? {};
+      } else {
+        throw Exception('Erro na resposta do servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Erro ao gerar conteúdo de bem-estar: $e');
       rethrow;
     }
   }
@@ -419,7 +457,7 @@ class Gemma3BackendService {
       };
 
       final response =
-          await _dio.post<Map<String, dynamic>>('/chat', data: requestData);
+          await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('chat'), data: requestData);
 
       if (response.statusCode == 200) {
         return response.data ?? {};
@@ -455,7 +493,7 @@ class Gemma3BackendService {
         if (severity != null) 'severity': severity,
       };
 
-      final response = await _dio.post<Map<String, dynamic>>('/emergency',
+      final response = await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('emergency'),
           data: requestData);
 
       if (response.statusCode == 200) {
@@ -492,7 +530,7 @@ class Gemma3BackendService {
         if (ageGroup != null) 'age_group': ageGroup,
       };
 
-      final response = await _dio.post<Map<String, dynamic>>('/education',
+      final response = await _dio.post<Map<String, dynamic>>(AppConfig.buildUrl('education'),
           data: requestData);
 
       if (response.statusCode == 200) {

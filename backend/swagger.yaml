@@ -1,9 +1,9 @@
  openapi: 3.0.3
 info:
-  title: Bu Fala Backend API
+  title: Moransa Backend API
   version: "2.0.0"
   description: |
-    API completa do Bu Fala - Sistema multimodal com Gemma 3n para acessibilidade, educação, agricultura e saúde.
+    API completa do Moransa - Sistema multimodal com Gemma 3n para acessibilidade, educação, agricultura e saúde.
     
     ## Recursos Principais
     - **Multimodalidade**: Análise de imagem, áudio e texto
@@ -18,7 +18,7 @@ info:
     - Flutter Mobile App
     
   contact:
-    name: Bu Fala Team
+    name: Moransa Team
     url: https://github.com/bufala
   license:
     name: MIT
@@ -322,7 +322,7 @@ components:
           properties:
             service:
               type: string
-              example: "Bu Fala Backend Modularizado"
+              example: "Moransa Backend Modularizado"
             version:
               type: string
               example: "2.0.0"

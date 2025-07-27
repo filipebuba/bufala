@@ -1,6 +1,6 @@
 cat > .gitignore << 'EOF'
 # ==========================================
-# Bu Fala - .gitignore completo
+# Moransa - .gitignore completo
 # ==========================================
 
 # ==========================================
@@ -384,6 +384,7 @@ _pywrap_tensorflow_internal.pyd
 api_keys.json
 secrets.json
 config/secrets/
+kaggle.json
 
 # Firebase
 firebase-debug.log
@@ -492,7 +493,7 @@ pids
 *.pid.lock
 
 # ==========================================
-# BU FALA SPECIFIC
+# Moransa SPECIFIC
 # ==========================================
 # ML Models (large files)
 *.tflite

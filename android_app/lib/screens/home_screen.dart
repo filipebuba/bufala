@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../config/app_config.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../services/environmental_api_service.dart';
-import '../services/smart_api_service.dart';
+import '../services/integrated_api_service.dart';
 import '../widgets/connection_status.dart';
 import '../widgets/feature_card.dart';
 import '../widgets/quick_action_button.dart';
@@ -38,14 +39,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkConnection() async {
-    final apiService = context.read<SmartApiService>();
+    final apiService = context.read<IntegratedApiService>();
 
     final hasInternet = await apiService.hasInternetConnection();
     final serverStatus = await apiService.healthCheck();
 
     setState(() {
-      _isConnected = hasInternet && serverStatus.success;
-      _serverStatus = serverStatus.data;
+      _isConnected = hasInternet && serverStatus;
+      _serverStatus = serverStatus ? {
+      'status': 'online',
+      'model': 'Moransa AI',
+      'features': {'medical': true, 'education': true, 'agriculture': true}
+    } : {
+      'status': 'offline',
+      'model': 'N/A',
+      'features': {}
+    };
     });
   }
 
@@ -177,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '🌍 Bem-vindo ao Bu Fala',
+              '🌍 Bem-vindo ao Moransa',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -423,7 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateToEnvironmental() {
     final apiService =
-        EnvironmentalApiService(baseUrl: SmartApiService.baseUrl);
+        EnvironmentalApiService(baseUrl: AppConfig.apiBaseUrl);
     Navigator.push<Widget>(
       context,
       MaterialPageRoute<Widget>(
@@ -536,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _analyzeImage() {
     final apiService =
-        EnvironmentalApiService(baseUrl: SmartApiService.baseUrl);
+        EnvironmentalApiService(baseUrl: AppConfig.apiBaseUrl);
     Navigator.push(
       context,
       MaterialPageRoute<void>(

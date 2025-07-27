@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas de Saúde do Sistema - Bu Fala Backend
+Rotas de Saúde do Sistema - Moransa Backend
 Hackathon Gemma 3n
 """
 
@@ -23,7 +23,7 @@ def health_check():
       - Saúde
     summary: Verificar status do sistema
     description: |
-      Endpoint para verificar o status de saúde de todos os serviços do Bu Fala.
+      Endpoint para verificar o status de saúde de todos os serviços do Moransa.
       Retorna informações detalhadas sobre:
       - Status dos serviços (backend, Gemma, health service)
       - Informações do sistema (CPU, memória, disco)

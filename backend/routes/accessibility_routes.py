@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas de Acessibilidade - Bu Fala Backend
+Rotas de Acessibilidade - Moransa Backend
 Hackathon Gemma 3n
 
 Especializado em acessibilidade para pessoas com deficiência,

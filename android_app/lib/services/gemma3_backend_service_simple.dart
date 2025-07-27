@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../models/crisis_response_models.dart';
 import '../models/offline_learning_models.dart';
+import '../config/app_config.dart';
 
 /// Serviço simplificado para conectar ao backend Gemma-3
 class Gemma3BackendService {
@@ -10,18 +11,18 @@ class Gemma3BackendService {
       Gemma3BackendService._internal();
 
   final Dio _dio = Dio();
-  static const String _baseUrl = 'http://127.0.0.1:5000';
+
   bool _isInitialized = false;
 
   /// Inicializar serviço
   Future<bool> initialize() async {
     try {
-      _dio.options.baseUrl = _baseUrl;
+      _dio.options.baseUrl = AppConfig.apiBaseUrl.replaceAll('/api', '');
       _dio.options.connectTimeout = const Duration(seconds: 10);
       _dio.options.receiveTimeout = const Duration(seconds: 30);
 
       // Testar conexão
-      final response = await _dio.get('/health');
+      final response = await _dio.get(AppConfig.buildUrl('health'));
       if (response.statusCode == 200) {
         _isInitialized = true;
         print('✅ Conectado ao backend Gemma-3');
@@ -48,7 +49,7 @@ class Gemma3BackendService {
       if (_isInitialized && await _isBackendAvailable()) {
         // Tentar usar backend real
         final response = await _dio.post(
-          '/medical',
+          AppConfig.buildUrl('medical'),
           data: {
             'emergency_type': emergencyType,
             'description': description,
@@ -84,7 +85,7 @@ class Gemma3BackendService {
     try {
       if (_isInitialized && await _isBackendAvailable()) {
         final response = await _dio.post(
-          '/education',
+          AppConfig.buildUrl('education'),
           data: {'subject': subject, 'language': language, 'level': level},
         );
 
@@ -104,7 +105,7 @@ class Gemma3BackendService {
   /// Verificar se backend está disponível
   Future<bool> _isBackendAvailable() async {
     try {
-      final response = await _dio.get('/health');
+      final response = await _dio.get(AppConfig.buildUrl('health'));
       return response.statusCode == 200;
     } catch (e) {
       return false;

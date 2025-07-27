@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas de Tradução - Bu Fala Backend
+Rotas de Tradução - Moransa Backend
 Hackathon Gemma 3n
 
 Especializado em tradução para crioulo da Guiné-Bissau

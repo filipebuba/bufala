@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rotas de Educação - Bu Fala Backend
+Rotas de Educação - Moransa Backend
 Hackathon Gemma 3n
 
 Especializado em educação para comunidades da Guiné-Bissau,
 com foco em ensino adaptado e materiais acessíveis.
 """
 
+import json
 import logging
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime

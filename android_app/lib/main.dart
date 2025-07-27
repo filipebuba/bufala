@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
+import 'config/app_config.dart';
 import 'constants/app_colors.dart';
 import 'constants/app_strings.dart';
 import 'providers/app_provider.dart';
@@ -12,16 +13,21 @@ import 'screens/home_screen.dart';
 import 'screens/medical_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_agriculture_screen.dart';
+import 'screens/agriculture_family_screen.dart';
+import 'screens/agriculture_navigation_screen.dart';
 import 'screens/voice_guide_navigation_screen.dart';
 import 'screens/voiceguide_accessibility_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
 import 'services/offline_service.dart';
-import 'services/smart_api_service.dart';
+import 'services/integrated_api_service.dart';
 import 'services/wellness_coaching_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializar configurações do app
+  await AppConfig.initialize();
 
   // Inicializar Hive para armazenamento offline
   await Hive.initFlutter();
@@ -52,7 +58,7 @@ class MoranaApp extends StatelessWidget {
   Widget build(BuildContext context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AppProvider()),
-          Provider(create: (_) => SmartApiService()),
+          Provider(create: (_) => IntegratedApiService()),
           Provider(create: (_) => LanguageService()),
           Provider(create: (_) => OfflineService()),
         ],
@@ -123,7 +129,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const EmergencyScreen(),
     const MedicalScreen(),
     const EducationScreen(),
-    const SmartAgricultureScreen(),
+    const AgricultureNavigationScreen(), // NOVA: Navegação de agricultura
     const VoiceGuideAccessibilityScreen(), // ADICIONADO: Tela de acessibilidade
     const VoiceGuideNavigationScreen(), // ADICIONADO: Tela de navegação VoiceGuide
     const SettingsScreen(),
@@ -164,7 +170,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.agriculture),
-              label: AppStrings.agriculture,
+              label: 'Agricultura',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.accessibility_new),

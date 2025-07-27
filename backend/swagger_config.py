@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Configuração do Swagger para Bu Fala Backend
+Configuração do Swagger para Moransa Backend
 """
 
 from flasgger import Swagger
@@ -10,11 +10,11 @@ from flasgger import Swagger
 SWAGGER_TEMPLATE = {
     "swagger": "2.0",
     "info": {
-        "title": "Bu Fala API",
+        "title": "Moransa API",
         "description": "API para assistência comunitária em Guiné-Bissau",
         "version": "2.0.0",
         "contact": {
-            "name": "Equipe Bu Fala",
+            "name": "Equipe Moransa",
             "email": "contato@bufala.app"
         }
     },

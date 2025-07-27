@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../models/accessibility_models.dart';
+import '../config/app_config.dart';
 
 class AccessibilityService {
   factory AccessibilityService() => _instance;

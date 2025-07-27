@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import '../config/app_config.dart';
 
 /// Serviço de API Inteligente para o Bu Fala - Versão Corrigida
 /// Otimizado para trabalhar com timeouts e fallbacks
@@ -8,7 +9,7 @@ class SmartApiService {
 
   SmartApiService() {
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
       connectTimeout: const Duration(seconds: 45),
       receiveTimeout:
           const Duration(minutes: 8), // Tempo estendido para Gemma-3n
@@ -52,7 +53,7 @@ class SmartApiService {
       ),
     );
   }
-  static const String baseUrl = 'http://10.0.2.2:5000';
+
 
   late final Dio _dio;
 
@@ -71,7 +72,7 @@ class SmartApiService {
   Future<SmartApiResponse<Map<String, dynamic>>> healthCheck() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '/health',
+        AppConfig.buildUrl('health'),
         options: Options(
           receiveTimeout: const Duration(seconds: 30),
         ),
@@ -105,7 +106,7 @@ class SmartApiService {
 
       // Primeiro, tentativa com timeout padrão
       final response = await _dio.post<Map<String, dynamic>>(
-        '/medical',
+        AppConfig.buildUrl('medical'),
         data: {
           'question': question,
           'language': language,
@@ -175,7 +176,7 @@ class SmartApiService {
     try {
       // Tentar um endpoint mais simples se disponível
       final response = await _dio.post<Map<String, dynamic>>(
-        '/medical/simple',
+        AppConfig.buildUrl('medical/simple'),
         data: {
           'question': question,
           'language': language,

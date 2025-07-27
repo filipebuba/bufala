@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../models/international_learning_models.dart';
 import 'smart_api_service.dart';
+import '../config/app_config.dart';
 
 /// Serviço para o Sistema Internacional "Bu Fala Professor para ONGs"
 class InternationalLearningService {
@@ -35,7 +36,7 @@ class InternationalLearningService {
       ),
     );
   }
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  static String get baseUrl => AppConfig.backendHost == 'localhost' ? 'http://localhost:5000' : 'http://10.0.2.2:5000';
   late final Dio _dio;
 
   // ========================================
@@ -45,7 +46,7 @@ class InternationalLearningService {
   /// Listar organizações disponíveis
   Future<SmartApiResponse<List<InternationalOrganization>>> getOrganizations() async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/api/international/organizations');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('international/organizations'));
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data!;
@@ -67,7 +68,7 @@ class InternationalLearningService {
   /// Obter detalhes de uma organização
   Future<SmartApiResponse<InternationalOrganization>> getOrganization(String orgId) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/api/international/organizations/$orgId');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('international/organizations/$orgId'));
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data!;
@@ -117,7 +118,7 @@ class InternationalLearningService {
       };
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/api/international/professionals/register',
+        AppConfig.buildUrl('international/professionals/register'),
         data: requestData,
       );
 
@@ -139,7 +140,7 @@ class InternationalLearningService {
   /// Obter perfil de profissional
   Future<SmartApiResponse<InternationalProfessional>> getProfessional(String professionalId) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/api/international/professionals/$professionalId');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('international/professionals/$professionalId'));
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data!;
@@ -174,7 +175,7 @@ class InternationalLearningService {
       };
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '/api/international/modules',
+        AppConfig.buildUrl('international/modules'),
         queryParameters: queryParams,
       );
 
@@ -198,7 +199,7 @@ class InternationalLearningService {
   /// Obter módulo específico com lições
   Future<SmartApiResponse<SpecializedModule>> getModule(String moduleId) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/api/international/modules/$moduleId');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('international/modules/$moduleId'));
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data!;
@@ -235,7 +236,7 @@ class InternationalLearningService {
       };
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/api/international/modules/generate',
+        AppConfig.buildUrl('international/modules/generate'),
         data: requestData,
       );
 
@@ -261,7 +262,7 @@ class InternationalLearningService {
   /// Obter dashboard da organização
   Future<SmartApiResponse<OrganizationDashboard>> getOrganizationDashboard(String organizationId) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/api/international/dashboard/$organizationId');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('international/dashboard/$organizationId'));
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data!;
@@ -281,7 +282,7 @@ class InternationalLearningService {
   /// Obter relatório de progresso de profissional
   Future<SmartApiResponse<ProfessionalProgress>> getProfessionalProgress(String professionalId) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/api/international/professionals/$professionalId/progress');
+      final response = await _dio.get<Map<String, dynamic>>(AppConfig.buildUrl('international/professionals/$professionalId/progress'));
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data!;
@@ -320,7 +321,7 @@ class InternationalLearningService {
       };
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/api/international/emergency/module',
+        AppConfig.buildUrl('international/emergency/module'),
         data: requestData,
       );
 
@@ -353,7 +354,7 @@ class InternationalLearningService {
       };
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '/api/international/emergency/phrases',
+        AppConfig.buildUrl('international/emergency/phrases'),
         queryParameters: queryParams,
       );
 
@@ -394,7 +395,7 @@ class InternationalLearningService {
       };
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/api/international/simulations/start',
+        AppConfig.buildUrl('international/simulations/start'),
         data: requestData,
       );
 

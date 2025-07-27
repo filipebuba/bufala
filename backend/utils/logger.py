@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Utilitário de Logging para Bu Fala Backend
+Utilitário de Logging para Moransa Backend
 Hackathon Gemma 3n
 """
 
