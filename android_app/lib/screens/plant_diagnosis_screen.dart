@@ -1,10 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 // import 'package:record/record.dart'; // Temporariamente desabilitado
-import 'dart:io';
-import 'dart:convert';
-import 'dart:typed_data';
 import '../services/environmental_api_service.dart';
 import '../config/app_config.dart';
 
@@ -57,6 +58,44 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    
+    XFile? pickedFile;
+    
+    // Verificar se está rodando na web
+     if (kIsWeb) {
+       // Para web, usar source gallery (funciona como file picker)
+       pickedFile = await picker.pickImage(source: ImageSource.gallery);
+     } else {
+      // Para mobile, usar ImageSource.gallery
+      pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    }
+    
+    if (pickedFile != null) {
+      if (kIsWeb) {
+        // Para web, criar arquivo temporário
+        final bytes = await pickedFile.readAsBytes();
+        final tempDir = Directory.systemTemp;
+        final tempFile = File('${tempDir.path}/temp_image_${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await tempFile.writeAsBytes(bytes);
+        
+        setState(() {
+          _image = tempFile;
+          _diagnosisResult = null;
+          _error = null;
+        });
+      } else {
+         // Para mobile, usar o arquivo diretamente
+         setState(() {
+           _image = File(pickedFile!.path);
+           _diagnosisResult = null;
+           _error = null;
+         });
+       }
+    }
   }
 
   @override
