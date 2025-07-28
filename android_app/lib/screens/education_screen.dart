@@ -9,6 +9,7 @@ import '../screens/content_view_screen.dart';
 import '../services/gemma3_backend_service.dart';
 import '../services/offline_learning_service.dart';
 import '../services/integrated_api_service.dart';
+import '../services/environmental_api_service.dart';
 import '../utils/app_colors.dart';
 
 class EducationScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class EducationScreen extends StatefulWidget {
 
 class _EducationScreenState extends State<EducationScreen> {
   final IntegratedApiService _apiService = IntegratedApiService();
+  final EnvironmentalApiService _environmentalApiService = EnvironmentalApiService(baseUrl: 'http://localhost:5000');
   late OfflineLearningService _learningService;
   late Gemma3BackendService _gemmaService;
 
@@ -42,6 +44,8 @@ class _EducationScreenState extends State<EducationScreen> {
   final String _currentLevel = 'beginner';
   List<OfflineLearningContent> _availableContent = [];
   OfflineLearningContent? _currentContent;
+  List<Map<String, dynamic>> _educationAlerts = [];
+  bool _loadingEducationAlerts = false;
 
   @override
   void initState() {
@@ -153,10 +157,14 @@ class _EducationScreenState extends State<EducationScreen> {
       },
     ];
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: subjects.length,
-      itemBuilder: (context, index) {
+    return Column(
+      children: [
+        _buildEducationAlertsSection(),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: subjects.length,
+            itemBuilder: (context, index) {
         final subject = subjects[index];
         final title = subject[_useCreole ? 'title_creole' : 'title'] as String;
         final description =
@@ -184,6 +192,9 @@ class _EducationScreenState extends State<EducationScreen> {
           ),
         );
       },
+    ),
+        ),
+      ],
     );
   }
 
@@ -761,31 +772,261 @@ $content
    }
    
    /// Remove marcadores de formatação Markdown das respostas do Gemma-3
-   String _cleanMarkdownFormatting(String text) {
-     if (text.isEmpty) return text;
-     
-     String cleaned = text;
-     
-     // Remover marcadores de negrito (**texto**)
-     cleaned = cleaned.replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'$1');
-     
-     // Remover marcadores de cabeçalho (## texto)
-     cleaned = cleaned.replaceAll(RegExp(r'^#{1,6}\s*(.*)$', multiLine: true), r'$1');
-     
-     // Remover marcadores de itálico (*texto*)
-     cleaned = cleaned.replaceAll(RegExp(r'\*(.*?)\*'), r'$1');
-     
-     // Remover marcadores de código (`código`)
-     cleaned = cleaned.replaceAll(RegExp(r'`(.*?)`'), r'$1');
-     
-     // Limpar múltiplas quebras de linha
-     cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
-     
-     // Remover espaços extras no início e fim
-     cleaned = cleaned.trim();
-     
-     return cleaned;
-   }
+  String _cleanMarkdownFormatting(String text) {
+    if (text.isEmpty) return text;
+    
+    String cleaned = text;
+    
+    // Remover marcadores de negrito (**texto**)
+    cleaned = cleaned.replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'$1');
+    
+    // Remover marcadores de cabeçalho (## texto)
+    cleaned = cleaned.replaceAll(RegExp(r'^#{1,6}\s*(.*)$', multiLine: true), r'$1');
+    
+    // Remover marcadores de itálico (*texto*)
+    cleaned = cleaned.replaceAll(RegExp(r'\*(.*?)\*'), r'$1');
+    
+    // Remover marcadores de código (`código`)
+    cleaned = cleaned.replaceAll(RegExp(r'`(.*?)`'), r'$1');
+    
+    // Limpar múltiplas quebras de linha
+    cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    
+    // Remover espaços extras no início e fim
+    cleaned = cleaned.trim();
+    
+    return cleaned;
+  }
+
+  Future<void> _loadEducationAlerts() async {
+    if (mounted) {
+      setState(() {
+        _loadingEducationAlerts = true;
+      });
+    }
+
+    try {
+      final alerts = await _environmentalApiService.getEnvironmentalAlerts();
+      
+      // Filtrar alertas relevantes para educação
+      final educationKeywords = [
+        'escola', 'educação', 'ensino', 'criança', 'estudante', 
+        'aula', 'material', 'livro', 'professor', 'aprendizagem',
+        'alfabetização', 'matemática', 'leitura', 'escrita'
+      ];
+      
+      final filteredAlerts = alerts.where((alert) {
+        final message = alert['message']?.toString().toLowerCase() ?? '';
+        final category = alert['category']?.toString().toLowerCase() ?? '';
+        final type = alert['type']?.toString().toLowerCase() ?? '';
+        
+        return educationKeywords.any((keyword) => 
+          message.contains(keyword) || 
+          category.contains(keyword) || 
+          type.contains(keyword)
+        );
+      }).toList();
+      
+      if (mounted) {
+        setState(() {
+          _educationAlerts = filteredAlerts.cast<Map<String, dynamic>>();
+          _loadingEducationAlerts = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _educationAlerts = [];
+          _loadingEducationAlerts = false;
+        });
+      }
+      print('Erro ao carregar alertas educacionais: $e');
+    }
+  }
+
+  Widget _buildEducationAlertsSection() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange.shade700,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _useCreole ? 'Alerta Edukasional' : 'Alertas Educacionais',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ),
+              if (_loadingEducationAlerts)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                  ),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadEducationAlerts,
+                  color: Colors.orange.shade700,
+                  iconSize: 20,
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_educationAlerts.isEmpty && !_loadingEducationAlerts)
+            Text(
+              _useCreole
+                  ? 'Nada alerta edukasional agora'
+                  : 'Nenhum alerta educacional no momento',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+              ),
+            )
+          else if (_educationAlerts.isNotEmpty)
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _educationAlerts.length,
+                itemBuilder: (context, index) {
+                  final alert = _educationAlerts[index];
+                  return _buildEducationAlertCard(alert);
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEducationAlertCard(Map<String, dynamic> alert) {
+    final type = alert['type']?.toString() ?? 'info';
+    final message = alert['message']?.toString() ?? '';
+    final level = alert['level']?.toString() ?? 'medium';
+    final region = alert['region']?.toString() ?? '';
+
+    Color cardColor;
+    IconData cardIcon;
+    
+    switch (level.toLowerCase()) {
+      case 'high':
+      case 'alto':
+        cardColor = Colors.red.shade100;
+        cardIcon = Icons.priority_high;
+        break;
+      case 'medium':
+      case 'médio':
+        cardColor = Colors.orange.shade100;
+        cardIcon = Icons.warning;
+        break;
+      case 'low':
+      case 'baixo':
+        cardColor = Colors.yellow.shade100;
+        cardIcon = Icons.info;
+        break;
+      default:
+        cardColor = Colors.blue.shade100;
+        cardIcon = Icons.notifications;
+    }
+
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cardColor.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(cardIcon, size: 16, color: Colors.grey.shade700),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  type.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: cardColor.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  level.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.3,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (region.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.location_on, size: 12, color: Colors.grey.shade600),
+                const SizedBox(width: 2),
+                Expanded(
+                  child: Text(
+                    region,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   void _showErrorDialog(String message) {
     showDialog<void>(

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../services/environmental_api_service.dart';
 import 'biodiversity_screen.dart';
 import 'environmental_alerts_screen.dart';
-import 'environmental_education_screen.dart';
 import 'plant_diagnosis_screen.dart';
 import 'recycling_screen.dart';
 
@@ -27,8 +26,7 @@ class EnvironmentalMenuScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute<Widget>(
-                  builder: (context) => PlantDiagnosisScreen(
-                      apiService: apiService, userId: userId),
+                  builder: (context) => const PlantDiagnosisScreen(),
                 ),
               );
             },
@@ -59,20 +57,7 @@ class EnvironmentalMenuScreen extends StatelessWidget {
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.menu_book, color: Colors.brown),
-            title: const Text('Educação Ambiental'),
-            subtitle: const Text('Acesse módulos educativos'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<Widget>(
-                  builder: (context) =>
-                      EnvironmentalEducationScreen(api: apiService),
-                ),
-              );
-            },
-          ),
+
           ListTile(
             leading: const Icon(Icons.warning, color: Colors.red),
             title: const Text('Alertas Ambientais'),
