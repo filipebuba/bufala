@@ -36,7 +36,7 @@ class InternationalLearningService {
       ),
     );
   }
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  static String get baseUrl => AppConfig.backendHost == 'localhost' ? 'http://localhost:5000' : 'http://10.0.2.2:5000';
   late final Dio _dio;
 
   // ========================================

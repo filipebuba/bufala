@@ -14,8 +14,7 @@ class Gemma3BackendService {
       Gemma3BackendService._internal();
 
   final Dio _dio = Dio();
-  static const String _baseUrl =
-      'http://10.0.2.2:5000/api'; // URL do backend para emulador Android
+  static String get _baseUrl => AppConfig.apiBaseUrl; // URL dinâmica do backend
   bool _isInitialized = false;
 
   // TensorFlow Lite para funcionamento offline
