@@ -14,6 +14,8 @@ import 'screens/smart_agriculture_screen.dart';
 import 'screens/agriculture_family_screen.dart';
 import 'screens/agriculture_navigation_screen.dart';
 import 'screens/voiceguide_accessibility_screen.dart';
+import 'screens/gamification_screen.dart';
+import 'screens/moransa_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
 import 'services/offline_service.dart';
@@ -160,7 +162,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const HomeScreen(),
     const EducationScreen(),
     const AgricultureNavigationScreen(), // Navegação de agricultura unificada
+    const MoransaScreen(), // Tela do Moransa - IA Colaborativa
     const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade
+    const GamificationScreen(), // Tela de gamificação
     const SettingsScreen(),
   ];
 
@@ -194,8 +198,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Agricultura',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.smart_toy),
+              label: 'Moransa',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.accessibility_new),
               label: 'Acessibilidade',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.emoji_events),
+              label: 'Gamificação',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),

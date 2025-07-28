@@ -11,7 +11,8 @@ import '../widgets/feature_card.dart';
 import '../widgets/quick_action_button.dart';
 import 'agriculture_screen.dart';
 import 'api_test_screen.dart'; // NOVO: Import da tela de teste
-import 'education_screen_enhanced_international.dart';
+import 'collaborative_teaching_screen.dart';
+import 'education_screen.dart';
 import 'environmental_menu_screen.dart';
 import 'medical_emergency_unified_screen.dart';
 import 'plant_diagnosis_screen.dart';
@@ -140,15 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   description:
                       'Sistema de ensino colaborativo para aprendizado de idiomas locais',
                   color: Colors.green,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Sistema de Ensino Colaborativo em desenvolvimento'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
+                  onTap: _navigateToCollaborativeTeaching,
                 ),
                 const SizedBox(height: 24),
 
@@ -442,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => const EducationScreenEnhancedFixed(),
+        builder: (context) => const EducationScreen(),
       ),
     );
   }
@@ -461,6 +454,15 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute<void>(
         builder: (context) => const WellnessCoachingScreen(),
+      ),
+    );
+  }
+
+  void _navigateToCollaborativeTeaching() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const CollaborativeTeachingScreen(),
       ),
     );
   }

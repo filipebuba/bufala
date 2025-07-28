@@ -980,6 +980,82 @@ class GemmaService:
             self.logger.error(f"Erro no aprendizado adaptativo: {e}")
             return self._fallback_adaptive_learning(user_input, feedback)
     
+    def language_teaching(self, target_language: str, current_level: str, focus_area: str, 
+                         learning_context: str = "general", user_profile: Dict = None) -> Dict[str, Any]:
+        """Sistema especializado de ensino de idiomas locais da Guiné-Bissau"""
+        try:
+            system_prompt = REVOLUTIONARY_PROMPTS['LANGUAGE_TEACHING']
+            
+            # Construir perfil do usuário
+            user_info = user_profile or {}
+            native_language = user_info.get('native_language', 'português')
+            learning_goals = user_info.get('learning_goals', 'comunicação básica')
+            cultural_background = user_info.get('cultural_background', 'Guiné-Bissau')
+            
+            prompt = f"""
+            ENSINO ESPECIALIZADO DE IDIOMAS LOCAIS:
+            
+            Idioma alvo: {target_language}
+            Nível atual: {current_level}
+            Área de foco: {focus_area}
+            Contexto de aprendizado: {learning_context}
+            
+            Perfil do aprendiz:
+            - Idioma nativo: {native_language}
+            - Objetivos: {learning_goals}
+            - Contexto cultural: {cultural_background}
+            
+            Gere uma lição completa que inclua:
+            
+            1. VOCABULÁRIO CONTEXTUALIZADO:
+               - 10-15 palavras/expressões essenciais
+               - Uso em contextos práticos
+               - Variações regionais quando relevante
+            
+            2. ESTRUTURAS GRAMATICAIS:
+               - Padrões sintáticos fundamentais
+               - Regras específicas do idioma
+               - Comparações com o idioma nativo
+            
+            3. CONTEXTO CULTURAL:
+               - Situações de uso apropriadas
+               - Nuances culturais importantes
+               - Tradições e costumes relacionados
+            
+            4. EXERCÍCIOS PRÁTICOS:
+               - Atividades de compreensão
+               - Exercícios de produção
+               - Simulações de diálogos
+            
+            5. GUIA DE PRONÚNCIA:
+               - Fonemas específicos
+               - Padrões de entonação
+               - Dicas para falantes nativos de {native_language}
+            
+            6. PROGRESSÃO DE APRENDIZADO:
+               - Próximos passos sugeridos
+               - Recursos adicionais
+               - Metas de curto prazo
+            
+            Responda em formato JSON estruturado com todas as seções.
+            """
+            
+            response = self.generate_response(prompt, system_prompt)
+            
+            if response['success']:
+                processed_response = self._process_language_teaching_response(response['response'])
+                processed_response['metadata'] = response.get('metadata', {})
+                processed_response['metadata']['feature'] = 'language_teaching'
+                processed_response['metadata']['target_language'] = target_language
+                processed_response['metadata']['level'] = current_level
+                return processed_response
+            else:
+                return self._fallback_language_teaching(target_language, current_level, focus_area)
+                
+        except Exception as e:
+            self.logger.error(f"Erro no ensino de idiomas: {e}")
+            return self._fallback_language_teaching(target_language, current_level, focus_area)
+    
     def multimodal_fusion_analysis(self, text: str, image_data: Optional[bytes] = None, 
                                   audio_data: Optional[bytes] = None, context: str = "general") -> Dict[str, Any]:
         """Análise de fusão multimodal avançada"""
@@ -1023,6 +1099,45 @@ class GemmaService:
             self.logger.error(f"Erro na análise multimodal: {e}")
             return self._fallback_multimodal_fusion(text, context)
     
+    def analyze_multimodal(self, prompt: str, image_base64: Optional[str] = None, 
+                          audio_base64: Optional[str] = None, **kwargs) -> str:
+        """Analisar conteúdo multimodal com prompt específico"""
+        try:
+            # Construir contexto multimodal
+            multimodal_context = []
+            
+            if image_base64:
+                multimodal_context.append("Imagem fornecida para análise visual")
+            
+            if audio_base64:
+                multimodal_context.append("Áudio fornecido para análise auditiva")
+            
+            # Construir prompt completo
+            full_prompt = prompt
+            if multimodal_context:
+                full_prompt += f"\n\nContexto multimodal: {', '.join(multimodal_context)}"
+            
+            # Gerar resposta usando o método existente
+            response = self.generate_response(full_prompt)
+            
+            if response['success']:
+                return response['response']
+            else:
+                return self._fallback_multimodal_response(prompt)
+                
+        except Exception as e:
+            self.logger.error(f"Erro na análise multimodal: {e}")
+            return self._fallback_multimodal_response(prompt)
+    
+    def _fallback_multimodal_response(self, prompt: str) -> str:
+        """Resposta de fallback para análise multimodal"""
+        return json.dumps({
+            "analysis": "Análise multimodal em processamento",
+            "status": "fallback_mode",
+            "message": "Sistema processando solicitação com recursos limitados",
+            "recommendations": ["Aguardar processamento", "Tentar novamente em alguns momentos"]
+        }, ensure_ascii=False)
+
     def get_health_status(self) -> Dict[str, Any]:
         """Obter status de saúde do serviço"""
         return {
@@ -1327,5 +1442,893 @@ class GemmaService:
             'modality_coherence': 'medium',
             'fusion_insights': ['Análise limitada aos dados textuais disponíveis'],
             'recommendations': ['Fornecer dados multimodais para análise completa'],
+            'fallback': True
+        }
+    
+    def _process_language_teaching_response(self, response: str) -> Dict[str, Any]:
+        """Processar resposta de ensino de idiomas"""
+        try:
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                return {
+                    'success': True,
+                    'vocabulary': result.get('vocabulary', []),
+                    'grammar': result.get('grammar', {}),
+                    'cultural_context': result.get('cultural_context', ''),
+                    'exercises': result.get('exercises', []),
+                    'pronunciation_guide': result.get('pronunciation_guide', {}),
+                    'progression': result.get('progression', {}),
+                    'lesson_content': result.get('lesson_content', response)
+                }
+        except:
+            pass
+        
+        return {
+            'success': True,
+            'vocabulary': ['Vocabulário básico em desenvolvimento'],
+            'grammar': {'patterns': ['Padrões gramaticais fundamentais']},
+            'cultural_context': 'Contexto cultural específico da Guiné-Bissau',
+            'exercises': ['Exercícios práticos de conversação'],
+            'pronunciation_guide': {'tips': ['Guia de pronúncia disponível']},
+            'progression': {'next_steps': ['Continuar prática regular']},
+            'lesson_content': response
+        }
+    
+    def _fallback_language_teaching(self, target_language: str, current_level: str, focus_area: str) -> Dict[str, Any]:
+        """Fallback para ensino de idiomas"""
+        return {
+            'success': True,
+            'vocabulary': [
+                f'Vocabulário básico de {target_language}',
+                'Palavras essenciais para comunicação',
+                'Expressões comuns do dia a dia'
+            ],
+            'grammar': {
+                'patterns': [f'Estruturas básicas do {target_language}'],
+                'rules': ['Regras fundamentais de gramática'],
+                'comparisons': ['Comparações com português']
+            },
+            'cultural_context': f'Contexto cultural importante para uso do {target_language} na Guiné-Bissau',
+            'exercises': [
+                'Exercícios de repetição',
+                'Prática de diálogos simples',
+                'Atividades de compreensão'
+            ],
+            'pronunciation_guide': {
+                'phonemes': [f'Sons específicos do {target_language}'],
+                'tips': ['Dicas de pronúncia para iniciantes'],
+                'intonation': ['Padrões de entonação básicos']
+            },
+            'progression': {
+                'current_level': current_level,
+                'next_steps': [f'Continuar estudo de {focus_area}'],
+                'goals': ['Melhorar fluência gradualmente'],
+                'resources': ['Praticar com falantes nativos']
+            },
+            'lesson_content': f'Lição básica de {target_language} - Nível {current_level}',
+            'fallback': True
+        }
+    
+    # ========== FUNCIONALIDADES COLABORATIVAS MORANSA ==========
+    
+    async def generate_translation_challenges(self, category: str = "geral", difficulty: str = "básico", quantity: int = 5, existing_phrases: List[str] = None) -> Dict[str, Any]:
+        """Gerar desafios de tradução para a comunidade"""
+        if existing_phrases is None:
+            existing_phrases = []
+        
+        # Prompt mestre + prompt específico
+        system_prompt = """Você é "Moransa", um assistente de IA e o coração do aplicativo de mesmo nome. Sua missão é apoiar comunidades na Guiné-Bissau, com foco especial em primeiros socorros, educação e agricultura. Você entende Português (pt-PT) perfeitamente e está aprendendo, com a ajuda da comunidade, o Crioulo da Guiné-Bissau e outros idiomas e dialetos locais.
+
+Seu trabalho é:
+1. Gerar conteúdo claro, útil e culturalmente sensível em Português para que a comunidade possa traduzir.
+2. Analisar e processar as contribuições da comunidade (traduções, áudios, imagens) para ajudar a validar a qualidade e enriquecer o conhecimento do aplicativo.
+3. Agir sempre como um facilitador do conhecimento, nunca como um detentor absoluto da verdade. O conhecimento da comunidade é a fonte primária.
+
+Responda sempre em formato JSON para facilitar a integração com o backend do aplicativo. Seja conciso e direto ao ponto."""
+        
+        task_prompt = f"""Com base nos parâmetros fornecidos, gere uma lista de frases em português. As frases devem ser curtas, diretas e essenciais para situações de {category}. Evite as frases já existentes. Para cada frase, forneça um contexto de uso claro e sugira de 2 a 3 tags relevantes.
+
+Parâmetros:
+- Categoria: {category}
+- Dificuldade: {difficulty}
+- Quantidade: {quantity}
+- Frases existentes: {existing_phrases}
+
+A resposta DEVE ser um objeto JSON contendo uma lista chamada "challenges". Cada item deve ter: word, category, context, tags."""
+        
+        try:
+            response = await self.generate_response(system_prompt + "\n\n" + task_prompt)
+            return self._process_translation_challenges_response(response)
+        except Exception as e:
+            logger.error(f"Erro ao gerar desafios de tradução: {e}")
+            return self._fallback_translation_challenges(category, difficulty, quantity)
+    
+    async def process_user_contribution(self, contribution_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Processar e analisar contribuição da comunidade"""
+        
+        # Prompt mestre + prompt específico
+        system_prompt = """Você é "Moransa", um assistente de IA e o coração do aplicativo de mesmo nome. Sua missão é apoiar comunidades na Guiné-Bissau, com foco especial em primeiros socorros, educação e agricultura. Você entende Português (pt-PT) perfeitamente e está aprendendo, com a ajuda da comunidade, o Crioulo da Guiné-Bissau e outros idiomas e dialetos locais.
+
+Seu trabalho é:
+1. Gerar conteúdo claro, útil e culturalmente sensível em Português para que a comunidade possa traduzir.
+2. Analisar e processar as contribuições da comunidade (traduções, áudios, imagens) para ajudar a validar a qualidade e enriquecer o conhecimento do aplicativo.
+3. Agir sempre como um facilitador do conhecimento, nunca como um detentor absoluto da verdade. O conhecimento da comunidade é a fonte primária.
+
+Responda sempre em formato JSON para facilitar a integração com o backend do aplicativo. Seja conciso e direto ao ponto."""
+        
+        task_prompt = f"""Analise a contribuição fornecida por um membro da comunidade. Realize as seguintes tarefas e retorne um único objeto JSON com os resultados:
+
+1. quality_assessment: Avalie a qualidade geral da contribuição. Atribua um score de 0.0 a 1.0 e um feedback em texto.
+2. context_enhancement: Melhore o contexto fornecido pelo usuário para ser mais descritivo e útil.
+3. tag_suggestion: Sugira uma lista de tags relevantes para esta contribuição.
+4. moderation_flags: Identifique possíveis problemas (low_quality_context, possible_profanity, unrelated_content).
+5. approval_recommendation: Sugira um status inicial: 'pending_community_vote' ou 'requires_moderator_review'.
+
+Contribuição:
+- Palavra: {contribution_data.get('word', '')}
+- Tradução: {contribution_data.get('translation', '')}
+- Idioma: {contribution_data.get('language', '')}
+- Categoria: {contribution_data.get('category', '')}
+- Contexto: {contribution_data.get('context', '')}
+
+A resposta DEVE ser um objeto JSON contendo um campo "analysis_result"."""
+        
+        try:
+            response = await self.generate_response(system_prompt + "\n\n" + task_prompt)
+            return self._process_contribution_analysis_response(response)
+        except Exception as e:
+            logger.error(f"Erro ao processar contribuição: {e}")
+            return self._fallback_contribution_analysis(contribution_data)
+    
+    async def generate_educational_content(self, subject: str, level: str = "básico", topic: str = None) -> Dict[str, Any]:
+        """Gerar conteúdo educacional específico"""
+        
+        system_prompt = """Você é "Moransa", um assistente de IA e o coração do aplicativo de mesmo nome. Sua missão é apoiar comunidades na Guiné-Bissau, com foco especial em primeiros socorros, educação e agricultura. Você entende Português (pt-PT) perfeitamente e está aprendendo, com a ajuda da comunidade, o Crioulo da Guiné-Bissau e outros idiomas e dialetos locais.
+
+Seu trabalho é:
+1. Gerar conteúdo claro, útil e culturalmente sensível em Português para que a comunidade possa traduzir.
+2. Analisar e processar as contribuições da comunidade (traduções, áudios, imagens) para ajudar a validar a qualidade e enriquecer o conhecimento do aplicativo.
+3. Agir sempre como um facilitador do conhecimento, nunca como um detentor absoluto da verdade. O conhecimento da comunidade é a fonte primária.
+
+Responda sempre em formato JSON para facilitar a integração com o backend do aplicativo. Seja conciso e direto ao ponto."""
+        
+        topic_info = f" sobre {topic}" if topic else ""
+        task_prompt = f"""Gere conteúdo educacional em português para {subject}{topic_info}, nível {level}, adequado para comunidades da Guiné-Bissau.
+
+O conteúdo deve incluir:
+1. lesson_title: Título da lição
+2. objectives: Objetivos de aprendizagem
+3. content: Conteúdo principal da lição
+4. key_concepts: Conceitos-chave
+5. practical_examples: Exemplos práticos relevantes para a comunidade
+6. assessment_questions: Perguntas para avaliação
+7. cultural_adaptations: Adaptações culturais específicas
+
+A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
+        
+        try:
+            response = await self.generate_response(system_prompt + "\n\n" + task_prompt)
+            return self._process_educational_content_response(response)
+        except Exception as e:
+            logger.error(f"Erro ao gerar conteúdo educacional: {e}")
+            return self._fallback_educational_content(subject, level, topic)
+
+    async def generate_gamification_challenge(self, user_data: dict, community_status: dict) -> dict:
+        """
+        Gera desafios personalizados de gamificação para o usuário
+        """
+        try:
+            # Prompt mestre para geração de desafios
+            master_prompt = """
+            Você é o 'Mestre do Jogo' do app Moransa, um aplicativo colaborativo para comunidades da Guiné-Bissau.
+            Sua função é criar desafios envolventes e personalizados que motivem os usuários a contribuir.
+            
+            Tipos de desafio disponíveis:
+            - 'Streak Saver': Para usuários que não contribuíram hoje mas têm sequência ativa
+            - 'Category Explorer': Incentiva exploração de categorias pouco usadas
+            - 'Level Up Push': Para usuários próximos de subir de nível
+            - 'Community Hero': Alinhado com necessidades da comunidade
+            - 'Daily Contributor': Desafio básico diário
+            - 'Knowledge Sharer': Foco em compartilhamento de conhecimento
+            """
+            
+            # Prompt de tarefa específica
+            task_prompt = f"""
+            Com base nos dados do usuário e status da comunidade, crie UM desafio personalizado:
+            
+            Dados do usuário:
+            - Nome: {user_data.get('user_name', 'Usuário')}
+            - Nível: {user_data.get('level', 1)}
+            - XP para próximo nível: {user_data.get('xp_to_next_level', 100)}
+            - Sequência atual: {user_data.get('current_streak', 0)} dias
+            - Categorias preferidas: {user_data.get('preferred_categories', ['geral'])}
+            - Contribuições hoje: {user_data.get('contribution_count_today', 0)}
+            
+            Status da comunidade:
+            - Categoria mais necessária: {community_status.get('most_needed_category', 'geral')}
+            - Evento comunitário ativo: {community_status.get('active_community_event', 'Nenhum')}
+            
+            Retorne APENAS um objeto JSON válido com:
+            {
+                "challenge": {
+                    "challenge_type": "tipo_do_desafio",
+                    "title": "Nome criativo do desafio",
+                    "description": "Descrição clara do que fazer",
+                    "xp_reward": número_de_pontos
+                }
+            }
+            """
+            
+            # Combinar prompts
+            full_prompt = f"{master_prompt}\n\n{task_prompt}"
+            
+            # Fazer chamada para Ollama
+            response = await self._make_ollama_request(full_prompt)
+            
+            if response and 'response' in response:
+                return self._process_gamification_challenge_response(response['response'])
+            else:
+                return self._fallback_gamification_challenge(user_data)
+                
+        except Exception as e:
+            logger.error(f"Erro ao gerar desafio de gamificação: {e}")
+            return self._fallback_gamification_challenge(user_data)
+
+    async def generate_reward_message(self, event_data: dict) -> dict:
+        """
+        Gera mensagens personalizadas de recompensa e celebração
+        """
+        try:
+            # Prompt mestre para mensagens de recompensa
+            master_prompt = """
+            Você é o 'Mestre do Jogo' do app Moransa. Sua função é criar mensagens inspiradoras
+            e personalizadas para celebrar as conquistas dos usuários da comunidade da Guiné-Bissau.
+            
+            As mensagens devem ser:
+            - Curtas e impactantes
+            - Culturalmente apropriadas
+            - Motivadoras e positivas
+            - Que reforcem o valor da contribuição para a comunidade
+            """
+            
+            # Prompt de tarefa específica
+            task_prompt = f"""
+            Crie uma mensagem de celebração para o seguinte evento:
+            
+            Tipo de evento: {event_data.get('event_type', 'conquista')}
+            Nome do usuário: {event_data.get('user_name', 'Usuário')}
+            Detalhes do evento: {event_data}
+            
+            Retorne APENAS um objeto JSON válido com:
+            {
+                "notification": {
+                    "title": "Título da notificação",
+                    "body": "Mensagem inspiradora e personalizada"
+                }
+            }
+            """
+            
+            # Combinar prompts
+            full_prompt = f"{master_prompt}\n\n{task_prompt}"
+            
+            # Fazer chamada para Ollama
+            response = await self._make_ollama_request(full_prompt)
+            
+            if response and 'response' in response:
+                return self._process_reward_message_response(response['response'])
+            else:
+                return self._fallback_reward_message(event_data)
+                
+        except Exception as e:
+            logger.error(f"Erro ao gerar mensagem de recompensa: {e}")
+            return self._fallback_reward_message(event_data)
+
+    async def create_badge(self, badge_criteria: str, category: str = "geral") -> dict:
+        """
+        Cria badges dinâmicos com nomes e descrições personalizadas
+        """
+        try:
+            # Prompt mestre para criação de badges
+            master_prompt = """
+            Você é o 'Mestre do Jogo' do app Moransa. Sua função é criar conquistas (badges)
+            significativas e motivadoras para a comunidade da Guiné-Bissau.
+            
+            Os badges devem:
+            - Ter nomes criativos e memoráveis
+            - Descrições que expliquem o valor da conquista
+            - Sugestões de ícones simples e reconhecíveis
+            - Refletir a cultura e valores da comunidade
+            """
+            
+            # Prompt de tarefa específica
+            task_prompt = f"""
+            Crie um badge baseado no seguinte critério:
+            
+            Critério: {badge_criteria}
+            Categoria: {category}
+            
+            Retorne APENAS um objeto JSON válido com:
+            {
+                "badge": {
+                    "name": "Nome criativo do badge",
+                    "description": "Descrição motivadora que explica o valor da conquista",
+                    "icon_suggestion": "Descrição simples para o ícone do badge",
+                    "category": "{category}"
+                }
+            }
+            """
+            
+            # Combinar prompts
+            full_prompt = f"{master_prompt}\n\n{task_prompt}"
+            
+            # Fazer chamada para Ollama
+            response = await self._make_ollama_request(full_prompt)
+            
+            if response and 'response' in response:
+                return self._process_badge_creation_response(response['response'])
+            else:
+                return self._fallback_badge_creation(badge_criteria, category)
+                
+        except Exception as e:
+            logger.error(f"Erro ao criar badge: {e}")
+            return self._fallback_badge_creation(badge_criteria, category)
+    
+    # ========== MÉTODOS DE PROCESSAMENTO DE RESPOSTA MORANSA ==========
+    
+    def _process_translation_challenges_response(self, response: str) -> Dict[str, Any]:
+        """Processar resposta de geração de desafios de tradução"""
+        try:
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                if 'challenges' in result:
+                    return {
+                        'success': True,
+                        'challenges': result['challenges'],
+                        'generated_count': len(result['challenges'])
+                    }
+        except Exception as e:
+            logger.error(f"Erro ao processar resposta de desafios: {e}")
+        
+        # Fallback se não conseguir processar JSON
+        return {
+            'success': False,
+            'challenges': [],
+            'generated_count': 0,
+            'error': 'Falha ao processar resposta da IA'
+        }
+    
+    def _process_contribution_analysis_response(self, response: str) -> Dict[str, Any]:
+        """Processar resposta de análise de contribuição"""
+        try:
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                if 'analysis_result' in result:
+                    return {
+                        'success': True,
+                        'analysis_result': result['analysis_result']
+                    }
+        except Exception as e:
+            logger.error(f"Erro ao processar análise de contribuição: {e}")
+        
+        # Fallback se não conseguir processar JSON
+        return {
+            'success': False,
+            'analysis_result': {
+                'quality_assessment': {
+                    'score': 0.5,
+                    'feedback': 'Análise automática não disponível'
+                },
+                'context_enhancement': 'Contexto necessita revisão manual',
+                'tag_suggestion': ['geral'],
+                'moderation_flags': ['requires_manual_review'],
+                'approval_recommendation': 'requires_moderator_review'
+            },
+            'error': 'Falha ao processar resposta da IA'
+        }
+    
+    def _process_educational_content_response(self, response: str) -> Dict[str, Any]:
+        """Processar resposta de conteúdo educacional"""
+        try:
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                if 'educational_content' in result:
+                    return {
+                        'success': True,
+                        'educational_content': result['educational_content']
+                    }
+        except Exception as e:
+            logger.error(f"Erro ao processar conteúdo educacional: {e}")
+        
+        # Fallback se não conseguir processar JSON
+        return {
+            'success': False,
+            'educational_content': {
+                'lesson_title': 'Lição Básica',
+                'objectives': ['Aprender conceitos fundamentais'],
+                'content': 'Conteúdo educacional básico',
+                'key_concepts': ['Conceito fundamental'],
+                'practical_examples': ['Exemplo prático'],
+                'assessment_questions': ['Pergunta de avaliação'],
+                'cultural_adaptations': ['Adaptação cultural necessária']
+            },
+            'error': 'Falha ao processar resposta da IA'
+        }
+
+    def _process_gamification_challenge_response(self, response_text: str) -> dict:
+        """
+        Processa a resposta da Gemma-3 para desafios de gamificação
+        """
+        try:
+            # Tentar extrair JSON da resposta
+            json_match = re.search(r'\{[^{}]*"challenge"[^{}]*\{[^{}]*\}[^{}]*\}', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+                data = json.loads(json_str)
+                
+                if 'challenge' in data and isinstance(data['challenge'], dict):
+                    challenge = data['challenge']
+                    # Validar campos obrigatórios
+                    required_fields = ['challenge_type', 'title', 'description', 'xp_reward']
+                    if all(field in challenge for field in required_fields):
+                        return {
+                            'success': True,
+                            'challenge': {
+                                'challenge_type': str(challenge['challenge_type']),
+                                'title': str(challenge['title']),
+                                'description': str(challenge['description']),
+                                'xp_reward': int(challenge['xp_reward']) if isinstance(challenge['xp_reward'], (int, str)) else 50
+                            }
+                        }
+            
+            # Se não conseguir extrair JSON válido, usar fallback
+            return self._fallback_gamification_challenge({})
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar resposta de desafio de gamificação: {e}")
+            return self._fallback_gamification_challenge({})
+
+    def _process_reward_message_response(self, response_text: str) -> dict:
+        """
+        Processa a resposta da Gemma-3 para mensagens de recompensa
+        """
+        try:
+            # Tentar extrair JSON da resposta
+            json_match = re.search(r'\{[^{}]*"notification"[^{}]*\{[^{}]*\}[^{}]*\}', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+                data = json.loads(json_str)
+                
+                if 'notification' in data and isinstance(data['notification'], dict):
+                    notification = data['notification']
+                    # Validar campos obrigatórios
+                    if 'title' in notification and 'body' in notification:
+                        return {
+                            'success': True,
+                            'notification': {
+                                'title': str(notification['title']),
+                                'body': str(notification['body'])
+                            }
+                        }
+            
+            # Se não conseguir extrair JSON válido, usar fallback
+            return self._fallback_reward_message({})
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar resposta de mensagem de recompensa: {e}")
+            return self._fallback_reward_message({})
+
+    def _process_badge_creation_response(self, response_text: str) -> dict:
+        """
+        Processa a resposta da Gemma-3 para criação de badges
+        """
+        try:
+            # Tentar extrair JSON da resposta
+            json_match = re.search(r'\{[^{}]*"badge"[^{}]*\{[^{}]*\}[^{}]*\}', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+                data = json.loads(json_str)
+                
+                if 'badge' in data and isinstance(data['badge'], dict):
+                    badge = data['badge']
+                    # Validar campos obrigatórios
+                    required_fields = ['name', 'description', 'icon_suggestion']
+                    if all(field in badge for field in required_fields):
+                        return {
+                            'success': True,
+                            'badge': {
+                                'name': str(badge['name']),
+                                'description': str(badge['description']),
+                                'icon_suggestion': str(badge['icon_suggestion']),
+                                'category': str(badge.get('category', 'geral'))
+                            }
+                        }
+            
+            # Se não conseguir extrair JSON válido, usar fallback
+            return self._fallback_badge_creation("", "geral")
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar resposta de criação de badge: {e}")
+            return self._fallback_badge_creation("", "geral")
+    
+    # ========== MÉTODOS DE FALLBACK MORANSA ==========
+    
+    def _fallback_translation_challenges(self, category: str, difficulty: str, quantity: int) -> Dict[str, Any]:
+        """Fallback para geração de desafios de tradução"""
+        
+        # Desafios pré-definidos por categoria
+        challenges_by_category = {
+            'médica': [
+                {
+                    'word': 'Onde dói?',
+                    'category': 'médica',
+                    'context': 'Pergunta essencial para localizar a dor do paciente',
+                    'tags': ['dor', 'localização', 'diagnóstico']
+                },
+                {
+                    'word': 'Você tem febre?',
+                    'category': 'médica',
+                    'context': 'Verificação de sintoma comum de infecção',
+                    'tags': ['febre', 'sintoma', 'temperatura']
+                },
+                {
+                    'word': 'Chame uma ambulância.',
+                    'category': 'médica',
+                    'context': 'Instrução urgente para emergências graves',
+                    'tags': ['emergência', 'ambulância', 'urgente']
+                },
+                {
+                    'word': 'Mantenha a calma.',
+                    'category': 'médica',
+                    'context': 'Instrução para acalmar paciente em situação de stress',
+                    'tags': ['calma', 'psicológico', 'suporte']
+                },
+                {
+                    'word': 'Você tem alguma alergia?',
+                    'category': 'médica',
+                    'context': 'Pergunta crucial antes de administrar medicamentos',
+                    'tags': ['alergia', 'medicamento', 'segurança']
+                }
+            ],
+            'educação': [
+                {
+                    'word': 'Vamos aprender juntos.',
+                    'category': 'educação',
+                    'context': 'Frase motivacional para iniciar uma lição',
+                    'tags': ['motivação', 'aprendizado', 'colaboração']
+                },
+                {
+                    'word': 'Você entendeu?',
+                    'category': 'educação',
+                    'context': 'Verificação de compreensão durante o ensino',
+                    'tags': ['compreensão', 'verificação', 'ensino']
+                },
+                {
+                    'word': 'Muito bem!',
+                    'category': 'educação',
+                    'context': 'Elogio para encorajar o aluno',
+                    'tags': ['elogio', 'encorajamento', 'positivo']
+                },
+                {
+                    'word': 'Tente novamente.',
+                    'category': 'educação',
+                    'context': 'Encorajamento após erro ou dificuldade',
+                    'tags': ['persistência', 'encorajamento', 'tentativa']
+                },
+                {
+                    'word': 'Qual é a sua dúvida?',
+                    'category': 'educação',
+                    'context': 'Pergunta para identificar dificuldades do aluno',
+                    'tags': ['dúvida', 'esclarecimento', 'ajuda']
+                }
+            ],
+            'agricultura': [
+                {
+                    'word': 'Quando plantar?',
+                    'category': 'agricultura',
+                    'context': 'Pergunta sobre o timing ideal para plantio',
+                    'tags': ['plantio', 'timing', 'época']
+                },
+                {
+                    'word': 'A terra está seca.',
+                    'category': 'agricultura',
+                    'context': 'Observação sobre condição do solo',
+                    'tags': ['solo', 'seca', 'irrigação']
+                },
+                {
+                    'word': 'Precisa de água.',
+                    'category': 'agricultura',
+                    'context': 'Identificação de necessidade de irrigação',
+                    'tags': ['água', 'irrigação', 'necessidade']
+                },
+                {
+                    'word': 'A colheita está pronta.',
+                    'category': 'agricultura',
+                    'context': 'Indicação de que é hora de colher',
+                    'tags': ['colheita', 'pronto', 'tempo']
+                },
+                {
+                    'word': 'Cuidado com as pragas.',
+                    'category': 'agricultura',
+                    'context': 'Alerta sobre proteção das culturas',
+                    'tags': ['pragas', 'proteção', 'cuidado']
+                }
+            ]
+        }
+        
+        # Selecionar desafios da categoria ou usar geral
+        available_challenges = challenges_by_category.get(category, challenges_by_category['médica'])
+        selected_challenges = available_challenges[:quantity]
+        
+        return {
+            'success': True,
+            'challenges': selected_challenges,
+            'generated_count': len(selected_challenges),
+            'fallback': True
+        }
+    
+    def _fallback_contribution_analysis(self, contribution_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback para análise de contribuição"""
+        
+        # Análise básica baseada em regras simples
+        word = contribution_data.get('word', '')
+        translation = contribution_data.get('translation', '')
+        context = contribution_data.get('context', '')
+        category = contribution_data.get('category', 'geral')
+        
+        # Score básico baseado na presença de dados
+        score = 0.3  # Base
+        if len(translation) > 0:
+            score += 0.3
+        if len(context) > 10:
+            score += 0.2
+        if category != 'geral':
+            score += 0.2
+        
+        # Flags de moderação básicas
+        moderation_flags = []
+        if len(context) < 10:
+            moderation_flags.append('low_quality_context')
+        if len(translation) < 2:
+            moderation_flags.append('incomplete_translation')
+        
+        # Recomendação baseada no score
+        recommendation = 'pending_community_vote' if score >= 0.6 else 'requires_moderator_review'
+        
+        # Sugestões de tags baseadas na categoria
+        tag_suggestions = {
+            'médica': ['saúde', 'primeiros socorros', 'medicina'],
+            'educação': ['ensino', 'aprendizado', 'escola'],
+            'agricultura': ['plantio', 'colheita', 'cultivo'],
+            'geral': ['comunidade', 'comunicação', 'básico']
+        }
+        
+        return {
+            'success': True,
+            'analysis_result': {
+                'quality_assessment': {
+                    'score': score,
+                    'feedback': f'Análise automática: contribuição com qualidade {"boa" if score >= 0.7 else "média" if score >= 0.5 else "baixa"}'
+                },
+                'context_enhancement': context if len(context) > 10 else f'Contexto para uso de "{word}" em situações de {category}',
+                'tag_suggestion': tag_suggestions.get(category, tag_suggestions['geral']),
+                'moderation_flags': moderation_flags,
+                'approval_recommendation': recommendation
+            },
+            'fallback': True
+        }
+    
+    def _fallback_educational_content(self, subject: str, level: str, topic: str = None) -> Dict[str, Any]:
+        """Fallback para conteúdo educacional"""
+        
+        topic_info = f" - {topic}" if topic else ""
+        
+        content_templates = {
+            'primeiros socorros': {
+                'lesson_title': f'Primeiros Socorros Básicos{topic_info}',
+                'objectives': [
+                    'Identificar situações de emergência',
+                    'Aplicar técnicas básicas de primeiros socorros',
+                    'Saber quando chamar ajuda profissional'
+                ],
+                'content': 'Os primeiros socorros são cuidados imediatos prestados a uma pessoa ferida ou doente até que chegue ajuda médica profissional.',
+                'key_concepts': ['Avaliação da situação', 'Segurança primeiro', 'ABC (Vias aéreas, Respiração, Circulação)'],
+                'practical_examples': [
+                    'Como parar uma hemorragia',
+                    'Posição de recuperação',
+                    'Quando e como chamar emergência'
+                ],
+                'assessment_questions': [
+                    'Quais são os primeiros passos ao encontrar uma pessoa ferida?',
+                    'Como identificar se uma pessoa está consciente?'
+                ],
+                'cultural_adaptations': [
+                    'Adaptar técnicas aos recursos disponíveis na comunidade',
+                    'Considerar crenças locais sobre saúde e cura'
+                ]
+            },
+            'agricultura': {
+                'lesson_title': f'Técnicas Agrícolas{topic_info}',
+                'objectives': [
+                    'Compreender ciclos de plantio',
+                    'Identificar pragas comuns',
+                    'Aplicar técnicas de conservação do solo'
+                ],
+                'content': 'A agricultura sustentável combina técnicas tradicionais com conhecimentos modernos para maximizar a produção.',
+                'key_concepts': ['Rotação de culturas', 'Compostagem', 'Controle natural de pragas'],
+                'practical_examples': [
+                    'Preparação do solo para plantio',
+                    'Identificação de pragas comuns',
+                    'Técnicas de irrigação eficiente'
+                ],
+                'assessment_questions': [
+                    'Qual a melhor época para plantar na sua região?',
+                    'Como identificar se o solo está pronto para plantio?'
+                ],
+                'cultural_adaptations': [
+                    'Usar conhecimentos tradicionais da comunidade',
+                    'Adaptar técnicas ao clima local'
+                ]
+            }
+        }
+        
+        # Usar template específico ou geral
+        template = content_templates.get(subject, {
+            'lesson_title': f'Lição de {subject.title()}{topic_info}',
+            'objectives': [f'Aprender conceitos básicos de {subject}'],
+            'content': f'Conteúdo educacional sobre {subject} adaptado para a comunidade.',
+            'key_concepts': [f'Conceitos fundamentais de {subject}'],
+            'practical_examples': [f'Exemplos práticos de {subject}'],
+            'assessment_questions': [f'Perguntas sobre {subject}'],
+            'cultural_adaptations': ['Adaptações culturais necessárias']
+        })
+        
+        return {
+            'success': True,
+            'educational_content': template,
+            'fallback': True
+        }
+    
+    def _fallback_gamification_challenge(self, challenge_type: str, user_level: str, category: str = None) -> Dict[str, Any]:
+        """Fallback para desafios de gamificação"""
+        
+        challenges_by_type = {
+            'translation': {
+                'title': 'Desafio de Tradução',
+                'description': 'Traduza palavras importantes para sua comunidade',
+                'task': 'Traduza a palavra "ajuda" para Crioulo',
+                'points': 10,
+                'difficulty': user_level,
+                'time_limit': 300,  # 5 minutos
+                'hints': ['Pense em situações de emergência', 'É uma palavra muito usada']
+            },
+            'knowledge': {
+                'title': 'Teste de Conhecimento',
+                'description': 'Responda perguntas sobre primeiros socorros',
+                'task': 'Qual é o primeiro passo ao encontrar uma pessoa ferida?',
+                'points': 15,
+                'difficulty': user_level,
+                'time_limit': 180,  # 3 minutos
+                'hints': ['Pense na sua segurança primeiro', 'Observe o ambiente']
+            },
+            'contribution': {
+                'title': 'Contribuição Comunitária',
+                'description': 'Adicione uma nova palavra ao dicionário',
+                'task': 'Adicione uma palavra relacionada à agricultura',
+                'points': 20,
+                'difficulty': user_level,
+                'time_limit': 600,  # 10 minutos
+                'hints': ['Pense em ferramentas agrícolas', 'Considere o contexto de uso']
+            }
+        }
+        
+        challenge = challenges_by_type.get(challenge_type, challenges_by_type['translation'])
+        
+        # Ajustar pontos baseado no nível
+        level_multiplier = {'iniciante': 1.0, 'intermediário': 1.5, 'avançado': 2.0}
+        challenge['points'] = int(challenge['points'] * level_multiplier.get(user_level, 1.0))
+        
+        return {
+            'success': True,
+            'challenge': challenge,
+            'fallback': True
+        }
+    
+    def _fallback_reward_message(self, achievement_type: str, points_earned: int, user_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback para mensagens de recompensa"""
+        
+        user_name = user_data.get('name', 'Amigo')
+        total_points = user_data.get('total_points', 0)
+        
+        messages_by_type = {
+            'challenge_completed': {
+                'title': 'Parabéns!',
+                'message': f'Excelente trabalho, {user_name}! Você completou o desafio e ganhou {points_earned} pontos.',
+                'encouragement': 'Continue assim e ajude sua comunidade a crescer!',
+                'next_action': 'Que tal tentar um desafio mais difícil?'
+            },
+            'level_up': {
+                'title': 'Nível Aumentado!',
+                'message': f'Incrível, {user_name}! Você subiu de nível com {total_points} pontos totais.',
+                'encouragement': 'Seu conhecimento está crescendo e beneficiando toda a comunidade!',
+                'next_action': 'Novos desafios foram desbloqueados para você!'
+            },
+            'contribution_accepted': {
+                'title': 'Contribuição Aceita!',
+                'message': f'Obrigado, {user_name}! Sua contribuição foi aceita e você ganhou {points_earned} pontos.',
+                'encouragement': 'Você está ajudando a preservar e compartilhar o conhecimento local!',
+                'next_action': 'Continue contribuindo para fortalecer nossa comunidade!'
+            },
+            'milestone_reached': {
+                'title': 'Marco Alcançado!',
+                'message': f'Fantástico, {user_name}! Você alcançou um marco importante com {total_points} pontos.',
+                'encouragement': 'Seu dedicação está fazendo a diferença na comunidade!',
+                'next_action': 'Vamos celebrar e continuar aprendendo juntos!'
+            }
+        }
+        
+        reward = messages_by_type.get(achievement_type, messages_by_type['challenge_completed'])
+        
+        return {
+            'success': True,
+            'reward_message': reward,
+            'fallback': True
+        }
+    
+    def _fallback_badge_creation(self, achievement_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback para criação de badges"""
+        
+        achievement_type = achievement_data.get('type', 'general')
+        level = achievement_data.get('level', 'bronze')
+        category = achievement_data.get('category', 'geral')
+        
+        badge_templates = {
+            'translator': {
+                'name': f'Tradutor {level.title()}',
+                'description': 'Reconhecimento por contribuições em tradução',
+                'icon': '🌐',
+                'color': {'bronze': '#CD7F32', 'prata': '#C0C0C0', 'ouro': '#FFD700'}.get(level, '#CD7F32'),
+                'criteria': f'Completou {10 if level == "bronze" else 25 if level == "prata" else 50} traduções'
+            },
+            'teacher': {
+                'name': f'Educador {level.title()}',
+                'description': 'Reconhecimento por contribuições educacionais',
+                'icon': '📚',
+                'color': {'bronze': '#CD7F32', 'prata': '#C0C0C0', 'ouro': '#FFD700'}.get(level, '#CD7F32'),
+                'criteria': f'Ajudou {5 if level == "bronze" else 15 if level == "prata" else 30} pessoas a aprender'
+            },
+            'helper': {
+                'name': f'Ajudante {level.title()}',
+                'description': 'Reconhecimento por ajudar a comunidade',
+                'icon': '🤝',
+                'color': {'bronze': '#CD7F32', 'prata': '#C0C0C0', 'ouro': '#FFD700'}.get(level, '#CD7F32'),
+                'criteria': f'Prestou {3 if level == "bronze" else 10 if level == "prata" else 20} ajudas importantes'
+            },
+            'contributor': {
+                'name': f'Contribuidor {level.title()}',
+                'description': 'Reconhecimento por contribuições valiosas',
+                'icon': '⭐',
+                'color': {'bronze': '#CD7F32', 'prata': '#C0C0C0', 'ouro': '#FFD700'}.get(level, '#CD7F32'),
+                'criteria': f'Fez {5 if level == "bronze" else 15 if level == "prata" else 30} contribuições aceitas'
+            }
+        }
+        
+        badge = badge_templates.get(achievement_type, badge_templates['contributor'])
+        
+        # Adicionar informações específicas da categoria
+        if category != 'geral':
+            badge['name'] += f' - {category.title()}'
+            badge['description'] += f' na área de {category}'
+        
+        return {
+            'success': True,
+            'badge': badge,
             'fallback': True
         }

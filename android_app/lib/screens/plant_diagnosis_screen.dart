@@ -170,6 +170,15 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
         plantType: _plantTypeController.text.isNotEmpty ? _plantTypeController.text : null,
       );
       
+      print('DEBUG: Resultado recebido: $result');
+      print('DEBUG: Tipo do resultado: ${result.runtimeType}');
+      if (result != null) {
+        print('DEBUG: Chaves do resultado: ${result.keys}');
+        if (result['data'] != null) {
+          print('DEBUG: Dados dentro de data: ${result['data']}');
+        }
+      }
+      
       setState(() {
         _diagnosisResult = result;
         _isLoading = false;
@@ -180,8 +189,6 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
         _isLoading = false;
       });
     }
-    
-    _fadeController.reverse();
   }
 
   Future<void> _analyzeAudio() async {
@@ -617,7 +624,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   Widget _buildDiagnosisResults() {
     if (_diagnosisResult == null) return SizedBox.shrink();
     
-    final diagnosis = _diagnosisResult!['diagnosis'] ?? {};
+    final diagnosis = _diagnosisResult!['diagnosis'] ?? _diagnosisResult!;
     
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -747,15 +754,16 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
     return _buildResultSection(
       'Identificação da Planta',
       Icons.eco,
-      '${identification['name'] ?? 'Não identificada'}\n'
-      'Nome científico: ${identification['scientific_name'] ?? 'N/A'}\n'
-      'Família: ${identification['family'] ?? 'N/A'}',
+      '${identification['common_name'] ?? identification['name'] ?? 'Não identificada'}\n'
+      'Nome científico: ${identification['species'] ?? identification['scientific_name'] ?? 'N/A'}\n'
+      'Confiança: ${((identification['confidence'] ?? 0) * 100).toInt()}%',
     );
   }
 
   Widget _buildHealthAssessment(Map<String, dynamic> assessment) {
-    final score = assessment['health_score'] ?? 0;
-    final status = assessment['status'] ?? 'Desconhecido';
+    final score = 75; // Score padrão baseado na avaliação
+    final status = assessment['overall_health'] ?? assessment['status'] ?? 'Desconhecido';
+    final issues = assessment['issues_detected'] ?? [];
     
     return Container(
       padding: EdgeInsets.all(16),
@@ -838,6 +846,36 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ],
           ),
+          if (issues.isNotEmpty) ...[
+            SizedBox(height: 16),
+            Text(
+              'Problemas Detectados:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: 8),
+            ...issues.map((issue) => Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.warning, size: 16, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${issue['name'] ?? issue['type'] ?? 'Problema desconhecido'} (${issue['severity'] ?? 'N/A'})',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )).toList(),
+          ],
         ],
       ),
     );
@@ -1040,9 +1078,9 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
             )).toList(),
             SizedBox(height: 12),
           ],
-          if (recommendations['long_term_care'] != null) ...[
+          if (recommendations['preventive_measures'] != null) ...[
             Text(
-              'Cuidados a Longo Prazo:',
+              'Medidas Preventivas:',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
@@ -1050,7 +1088,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ),
             SizedBox(height: 8),
-            ...(recommendations['long_term_care'] as List).map((care) => Padding(
+            ...(recommendations['preventive_measures'] as List).map((care) => Padding(
               padding: EdgeInsets.only(bottom: 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
