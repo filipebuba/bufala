@@ -10,6 +10,7 @@ import 'providers/app_provider.dart';
 import 'screens/education_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/smart_agriculture_screen.dart';
 import 'screens/agriculture_family_screen.dart';
 import 'screens/agriculture_navigation_screen.dart';
 import 'screens/voiceguide_accessibility_screen.dart';
