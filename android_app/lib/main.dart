@@ -11,7 +11,8 @@ import 'screens/education_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/smart_agriculture_screen.dart';
-
+import 'screens/agriculture_family_screen.dart';
+import 'screens/agriculture_navigation_screen.dart';
 import 'screens/voiceguide_accessibility_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
@@ -158,8 +159,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const EducationScreen(),
-    const SmartAgricultureScreen(),
-    const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade com navegação integrada
+    const AgricultureNavigationScreen(), // Navegação de agricultura unificada
+    const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade
     const SettingsScreen(),
   ];
 
@@ -190,11 +191,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.agriculture),
-              label: AppStrings.agriculture,
+              label: 'Agricultura',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.accessibility_new),
-              label: 'VoiceGuide IA',
+              label: 'Acessibilidade',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),

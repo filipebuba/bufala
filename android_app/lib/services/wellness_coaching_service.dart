@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 import '../models/mental_health_models.dart';
 import 'voice_analysis_service.dart';
 import 'voice_guided_breathing_service.dart';
@@ -31,8 +32,7 @@ class WellnessCoachingService {
   late final Dio _dio;
 
   // Configuração do backend
-  static const String _backendUrl =
-      'http://10.0.2.2:5000/api'; // CORRIGIDO: emulador Android
+  static String get _baseUrl => AppConfig.apiBaseUrl; // URL dinâmica
   bool _backendAvailable = false;
 
   WellnessProfile? _currentProfile;
@@ -103,10 +103,10 @@ class WellnessCoachingService {
   /// Verificar saúde do backend
   Future<void> _checkBackendHealth() async {
     try {
-      debugPrint('🔍 Verificando saúde do backend em $_backendUrl...');
+      debugPrint('🔍 Verificando saúde do backend em $_baseUrl...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '$_backendUrl/health',
+        '$_baseUrl/health',
       );
 
       _backendAvailable = response.statusCode == 200;
@@ -127,7 +127,7 @@ class WellnessCoachingService {
             '❌ Backend connection timeout: Não foi possível conectar em 30s');
       } else if (e.type == DioExceptionType.connectionError) {
         debugPrint(
-            '❌ Backend connection error: Verifique se o servidor está rodando em $_backendUrl');
+            '❌ Backend connection error: Verifique se o servidor está rodando em $_baseUrl');
       } else {
         debugPrint('❌ Backend indisponível: ${e.type} - ${e.message}');
       }
@@ -300,7 +300,7 @@ class WellnessCoachingService {
       print('📊 Enviando métricas diárias para backend Gemma-3n');
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '$_backendUrl/wellness/daily-metrics',
+        '$_baseUrl/wellness/daily-metrics',
         data: {
           'metrics': {
             'mood_rating': metrics.moodRating,
@@ -1379,7 +1379,7 @@ class WellnessCoachingService {
 
       // Enviar requisição para o backend com timeout maior
       final response = await _dio.post<Map<String, dynamic>>(
-        '$_backendUrl/wellness/coaching',
+        '$_baseUrl/wellness/coaching',
         data: requestData,
         options: Options(
           headers: {'Content-Type': 'application/json'},
@@ -1429,7 +1429,7 @@ class WellnessCoachingService {
             '❌ Backend timeout: Gemma-3n está demorando para processar. Usando fallback offline.');
       } else if (e.type == DioExceptionType.connectionError) {
         print(
-            '❌ Erro de conexão: Verifique se o backend está rodando em $_backendUrl');
+            '❌ Erro de conexão: Verifique se o backend está rodando em $_baseUrl');
       } else {
         print('❌ Erro ao usar backend: ${e.type} - ${e.message}');
       }
