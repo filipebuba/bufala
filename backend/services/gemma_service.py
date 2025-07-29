@@ -17,21 +17,45 @@ from datetime import datetime
 
 from config.settings import BackendConfig, SystemPrompts
 from .model_selector import ModelSelector
+from .intelligent_model_selector import IntelligentModelSelector, CriticalityLevel, ContextType
 from config.system_prompts import REVOLUTIONARY_PROMPTS
 
 class GemmaService:
     """Serviço para interação com modelos Gemma com seleção automática"""
     
-    def __init__(self, domain: str = "general", force_model: Optional[str] = None):
+    def __init__(self, domain: str = "general", force_model: Optional[str] = None, context: Optional[str] = None, criticality: Optional[str] = None):
         self.logger = logging.getLogger(__name__)
         self.config = BackendConfig
         
-        # Configuração automática de modelo baseada no domínio
+        # Configuração inteligente de modelo baseada na criticidade e contexto
         if force_model:
             self.model_name = force_model
             self.model_config = ModelSelector.get_model_info(force_model).get('config', {})
+            self.intelligent_config = None
         else:
-            self.model_name, self.model_config = ModelSelector.get_model_for_domain(domain)
+            # Converte strings para enums se fornecidas
+            context_enum = None
+            if context:
+                try:
+                    context_enum = ContextType(context.lower())
+                except ValueError:
+                    self.logger.warning(f"Contexto inválido: {context}, usando detecção automática")
+            
+            criticality_enum = None
+            if criticality:
+                try:
+                    criticality_enum = CriticalityLevel(criticality.lower())
+                except ValueError:
+                    self.logger.warning(f"Criticidade inválida: {criticality}, usando detecção automática")
+            
+            # Seleciona modelo inteligentemente
+            self.model_name, self.intelligent_config = IntelligentModelSelector.select_model(
+                context=context_enum,
+                criticality=criticality_enum
+            )
+            
+            # Fallback para configuração tradicional se necessário
+            self.model_config = ModelSelector.get_model_info(self.model_name).get('config', {})
         
         # Configurações do sistema
         self.system_config = ModelSelector.auto_configure_for_system()
@@ -65,6 +89,8 @@ Você é o módulo de geração de conteúdo do aplicativo 'Moransa'. Sua missã
         self.domain = domain
         
         self.logger.info(f"GemmaService inicializado com modelo: {self.model_name} para domínio: {domain}")
+        if hasattr(self, 'intelligent_config') and self.intelligent_config:
+            self.logger.info(f"Seleção inteligente ativa - Modelo: {self.intelligent_config.name}, Criticidade: {self.intelligent_config.criticality_threshold.value}")
         self.logger.info(f"Recursos do sistema: RAM {self.system_config['system_resources']['available_ram_gb']:.1f}GB, GPU: {self.system_config['system_resources']['has_cuda']}")
         self.logger.info("🎯 Modo de validação comunitária ativado - Gemma-3n como gerador de conteúdo")
     
@@ -292,6 +318,7 @@ Você é o módulo de geração de conteúdo do aplicativo 'Moransa'. Sua missã
             self.ollama_available = False
             return False
     
+<<<<<<< HEAD
     def generate_new_portuguese_phrases(self, category: str, difficulty: str = "básico", quantity: int = 10, existing_phrases: List[str] = None, device_specs: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Gera novas frases em português para serem traduzidas pela comunidade.
@@ -471,6 +498,23 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
             'fallback': True,
             'message': 'Frases geradas usando sistema de fallback'
         }
+=======
+    def _check_ollama_model_available(self, model_name: str) -> bool:
+        """Verifica se um modelo específico está disponível no Ollama"""
+        try:
+            response = requests.get(
+                f"{self.config.OLLAMA_HOST}/api/tags",
+                timeout=5
+            )
+            if response.status_code == 200:
+                models = response.json().get('models', [])
+                model_names = [model['name'] for model in models]
+                return model_name in model_names
+            return False
+        except Exception as e:
+            self.logger.warning(f"Erro ao verificar modelo {model_name}: {e}")
+            return False
+>>>>>>> dc4bcba2edbfb97764e9edbac28212b01bd57690
     
     def _setup_kaggle_credentials(self):
         """Configurar credenciais do Kaggle para acesso ao modelo Gemma-3n"""
@@ -656,24 +700,55 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        auto_select_model: bool = True,
         **kwargs
     ) -> Dict[str, Any]:
-        """Gerar resposta usando Ollama ou modelo local com configurações otimizadas"""
+        """Gerar resposta usando Ollama ou modelo local com seleção inteligente"""
         start_time = datetime.now()
+        
+        # Seleção inteligente de modelo baseada no prompt
+        selected_model = self.model_name
+        model_config = self.intelligent_config or self.model_config
+        
+        if auto_select_model and prompt:
+            try:
+                # Detecta o melhor modelo para este prompt específico
+                new_model, new_config = IntelligentModelSelector.select_model(text=prompt)
+                
+                # Se o modelo selecionado é diferente do atual, atualiza
+                if new_model != self.model_name:
+                    self.logger.info(f"Mudando modelo de {self.model_name} para {new_model} baseado no conteúdo")
+                    selected_model = new_model
+                    model_config = new_config
+                    
+                    # Atualiza configuração do Ollama se necessário
+                    if hasattr(self.config, 'OLLAMA_MODEL'):
+                        original_model = self.config.OLLAMA_MODEL
+                        self.config.OLLAMA_MODEL = new_config.ollama_model
+                        
+                        # Verifica se o novo modelo está disponível
+                        if not self._check_ollama_model_available(new_config.ollama_model):
+                            self.logger.warning(f"Modelo {new_config.ollama_model} não disponível, usando {original_model}")
+                            self.config.OLLAMA_MODEL = original_model
+                            selected_model = self.model_name
+                            model_config = self.intelligent_config or self.model_config
+                        
+            except Exception as e:
+                self.logger.warning(f"Erro na seleção automática de modelo: {e}, usando modelo padrão")
         
         try:
             # Tentar Ollama primeiro
             if self.ollama_available:
-                response = self._generate_with_ollama(prompt, system_prompt, **kwargs)
+                response = self._generate_with_ollama(prompt, system_prompt, model_config=model_config, **kwargs)
             elif self.model_loaded:
-                response = self._generate_with_local_model(prompt, system_prompt, **kwargs)
+                response = self._generate_with_local_model(prompt, system_prompt, model_config=model_config, **kwargs)
             else:
                 # Tentar carregar um modelo automaticamente
                 self.logger.warning("Nenhum modelo carregado, tentando carregar automaticamente...")
                 self._load_local_model()
                 
                 if self.model_loaded:
-                    response = self._generate_with_local_model(prompt, system_prompt, **kwargs)
+                    response = self._generate_with_local_model(prompt, system_prompt, model_config=model_config, **kwargs)
                 else:
                     # Fallback para resposta padrão
                     response = self._generate_fallback_response(prompt)
@@ -705,7 +780,7 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
                 self._try_fallback_model()
                 if self.model_loaded:
                     try:
-                        response = self._generate_with_local_model(prompt, system_prompt, **kwargs)
+                        response = self._generate_with_local_model(prompt, system_prompt, model_config=model_config, **kwargs)
                         response['metadata'] = {
                             'provider': 'fallback_model',
                             'model': self.model_name,
@@ -731,6 +806,7 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        model_config: Optional[Any] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """Gerar resposta usando Ollama ou simulação para demonstração"""
@@ -741,17 +817,30 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
                 messages.append({"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
             
+            # Usar configurações do modelo inteligente se disponível
+            if model_config and hasattr(model_config, 'temperature'):
+                temperature = kwargs.get('temperature', model_config.temperature)
+                top_p = kwargs.get('top_p', model_config.top_p)
+                max_tokens = kwargs.get('max_new_tokens', model_config.max_tokens)
+                model_name = model_config.ollama_model
+                self.logger.info(f"Usando configurações inteligentes - Temp: {temperature}, Top-p: {top_p}, Max tokens: {max_tokens}")
+            else:
+                temperature = kwargs.get('temperature', self.config.TEMPERATURE)
+                top_p = kwargs.get('top_p', self.config.TOP_P)
+                max_tokens = kwargs.get('max_new_tokens', self.config.MAX_NEW_TOKENS)
+                model_name = self.config.OLLAMA_MODEL
+            
             # Preparar payload
             payload = {
-                "model": self.config.OLLAMA_MODEL,
+                "model": model_name,
                 "messages": messages,
                 "stream": False,
                 "options": {
-                    "temperature": kwargs.get('temperature', self.config.TEMPERATURE),
-                    "top_p": kwargs.get('top_p', self.config.TOP_P),
+                    "temperature": temperature,
+                    "top_p": top_p,
                     "top_k": kwargs.get('top_k', self.config.TOP_K),
                     "repeat_penalty": kwargs.get('repetition_penalty', self.config.REPETITION_PENALTY),
-                    "num_predict": kwargs.get('max_new_tokens', self.config.MAX_NEW_TOKENS)
+                    "num_predict": max_tokens
                 }
             }
             
@@ -790,6 +879,7 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        model_config: Optional[Any] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """Gerar resposta usando modelo local com configurações otimizadas"""
@@ -820,7 +910,7 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
             inputs = {k: v.to(device) for k, v in inputs.items()}
             
             # Obter configurações de geração otimizadas
-            gen_config = self._get_optimized_generation_config(prompt, **kwargs)
+            gen_config = self._get_optimized_generation_config(prompt, model_config=model_config, **kwargs)
             
             # Gerar resposta
             with torch.no_grad():
@@ -852,14 +942,25 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
             self.logger.error(f"Erro no modelo local: {e}")
             raise
     
-    def _get_optimized_generation_config(self, prompt: str, **kwargs) -> Dict[str, Any]:
+    def _get_optimized_generation_config(self, prompt: str, model_config: Optional[Any] = None, **kwargs) -> Dict[str, Any]:
         """Obter configurações de geração otimizadas baseadas no modelo e contexto"""
+        # Usar configurações do modelo inteligente se disponível
+        if model_config and hasattr(model_config, 'temperature'):
+            base_temperature = model_config.temperature
+            base_top_p = model_config.top_p
+            base_max_tokens = model_config.max_tokens
+            self.logger.info(f"Usando configurações inteligentes para geração local - Temp: {base_temperature}")
+        else:
+            base_temperature = 0.7
+            base_top_p = 0.9
+            base_max_tokens = 512
+        
         # Configurações base do modelo
         base_config = {
-            'max_new_tokens': kwargs.get('max_tokens', 512),
+            'max_new_tokens': kwargs.get('max_tokens', base_max_tokens),
             'do_sample': True,
-            'temperature': kwargs.get('temperature', 0.7),
-            'top_p': kwargs.get('top_p', 0.9),
+            'temperature': kwargs.get('temperature', base_temperature),
+            'top_p': kwargs.get('top_p', base_top_p),
             'top_k': kwargs.get('top_k', 50),
             'repetition_penalty': kwargs.get('repetition_penalty', 1.1),
             'no_repeat_ngram_size': 3,
