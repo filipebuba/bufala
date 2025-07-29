@@ -987,8 +987,8 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
       if (mounted) {
         Navigator.of(context).pop(); // Fechar dialog de loading
 
-        final tips = _cleanMarkdownFormatting(
-            response['response'] ?? response['answer'] ??
+        final tips = _cleanGemmaText(
+        response['response'] ?? response['answer'] ??
                 'Não foi possível gerar dicas no momento.');
 
         showDialog<void>(
@@ -1023,13 +1023,35 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     }
   }
 
-  String _cleanMarkdownFormatting(String text) {
+  String _cleanGemmaText(String text) {
+    if (text.isEmpty) return text;
+    
     return text
+        // Remover marcadores de markdown
         .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'$1') // Remove negrito
         .replaceAll(RegExp(r'##\s*'), '') // Remove cabeçalhos
         .replaceAll(RegExp(r'\*(.*?)\*'), r'$1') // Remove itálico
         .replaceAll(RegExp(r'`(.*?)`'), r'$1') // Remove código
+        .replaceAll(RegExp(r'```[\s\S]*?```'), '') // Remove blocos de código
+        .replaceAll(RegExp(r'\[.*?\]\(.*?\)'), '') // Remove links
+        
+        // Remover caracteres de formatação
+        .replaceAll(RegExp(r'[\*_~`]'), '') // Remove caracteres de markdown
+        .replaceAll(RegExp(r'#{1,6}\s*'), '') // Remove headers
+        .replaceAll(RegExp(r'>\s*'), '') // Remove citações
+        .replaceAll(RegExp(r'\|.*?\|'), '') // Remove tabelas
+        
+        // Normalizar aspas
+        .replaceAll(RegExp(r'["'']'), '"') // Normalizar aspas
+        
+        // Limpar quebras de linha e espaços
         .replaceAll(RegExp(r'\n\s*\n'), '\n') // Remove quebras excessivas
+        .replaceAll(RegExp(r'\s+'), ' ') // Normalizar espaços
+        .replaceAll(RegExp(r'\n\s*[-•]\s*'), '\n• ') // Normalizar listas
+        .replaceAll(RegExp(r'\s*—\s*'), ' - ') // Normalizar travessões
+        .replaceAll(RegExp(r'\.\.\.*'), '...') // Normalizar reticências
+        .replaceAll(RegExp(r'\u00A0'), ' ') // Remover espaços não-quebráveis
+        .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '') // Remover caracteres de controle
         .trim();
   }
 

@@ -797,25 +797,41 @@ def generate_gamification_challenge():
     try:
         data = request.get_json()
         
-        # Parâmetros obrigatórios
-        challenge_type = data.get('challenge_type', 'translation')
-        user_level = data.get('user_level', 'iniciante')
+        # Preparar dados do usuário
+        user_data = {
+            'user_name': data.get('user_name', 'Usuário'),
+            'level': data.get('user_level', 1),
+            'xp_to_next_level': data.get('xp_to_next_level', 100),
+            'current_streak': data.get('current_streak', 0),
+            'preferred_categories': data.get('preferred_categories', ['geral']),
+            'contribution_count_today': data.get('contribution_count_today', 0)
+        }
         
-        # Parâmetros opcionais
-        category = data.get('category')
-        user_profile = data.get('user_profile', {})
+        # Preparar status da comunidade
+        community_status = {
+            'most_needed_category': data.get('most_needed_category', 'geral'),
+            'active_community_event': data.get('active_community_event', 'Nenhum')
+        }
         
         # Obter serviço Gemma
         from services.gemma_service import GemmaService
         gemma_service = GemmaService()
         
         if gemma_service:
+            # Executar de forma síncrona usando asyncio
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
             # Gerar desafio usando Gemma-3
-            challenge_result = gemma_service.generate_gamification_challenge(
-                challenge_type=challenge_type,
-                user_level=user_level,
-                category=category,
-                user_profile=user_profile
+            challenge_result = loop.run_until_complete(
+                gemma_service.generate_gamification_challenge(
+                    user_data=user_data,
+                    community_status=community_status
+                )
             )
             
             return jsonify({

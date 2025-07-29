@@ -48,11 +48,44 @@ Esta pasta contém a documentação técnica completa do **Projeto Moransa**, um
 
 #### 🌍 [05 - Sistema de Tradução](./06-sistema-traducao.md)
 **Módulo Linguístico** - Tradução e preservação cultural
-- Tradução multimodal (texto, áudio, imagem)
-- Especialização em Crioulo da Guiné-Bissau
-- Análise emocional e cultural
-- Ensino de idiomas locais
-- Ponte cultural inteligente
+- Tradução automática para Crioulo
+- Preservação de idiomas locais
+- Adaptação cultural de conteúdo
+- Suporte a múltiplos dialetos
+- IA especializada em linguística africana
+
+#### 🧘‍♀️ [10 - Sistema de Wellness Coaching](./10-sistema-wellness-coaching.md)
+**Módulo de Bem-estar** - Coaching de saúde mental e bem-estar
+- Análise de humor com IA personalizada
+- Sessões de respiração e meditação guiada
+- Análise de voz para bem-estar mental
+- Coaching culturalmente adaptado à Guiné-Bissau
+- Diário de bem-estar e monitoramento de progresso
+- Recursos de emergência e apoio comunitário
+
+#### 🌱 [09 - Sistema de Sustentabilidade Ambiental](./09-sistema-sustentabilidade-ambiental.md)
+**Módulo Ambiental** - Monitoramento e conservação da biodiversidade
+- Identificação automática de espécies via IA
+- Monitoramento de ecossistemas locais
+- Avaliação de saúde ambiental
+- Programas de conservação participativa
+- Base de dados de fauna e flora da Guiné-Bissau
+
+#### 🤝 [06 - Sistema de Validação Comunitária](./07-sistema-validacao-comunitaria.md)
+**NOVO** - Sistema gamificado onde a comunidade valida traduções
+- Validação comunitária de traduções
+- Sistema de pontuação gamificado
+- Gemma-3n como gerador de conteúdo
+- Engajamento da comunidade local
+- Qualidade colaborativa das traduções
+
+#### 👥 [07 - Guia do Colaborador](./08-guia-colaborador.md)
+**Manual Completo** - Guia para profissionais humanitários e colaboradores
+- Onboarding para novos colaboradores
+- Protocolos de trabalho com comunidades
+- Treinamento em tecnologias do projeto
+- Diretrizes éticas e culturais
+- Procedimentos operacionais padrão
 
 ## 🔧 Aspectos Técnicos Centrais
 
@@ -123,6 +156,12 @@ class GemmaService:
 - Preservação de expressões culturais autênticas
 - Ensino especializado de idiomas
 
+### 5. **Validação Comunitária Gamificada**
+- Sistema de pontos para validação de traduções
+- Engajamento da comunidade local
+- Qualidade colaborativa das traduções
+- Gemma-3n como gerador de conteúdo para validação
+
 ## 📊 Impacto Social Documentado
 
 ### Métricas de Sucesso Esperadas
@@ -173,6 +212,7 @@ Esta documentação é um documento vivo que será atualizado conforme o projeto
 - **Frequência**: Trimestral ou conforme marcos importantes
 
 ### Histórico de Versões
+- **v2.0** (Jan 2024): **CORREÇÃO FUNDAMENTAL** - Sistema de Validação Comunitária implementado
 - **v1.0** (Jan 2024): Documentação inicial completa
 - **v0.9** (Dez 2023): Versão beta da documentação
 - **v0.5** (Nov 2023): Documentação de desenvolvimento

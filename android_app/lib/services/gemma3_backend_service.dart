@@ -544,6 +544,116 @@ class Gemma3BackendService {
     }
   }
 
+  /// Solicitar sessão de meditação guiada com áudio Gemma-3n
+  Future<Map<String, dynamic>> requestGuidedMeditationWithAudio({
+    required String sessionType,
+    required int durationMinutes,
+    String language = 'pt-BR',
+    String? customPrompt,
+    bool useGemmaAudio = true,
+  }) async {
+    if (!_isInitialized) {
+      return {
+        'success': false,
+        'error': 'Serviço não inicializado',
+      };
+    }
+
+    try {
+      if (_isOfflineMode) {
+        // Modo offline - gerar sessão básica
+        return _generateOfflineMeditationSession(
+          sessionType: sessionType,
+          durationMinutes: durationMinutes,
+          language: language,
+        );
+      }
+
+      // Modo online - usar Gemma-3n
+      final response = await _dio.post<Map<String, dynamic>>(
+        AppConfig.buildUrl('wellness/guided-meditation'),
+        data: {
+          'session_type': sessionType,
+          'duration_minutes': durationMinutes,
+          'language': language,
+          'personalized_prompt': customPrompt,
+          'use_gemma_audio': useGemmaAudio,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return {
+          'success': true,
+          'session_data': response.data!['session_data'],
+          'audio_capabilities': response.data!['audio_capabilities'] ?? false,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Resposta inválida do servidor',
+        };
+      }
+    } catch (e) {
+      print('❌ Erro na solicitação de meditação: $e');
+      
+      // Fallback para modo offline
+      return _generateOfflineMeditationSession(
+        sessionType: sessionType,
+        durationMinutes: durationMinutes,
+        language: language,
+      );
+    }
+  }
+
+  /// Gerar sessão de meditação offline
+  Map<String, dynamic> _generateOfflineMeditationSession({
+    required String sessionType,
+    required int durationMinutes,
+    required String language,
+  }) {
+    final fallbackSessions = {
+      'breathing': {
+        'introduction': 'Bem-vindo à sua sessão de respiração guiada. Vamos encontrar calma juntos.',
+        'preparation': 'Sente-se confortavelmente e relaxe os ombros.',
+        'conclusion': 'Parabéns! Você completou sua sessão de respiração.',
+        'pattern': {'name': '4-7-8 Relaxamento', 'inhale_seconds': 4, 'hold_seconds': 7, 'exhale_seconds': 8}
+      },
+      'meditation': {
+        'introduction': 'Bem-vindo à sua sessão de meditação de $durationMinutes minutos.',
+        'preparation': 'Encontre uma posição confortável e feche os olhos suavemente.',
+        'conclusion': 'Sua sessão de meditação está completa. Carregue essa paz consigo.',
+        'pattern': {'name': 'Respiração Natural', 'inhale_seconds': 4, 'hold_seconds': 2, 'exhale_seconds': 6}
+      },
+      'relaxation': {
+        'introduction': 'Hora de relaxar profundamente. Esta sessão é para você.',
+        'preparation': 'Deite-se confortavelmente e solte toda a tensão.',
+        'conclusion': 'Você está completamente relaxado. Mantenha essa paz.',
+        'pattern': {'name': 'Respiração Calmante', 'inhale_seconds': 3, 'hold_seconds': 2, 'exhale_seconds': 6}
+      },
+    };
+
+    final sessionData = fallbackSessions[sessionType] ?? fallbackSessions['breathing']!;
+    
+    return {
+      'success': true,
+      'session_data': {
+        'session_id': '${sessionType}_offline_${DateTime.now().millisecondsSinceEpoch}',
+        'instructions': {
+          'introduction': sessionData['introduction'],
+          'preparation': sessionData['preparation'],
+          'conclusion': sessionData['conclusion'],
+        },
+        'audio_content': {
+          'has_audio': false,
+          'use_tts': true,
+          'fallback_text': '${sessionData['introduction']} ${sessionData['preparation']} ${sessionData['conclusion']}'
+        },
+        'pattern': sessionData['pattern'],
+      },
+      'audio_capabilities': false,
+    };
+  }
+
   /// Construir prompt para emergência
   String _buildEmergencyPrompt(
       String type, String? description, String language) {
