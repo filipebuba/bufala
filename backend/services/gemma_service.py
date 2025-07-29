@@ -318,7 +318,6 @@ Você é o módulo de geração de conteúdo do aplicativo 'Moransa'. Sua missã
             self.ollama_available = False
             return False
     
-<<<<<<< HEAD
     def generate_new_portuguese_phrases(self, category: str, difficulty: str = "básico", quantity: int = 10, existing_phrases: List[str] = None, device_specs: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Gera novas frases em português para serem traduzidas pela comunidade.
@@ -498,7 +497,7 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
             'fallback': True,
             'message': 'Frases geradas usando sistema de fallback'
         }
-=======
+    
     def _check_ollama_model_available(self, model_name: str) -> bool:
         """Verifica se um modelo específico está disponível no Ollama"""
         try:
@@ -514,7 +513,6 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
         except Exception as e:
             self.logger.warning(f"Erro ao verificar modelo {model_name}: {e}")
             return False
->>>>>>> dc4bcba2edbfb97764e9edbac28212b01bd57690
     
     def _setup_kaggle_credentials(self):
         """Configurar credenciais do Kaggle para acesso ao modelo Gemma-3n"""
