@@ -396,7 +396,9 @@ class _EducationScreenState extends State<EducationScreen> {
       print('📚 Total de conteúdos carregados: ${content.length}');
     } catch (e) {
       setState(() => _isLoading = false);
-      _showErrorDialog('Erro ao carregar conteúdo: $e');
+      if (mounted) {
+        _showErrorDialog('Erro ao carregar conteúdo: $e');
+      }
     }
   }
 
@@ -920,11 +922,33 @@ $content
     );
   }
 
+  // Função para limpar caracteres especiais dos textos do Gemma3
+  String _cleanGemmaText(String? text) {
+    if (text == null || text.isEmpty) return '';
+    
+    // Remove caracteres especiais comuns que podem aparecer na resposta do Gemma3
+    String cleanedText = text
+        .replaceAll(RegExp(r'[\*\#\`\~\^\{\}\[\]\|\\]'), '') // Remove markdown e caracteres especiais
+        .replaceAll(RegExp(r'\n\s*\n'), '\n') // Remove quebras de linha duplas
+        .replaceAll(RegExp(r'^\s*[\-\*\+]\s*'), '') // Remove marcadores de lista no início
+        .replaceAll(RegExp(r'\s+'), ' ') // Normaliza espaços múltiplos
+        .replaceAll(RegExp(r'["'']'), '"') // Normaliza aspas
+        .replaceAll(RegExp(r'[\u2013\u2014]'), '-') // Normaliza travessões
+        .replaceAll(RegExp(r'[\u2026]'), '...') // Normaliza reticências
+        .replaceAll(RegExp(r'[\u00A0]'), ' ') // Remove espaços não-quebráveis
+        .trim();
+    
+    // Remove caracteres de controle e não-ASCII problemáticos
+    cleanedText = cleanedText.replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
+    
+    return cleanedText;
+  }
+
   Widget _buildEducationAlertCard(Map<String, dynamic> alert) {
-    final type = alert['type']?.toString() ?? 'info';
-    final message = alert['message']?.toString() ?? '';
-    final level = alert['level']?.toString() ?? 'medium';
-    final region = alert['region']?.toString() ?? '';
+    final type = _cleanGemmaText(alert['type']?.toString()) ?? 'info';
+    final message = _cleanGemmaText(alert['message']?.toString());
+    final level = _cleanGemmaText(alert['level']?.toString()) ?? 'medium';
+    final region = _cleanGemmaText(alert['region']?.toString());
 
     Color cardColor;
     IconData cardIcon;
