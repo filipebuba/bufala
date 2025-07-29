@@ -303,11 +303,17 @@ class ModularBackendService {
       
       final response = await _dio.post(
         endpoint,
-        data: {
-          'question': question,
+        data: isEmergency ? {
+          'emergency_type': question,
+          'description': question,
+          'language': language,
+          'priority': 'critical',
+          'timestamp': DateTime.now().toIso8601String(),
+        } : {
+          'prompt': question,
           'language': language,
           'context': 'medical',
-          'priority': isEmergency ? 'critical' : 'high',
+          'priority': 'high',
           'timestamp': DateTime.now().toIso8601String(),
         },
         options: Options(receiveTimeout: timeout),

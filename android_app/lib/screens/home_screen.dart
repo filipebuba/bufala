@@ -11,7 +11,8 @@ import '../widgets/feature_card.dart';
 import '../widgets/quick_action_button.dart';
 import 'agriculture_screen.dart';
 import 'api_test_screen.dart'; // NOVO: Import da tela de teste
-import 'collaborative_teaching_screen.dart';
+
+import 'gemma_meditation_test_screen.dart'; // NOVO: Import da tela de teste Gemma-3n
 import 'education_screen.dart';
 import 'environmental_menu_screen.dart';
 import 'medical_emergency_unified_screen.dart';
@@ -135,13 +136,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: _navigateToEnvironmental,
                 ),
                 const SizedBox(height: 12),
+
                 FeatureCard(
-                  icon: Icons.school_outlined,
-                  title: 'Ensine o Bu Fala - Sistema Colaborativo',
+                  icon: Icons.spa,
+                  title: 'Teste Meditação Gemma-3n',
                   description:
-                      'Sistema de ensino colaborativo para aprendizado de idiomas locais',
-                  color: Colors.green,
-                  onTap: _navigateToCollaborativeTeaching,
+                      'Teste da funcionalidade de meditação com áudio do Gemma-3n',
+                  color: Colors.deepPurple,
+                  onTap: _navigateToGemmaMeditationTest,
                 ),
                 const SizedBox(height: 24),
 
@@ -458,11 +460,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _navigateToCollaborativeTeaching() {
+
+  void _navigateToGemmaMeditationTest() {
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => const CollaborativeTeachingScreen(),
+      MaterialPageRoute(
+        builder: (context) => const GemmaMeditationTestScreen(),
       ),
     );
   }

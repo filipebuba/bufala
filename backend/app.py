@@ -45,6 +45,7 @@ from routes.multimodal_routes import multimodal_bp
 from routes.environmental_routes import environmental_bp
 from routes.model_management_routes import model_management_bp
 from routes.collaborative_routes import collaborative_bp
+# Router FastAPI removido - agora usando funções Flask diretamente
 
 def create_app():
     """Factory function para criar a aplicação Flask"""
@@ -103,6 +104,33 @@ def create_app():
     app.register_blueprint(model_management_bp, url_prefix='/api')
     app.register_blueprint(collaborative_bp, url_prefix='/api')
     
+    # Registrar rotas de validação comunitária manualmente
+    from routes.collaborative_validation_routes import (
+        generate_portuguese_phrases,
+        get_phrases_to_translate,
+        propose_translation,
+        get_translations_to_validate,
+        validate_translation,
+        get_user_stats,
+        get_leaderboard
+    )
+    
+    # Registrar rotas Flask diretamente
+    app.add_url_rule('/api/collaborative-validation/generate-phrases', 
+                     'generate_phrases', generate_portuguese_phrases, methods=['POST'])
+    app.add_url_rule('/api/collaborative-validation/phrases-to-translate', 
+                     'phrases_to_translate', get_phrases_to_translate, methods=['GET'])
+    app.add_url_rule('/api/collaborative-validation/propose-translation', 
+                     'propose_translation', propose_translation, methods=['POST'])
+    app.add_url_rule('/api/collaborative-validation/translations-to-validate', 
+                     'translations_to_validate', get_translations_to_validate, methods=['GET'])
+    app.add_url_rule('/api/collaborative-validation/validate-translation', 
+                     'validate_translation', validate_translation, methods=['POST'])
+    app.add_url_rule('/api/collaborative-validation/user-stats/<user_id>', 
+                     'get_user_stats', get_user_stats, methods=['GET'])
+    app.add_url_rule('/api/collaborative-validation/leaderboard', 
+                     'get_leaderboard', get_leaderboard, methods=['GET'])
+    
     # Rota raiz
     @app.route('/')
     def index():
@@ -128,6 +156,7 @@ def create_app():
                 'voice_guide': '/api/voice-guide',
                 'multimodal': '/api/multimodal',
                 'environmental': '/api/environment',
+                'collaborative_validation': '/api/collaborative-validation',
                 'model_management': '/api/models'
             }
         })

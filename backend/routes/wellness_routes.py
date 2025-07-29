@@ -1076,6 +1076,151 @@ def _get_stress_prevention_tips():
         "Pratique gratidão diariamente"
     ]
 
+@wellness_bp.route('/wellness/guided-meditation', methods=['POST'])
+def guided_meditation():
+    """
+    Sessão de meditação e respiração guiada com Gemma-3n
+    ---
+    tags:
+      - Bem-estar
+    summary: Sessão de meditação guiada com áudio do Gemma-3n
+    description: |
+      Endpoint para gerar sessões de meditação e respiração guiada usando
+      as capacidades multimodais do Gemma-3n, incluindo geração de áudio.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - session_type
+          properties:
+            session_type:
+              type: string
+              enum: ["breathing", "meditation", "relaxation"]
+              description: Tipo de sessão
+              example: "breathing"
+            duration_minutes:
+              type: integer
+              description: Duração em minutos
+              example: 5
+            language:
+              type: string
+              enum: ["português", "crioulo"]
+              description: Idioma preferido
+              example: "português"
+            personalized_prompt:
+              type: string
+              description: Prompt personalizado
+              example: "Preciso relaxar após um dia difícil"
+            use_gemma_audio:
+              type: boolean
+              description: Usar capacidade de áudio do Gemma-3n
+              example: true
+    responses:
+      200:
+        description: Sessão de meditação gerada com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            data:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                instructions:
+                  type: object
+                  properties:
+                    introduction:
+                      type: string
+                    preparation:
+                      type: string
+                    conclusion:
+                      type: string
+                audio_content:
+                  type: object
+                  properties:
+                    has_audio:
+                      type: boolean
+                    audio_instructions:
+                      type: array
+                      items:
+                        type: string
+                    fallback_text:
+                      type: string
+                pattern:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    inhale_seconds:
+                      type: integer
+                    hold_seconds:
+                      type: integer
+                    exhale_seconds:
+                      type: integer
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        # Extrair parâmetros
+        session_type = data.get('session_type', 'breathing')
+        duration_minutes = data.get('duration_minutes', 5)
+        language = data.get('language', 'português')
+        personalized_prompt = data.get('personalized_prompt', '')
+        use_gemma_audio = data.get('use_gemma_audio', True)
+        
+        # Validar parâmetros
+        if session_type not in ['breathing', 'meditation', 'relaxation']:
+            return jsonify(create_error_response(
+                'invalid_session_type',
+                'Tipo de sessão deve ser: breathing, meditation ou relaxation',
+                400
+            )), 400
+        
+        if duration_minutes < 1 or duration_minutes > 60:
+            return jsonify(create_error_response(
+                'invalid_duration',
+                'Duração deve estar entre 1 e 60 minutos',
+                400
+            )), 400
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service and use_gemma_audio:
+            # Tentar usar capacidades multimodais do Gemma-3n
+            session_data = _generate_guided_session_with_gemma_audio(
+                gemma_service, session_type, duration_minutes, language, personalized_prompt
+            )
+        else:
+            # Fallback para geração de texto + TTS
+            session_data = _generate_guided_session_with_text(
+                gemma_service, session_type, duration_minutes, language, personalized_prompt
+            )
+        
+        return jsonify({
+            'success': True,
+            'data': session_data
+        })
+        
+    except Exception as e:
+        log_error(logger, e, 'guided_meditation')
+        return jsonify(create_error_response(
+            'internal_error',
+            'Erro interno do servidor',
+            500
+        )), 500
+
 @wellness_bp.route('/wellness/voice-analysis', methods=['POST'])
 def voice_analysis():
     """
@@ -1660,6 +1805,374 @@ def _process_wellness_content_response(gemma_response, content_type, duration):
         'instructions': instructions,
         'tips': tips or _get_default_tips(content_type),
         'benefits': benefits or _get_default_benefits(content_type)
+    }
+
+def _generate_guided_session_with_gemma_audio(gemma_service, session_type, duration_minutes, language, personalized_prompt):
+    """
+    Gerar sessão de meditação usando Gemma-3n para criar instruções de áudio estruturadas
+    NOTA: Ollama ainda não suporta capacidades multimodais completas do Gemma-3n,
+    então geramos instruções estruturadas para síntese de áudio
+    """
+    try:
+        # Prompt especializado para geração de instruções de áudio estruturadas
+        audio_prompt = f"""
+        Você é um especialista em meditação e bem-estar usando o modelo Gemma-3n.
+        
+        Crie uma sessão detalhada de {session_type} de {duration_minutes} minutos em {language}.
+        {f'Contexto personalizado: {personalized_prompt}' if personalized_prompt else ''}
+        
+        IMPORTANTE: Gere instruções estruturadas para síntese de áudio com:
+        1. Texto narrativo completo para conversão em áudio
+        2. Orientações passo-a-passo detalhadas
+        3. Indicações de tom de voz e pausas
+        4. Sinais sonoros descritos textualmente
+        
+        Estruture a resposta EXATAMENTE neste formato JSON:
+        {{
+            "session_id": "gemma3n_{session_type}_{duration_minutes}min",
+            "instructions": {{
+                "introduction": "Bem-vindos a esta sessão de {session_type}. Encontre uma posição confortável...",
+                "preparation": "Vamos começar preparando nosso corpo e mente...",
+                "main_content": "Agora vamos iniciar o exercício principal...",
+                "conclusion": "Chegamos ao final desta sessão..."
+            }},
+            "audio_content": {{
+                "has_structured_audio": true,
+                "narration_text": "Texto completo para narração contínua",
+                "breathing_cues": ["Inspire profundamente", "Segure o ar", "Expire lentamente"],
+                "voice_instructions": "Voz calma, pausas de 2 segundos entre frases",
+                "background_sounds": "Sons da natureza suaves"
+            }},
+            "pattern": {{
+                "name": "Respiração {session_type}",
+                "inhale_seconds": 4,
+                "hold_seconds": 4,
+                "exhale_seconds": 6,
+                "cycles": {max(5, duration_minutes * 2)}
+            }},
+            "timing": {{
+                "introduction_duration": 60,
+                "main_duration": {(duration_minutes - 2) * 60},
+                "conclusion_duration": 60
+            }}
+        }}
+        
+        Adapte para o contexto cultural da Guiné-Bissau e use linguagem acolhedora.
+        """
+        
+        # Gerar com Gemma-3n
+        response = gemma_service.generate_response(
+            audio_prompt,
+            SystemPrompts.WELLNESS,
+            temperature=0.6,
+            max_new_tokens=1200
+        )
+        
+        if response.get('success'):
+            # Processar resposta do Gemma-3n
+            response_text = response.get('response', '')
+            session_data = _parse_gemma_structured_audio_response(response_text, session_type, duration_minutes)
+            
+            # Marcar como gerado pelo Gemma-3n
+            session_data['generated_by'] = 'gemma3n'
+            session_data['audio_content']['has_audio'] = True  # Áudio será sintetizado
+            session_data['audio_content']['use_tts'] = True
+            
+            logger.info("✅ Gemma-3n gerou instruções estruturadas para síntese de áudio")
+            return session_data
+        else:
+            logger.warning("❌ Falha na geração com Gemma-3n, usando fallback")
+            return _generate_guided_session_with_text(gemma_service, session_type, duration_minutes, language, personalized_prompt)
+            
+    except Exception as e:
+        logger.error(f"Erro na geração com Gemma-3n: {e}")
+        return _generate_guided_session_with_text(gemma_service, session_type, duration_minutes, language, personalized_prompt)
+
+def _generate_guided_session_with_text(gemma_service, session_type, duration_minutes, language, personalized_prompt):
+    """
+    Gerar sessão de meditação com texto do Gemma-3n para usar com TTS
+    """
+    try:
+        # Prompt para geração de texto estruturado
+        text_prompt = f"""
+        Você é um especialista em meditação e bem-estar.
+        
+        Crie uma sessão de {session_type} de {duration_minutes} minutos em {language}.
+        {f'Contexto personalizado: {personalized_prompt}' if personalized_prompt else ''}
+        
+        Forneça instruções detalhadas que serão narradas por TTS:
+        1. Introdução acolhedora (30-40 palavras)
+        2. Preparação e posicionamento (20-30 palavras)
+        3. Instruções passo-a-passo para a sessão
+        4. Conclusão motivadora (30-40 palavras)
+        
+        Inclua também um padrão de respiração apropriado.
+        
+        Responda em JSON estruturado.
+        """
+        
+        if gemma_service:
+            response = gemma_service.generate_response(
+                text_prompt,
+                SystemPrompts.WELLNESS,
+                temperature=0.7,
+                max_new_tokens=600
+            )
+            
+            if response.get('success'):
+                response_text = response.get('response', '')
+                session_data = _parse_gemma_text_response(response_text, session_type, duration_minutes)
+            else:
+                session_data = _get_fallback_session_data(session_type, duration_minutes, language)
+        else:
+            session_data = _get_fallback_session_data(session_type, duration_minutes, language)
+        
+        # Marcar que deve usar TTS
+        session_data['audio_content'] = {
+            'has_audio': False,
+            'use_tts': True,
+            'fallback_text': session_data['instructions']['introduction'] + ' ' + 
+                           session_data['instructions']['preparation'] + ' ' +
+                           session_data['instructions']['conclusion']
+        }
+        
+        return session_data
+        
+    except Exception as e:
+        logger.error(f"Erro na geração com texto: {e}")
+        return _get_fallback_session_data(session_type, duration_minutes, language)
+
+def _parse_gemma_structured_audio_response(response_text, session_type, duration_minutes):
+    """
+    Processar resposta do Gemma-3n com instruções estruturadas para áudio
+    """
+    try:
+        import re
+        import json
+        
+        # Tentar extrair JSON da resposta com múltiplas estratégias
+        logger.info(f"🔍 Processando resposta do Gemma-3n (tamanho: {len(response_text)} chars)")
+        
+        # Estratégia 1: JSON completo
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if json_match:
+            json_text = json_match.group()
+            try:
+                data = json.loads(json_text)
+            except json.JSONDecodeError as e:
+                logger.error(f"Erro de JSON: {e}")
+                # Estratégia 2: Tentar limpar o JSON
+                json_text = re.sub(r',\s*\}', '}', json_text)  # Remove vírgulas antes de }
+                json_text = re.sub(r',\s*\]', ']', json_text)  # Remove vírgulas antes de ]
+                try:
+                    data = json.loads(json_text)
+                    logger.info("✅ JSON corrigido e parseado com sucesso")
+                except json.JSONDecodeError as e2:
+                     logger.error(f"Erro de JSON após correção: {e2}")
+                     logger.info("📝 Criando estrutura a partir do texto bruto")
+                     # Garantir que o texto do Gemma-3n seja usado para áudio
+                     session_data = _create_enhanced_session_structure(response_text, session_type, duration_minutes)
+                     session_data['generated_by'] = 'gemma3n'
+                     session_data['audio_content']['generated_by_gemma3n'] = True
+                     session_data['audio_content']['has_audio'] = True
+                     # Usar o texto completo do Gemma-3n como narração
+                     session_data['audio_content']['narration_text'] = response_text.strip()
+                     logger.info(f"✅ Texto do Gemma-3n convertido para áudio (tamanho: {len(response_text)} chars)")
+                     return session_data
+            
+            # Validar estrutura esperada
+            if 'audio_content' in data and 'instructions' in data:
+                # Garantir que tem os campos necessários
+                if 'narration_text' not in data['audio_content']:
+                    # Criar narração a partir das instruções
+                    instructions = data.get('instructions', {})
+                    narration_parts = []
+                    
+                    if 'introduction' in instructions:
+                        narration_parts.append(instructions['introduction'])
+                    if 'preparation' in instructions:
+                        narration_parts.append(instructions['preparation'])
+                    if 'main_content' in instructions:
+                        narration_parts.append(instructions['main_content'])
+                    if 'conclusion' in instructions:
+                        narration_parts.append(instructions['conclusion'])
+                    
+                    data['audio_content']['narration_text'] = ' ... '.join(narration_parts)
+                
+                # Garantir campos de áudio
+                data['audio_content']['has_structured_audio'] = True
+                data['audio_content']['generated_by_gemma3n'] = True
+                
+                logger.info("✅ JSON estruturado extraído com sucesso do Gemma-3n")
+                return data
+            else:
+                logger.warning("⚠️ JSON não tem estrutura esperada, criando estrutura básica")
+                return _create_enhanced_session_structure(response_text, session_type, duration_minutes)
+        else:
+            # Se não conseguir extrair JSON, criar estrutura a partir do texto
+            logger.info("📝 Criando estrutura a partir do texto do Gemma-3n")
+            return _create_enhanced_session_structure(response_text, session_type, duration_minutes)
+            
+    except json.JSONDecodeError as e:
+        logger.error(f"Erro de JSON: {e}")
+        return _create_enhanced_session_structure(response_text, session_type, duration_minutes)
+    except Exception as e:
+        logger.error(f"Erro ao processar resposta estruturada: {e}")
+        return _create_enhanced_session_structure(response_text, session_type, duration_minutes)
+
+def _parse_gemma_audio_response(response_text, session_type, duration_minutes):
+    """
+    Processar resposta do Gemma-3n com capacidades de áudio (função legada)
+    """
+    # Redirecionar para a nova função
+    return _parse_gemma_structured_audio_response(response_text, session_type, duration_minutes)
+
+def _parse_gemma_text_response(response_text, session_type, duration_minutes):
+    """
+    Processar resposta de texto do Gemma-3n
+    """
+    try:
+        import re
+        import json
+        
+        # Tentar extrair JSON da resposta
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group())
+            return data
+        else:
+            # Criar estrutura a partir do texto
+            return _create_basic_session_structure(response_text, session_type, duration_minutes, has_audio=False)
+            
+    except Exception as e:
+        logger.error(f"Erro ao processar resposta de texto: {e}")
+        return _create_basic_session_structure(response_text, session_type, duration_minutes, has_audio=False)
+
+def _create_enhanced_session_structure(response_text, session_type, duration_minutes):
+    """
+    Criar estrutura melhorada de sessão usando o texto do Gemma-3n
+    """
+    import uuid
+    import re
+    
+    # Extrair partes do texto do Gemma-3n
+    text_parts = response_text.split('\n') if response_text else []
+    clean_lines = [line.strip() for line in text_parts if line.strip()]
+    
+    # Tentar identificar seções no texto
+    introduction = "Bem-vindo a esta sessão especial de bem-estar."
+    preparation = "Vamos preparar nosso corpo e mente para esta experiência."
+    main_content = f"Agora vamos praticar {session_type} por {duration_minutes} minutos."
+    conclusion = "Parabéns por dedicar este tempo ao seu bem-estar."
+    
+    # Usar o texto do Gemma-3n se disponível
+    if response_text and len(response_text) > 50:
+        # Usar o texto completo como narração principal
+        main_narration = response_text.strip()
+        
+        # Dividir o texto em partes para estrutura
+        text_length = len(response_text)
+        if text_length > 200:
+            quarter = text_length // 4
+            introduction = response_text[:quarter].strip()
+            preparation = response_text[quarter:quarter*2].strip()
+            main_content = response_text[quarter*2:quarter*3].strip()
+            conclusion = response_text[quarter*3:].strip()
+        else:
+            main_content = response_text
+    
+    # Criar narração completa usando o texto do Gemma-3n
+    if response_text and len(response_text) > 50:
+        # Usar o texto completo do Gemma-3n como narração principal
+        narration_text = main_narration
+    else:
+        # Fallback para estrutura por partes
+        narration_text = f"{introduction} ... {preparation} ... {main_content} ... {conclusion}"
+    
+    return {
+        'session_id': f"gemma3n_enhanced_{session_type}_{str(uuid.uuid4())[:8]}",
+        'generated_by': 'gemma3n',
+        'instructions': {
+            'introduction': introduction,
+            'preparation': preparation,
+            'main_content': main_content,
+            'conclusion': conclusion
+        },
+        'audio_content': {
+            'has_audio': True,
+            'use_tts': True,
+            'has_structured_audio': True,
+            'generated_by_gemma3n': True,
+            'narration_text': narration_text,
+            'breathing_cues': [
+                "Inspire profundamente pelo nariz",
+                "Segure o ar suavemente", 
+                "Expire lentamente pela boca"
+            ],
+            'voice_instructions': "Voz calma e acolhedora, pausas naturais",
+            'background_sounds': "Sons suaves da natureza"
+        },
+        'pattern': {
+            'name': f"Respiração {session_type} - Gemma-3n",
+            'inhale_seconds': 4,
+            'hold_seconds': 4,
+            'exhale_seconds': 6,
+            'cycles': max(5, duration_minutes * 2)
+        },
+        'timing': {
+            'introduction_duration': 60,
+            'main_duration': (duration_minutes - 2) * 60,
+            'conclusion_duration': 60
+        }
+    }
+
+def _create_basic_session_structure(response_text, session_type, duration_minutes, has_audio=False):
+    """
+    Criar estrutura básica de sessão a partir do texto (função legada)
+    """
+    # Redirecionar para a função melhorada
+    return _create_enhanced_session_structure(response_text, session_type, duration_minutes)
+
+def _get_fallback_session_data(session_type, duration_minutes, language):
+    """
+    Dados de fallback quando Gemma-3n não está disponível
+    """
+    fallback_data = {
+        'breathing': {
+            'introduction': 'Bem-vindo à sua sessão de respiração guiada. Vamos encontrar calma e equilíbrio juntos.',
+            'preparation': 'Sente-se confortavelmente, mantenha as costas retas e relaxe os ombros.',
+            'conclusion': 'Parabéns! Você completou sua sessão de respiração. Observe como se sente agora.',
+            'pattern': {'name': '4-7-8 Relaxamento', 'inhale_seconds': 4, 'hold_seconds': 7, 'exhale_seconds': 8}
+        },
+        'meditation': {
+            'introduction': f'Bem-vindo à sua sessão de meditação de {duration_minutes} minutos. Vamos cultivar paz interior.',
+            'preparation': 'Encontre uma posição confortável, feche os olhos suavemente e respire naturalmente.',
+            'conclusion': 'Sua sessão de meditação está completa. Carregue essa paz consigo.',
+            'pattern': {'name': 'Respiração Natural', 'inhale_seconds': 4, 'hold_seconds': 2, 'exhale_seconds': 6}
+        },
+        'relaxation': {
+            'introduction': f'Hora de relaxar profundamente. Esta sessão de {duration_minutes} minutos é para você.',
+            'preparation': 'Deite-se ou sente-se confortavelmente, solte toda a tensão do corpo.',
+            'conclusion': 'Você está completamente relaxado. Mantenha essa sensação de paz.',
+            'pattern': {'name': 'Respiração Calmante', 'inhale_seconds': 3, 'hold_seconds': 2, 'exhale_seconds': 6}
+        }
+    }
+    
+    data = fallback_data.get(session_type, fallback_data['breathing'])
+    
+    return {
+        'session_id': f"{session_type}_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        'instructions': {
+            'introduction': data['introduction'],
+            'preparation': data['preparation'],
+            'conclusion': data['conclusion']
+        },
+        'audio_content': {
+            'has_audio': False,
+            'use_tts': True,
+            'fallback_text': f"{data['introduction']} {data['preparation']} {data['conclusion']}"
+        },
+        'pattern': data['pattern']
     }
 
 def _get_wellness_content_fallback(content_type, duration, difficulty, language):

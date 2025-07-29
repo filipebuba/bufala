@@ -43,6 +43,13 @@ class GemmaService:
         self.tokenizer = None
         self.current_model_index = 0  # Para fallback
         
+        # Sistema de prompts especializados para validação comunitária
+        self.system_prompts = {
+            'content_generator': """
+Você é o módulo de geração de conteúdo do aplicativo 'Moransa'. Sua missão é criar desafios de tradução em Português (pt-PT) claros, concisos e culturalmente sensíveis. Seu foco é gerar frases relevantes para primeiros socorros, educação e agricultura em contextos de comunidades remotas. Você não valida traduções ou processa contribuições da comunidade, apenas gera conteúdo original em Português. Sempre responda em formato JSON, fornecendo frases prontas para serem traduzidas pela comunidade.
+"""
+        }
+        
         # Configurar credenciais do Kaggle para acesso ao Gemma-3n
         self._setup_kaggle_credentials()
         
@@ -54,9 +61,184 @@ class GemmaService:
         if not self.ollama_available:
             self._load_local_model()
         
+        # Armazenar domínio para seleção inteligente
+        self.domain = domain
+        
         self.logger.info(f"GemmaService inicializado com modelo: {self.model_name} para domínio: {domain}")
         self.logger.info(f"Recursos do sistema: RAM {self.system_config['system_resources']['available_ram_gb']:.1f}GB, GPU: {self.system_config['system_resources']['has_cuda']}")
+        self.logger.info("🎯 Modo de validação comunitária ativado - Gemma-3n como gerador de conteúdo")
     
+    def _select_optimal_gemma_model(self, available_models: List[str], device_specs: Dict[str, Any] = None) -> str:
+        """Seleciona o modelo Gemma-3n mais adequado baseado no domínio, necessidades e especificações do dispositivo"""
+        domain_preferences = {
+            'medical': ['gemma3n:e4b', 'gemma3n:latest'],  # Precisão máxima para medicina
+            'emergency': ['gemma3n:e4b', 'gemma3n:latest'],  # Análises críticas
+            'health': ['gemma3n:e4b', 'gemma3n:latest'],  # Diagnósticos precisos
+            'education': ['gemma3n:e2b', 'gemma3n:latest'],  # Eficiência para educação
+            'agriculture': ['gemma3n:e2b', 'gemma3n:latest'],  # Tarefas básicas
+            'translation': ['gemma3n:e2b', 'gemma3n:latest'],  # Processamento de linguagem
+            'content_generation': ['gemma3n:e2b', 'gemma3n:latest'],  # Geração de conteúdo
+            'general': ['gemma3n:e2b', 'gemma3n:e4b', 'gemma3n:latest']  # Qualquer modelo
+        }
+        
+        # Analisar especificações do dispositivo para otimização
+        device_quality = self._analyze_device_quality(device_specs)
+        
+        # Obter preferências para o domínio atual
+        preferred_models = domain_preferences.get(self.domain, domain_preferences['general'])
+        
+        # Ajustar preferências baseado na qualidade do dispositivo
+        optimized_models = self._optimize_models_for_device(preferred_models, device_quality)
+        
+        # Selecionar o primeiro modelo otimizado que esteja disponível
+        for preferred in optimized_models:
+            if preferred in available_models:
+                self.logger.info(f"🎯 Modelo selecionado: {preferred} (domínio: {self.domain}, dispositivo: {device_quality})")
+                return preferred
+        
+        # Fallback: usar o primeiro disponível
+        selected = available_models[0]
+        self.logger.warning(f"⚠️ Usando fallback: {selected} (preferências não encontradas para {self.domain})")
+        return selected
+    
+    def _analyze_device_quality(self, device_specs: Dict[str, Any] = None) -> str:
+        """Analisa a qualidade do dispositivo baseado em RAM, processador e outras especificações"""
+        if not device_specs:
+            # Usar especificações do sistema atual como fallback com valores seguros
+            system_resources = self.system_config.get('system_resources', {})
+            device_specs = {
+                'ram_gb': system_resources.get('available_ram_gb', 4),
+                'has_gpu': system_resources.get('has_cuda', False),
+                'cpu_cores': system_resources.get('cpu_cores', 4)
+            }
+        
+        # Garantir que os valores não sejam None
+        ram_gb = device_specs.get('ram_gb') or 4
+        cpu_cores = device_specs.get('cpu_cores') or 4
+        has_gpu = device_specs.get('has_gpu', False)
+        
+        # Calcular score de qualidade do dispositivo
+        quality_score = 0
+        
+        # Pontuação baseada na RAM
+        if ram_gb >= 16:
+            quality_score += 40  # Excelente
+        elif ram_gb >= 8:
+            quality_score += 30  # Boa
+        elif ram_gb >= 4:
+            quality_score += 20  # Média
+        else:
+            quality_score += 10  # Baixa
+        
+        # Pontuação baseada no processador
+        if cpu_cores >= 8:
+            quality_score += 30  # Excelente
+        elif cpu_cores >= 4:
+            quality_score += 20  # Boa
+        elif cpu_cores >= 2:
+            quality_score += 15  # Média
+        else:
+            quality_score += 5   # Baixa
+        
+        # Pontuação baseada na GPU
+        if has_gpu:
+            quality_score += 30  # GPU disponível
+        
+        # Classificar qualidade
+        if quality_score >= 80:
+            return 'premium'    # Dispositivos high-end
+        elif quality_score >= 60:
+            return 'high'       # Dispositivos bons
+        elif quality_score >= 40:
+            return 'medium'     # Dispositivos médios
+        else:
+            return 'low'        # Dispositivos básicos
+    
+    def _optimize_models_for_device(self, preferred_models: List[str], device_quality: str) -> List[str]:
+        """Otimiza a lista de modelos baseado na qualidade do dispositivo"""
+        # Mapeamento de qualidade para estratégia de modelo
+        device_strategies = {
+            'premium': {
+                'priority': ['gemma3n:e4b', 'gemma3n:latest', 'gemma3n:e2b'],
+                'reason': 'Dispositivo premium pode executar modelos complexos'
+            },
+            'high': {
+                'priority': ['gemma3n:e4b', 'gemma3n:e2b', 'gemma3n:latest'],
+                'reason': 'Dispositivo bom, preferir e4b quando possível'
+            },
+            'medium': {
+                'priority': ['gemma3n:e2b', 'gemma3n:e4b', 'gemma3n:latest'],
+                'reason': 'Dispositivo médio, priorizar eficiência'
+            },
+            'low': {
+                'priority': ['gemma3n:e2b', 'gemma3n:latest'],
+                'reason': 'Dispositivo básico, usar apenas modelos leves'
+            }
+        }
+        
+        strategy = device_strategies.get(device_quality, device_strategies['medium'])
+        device_priority = strategy['priority']
+        
+        # Reordenar modelos preferidos baseado na estratégia do dispositivo
+        optimized = []
+        
+        # Primeiro, adicionar modelos que estão tanto na preferência quanto na prioridade do dispositivo
+        for device_model in device_priority:
+            if device_model in preferred_models and device_model not in optimized:
+                optimized.append(device_model)
+        
+        # Depois, adicionar modelos restantes da preferência original
+        for model in preferred_models:
+            if model not in optimized:
+                optimized.append(model)
+        
+        self.logger.info(f"📱 Estratégia do dispositivo ({device_quality}): {strategy['reason']}")
+        self.logger.info(f"🔄 Modelos otimizados: {optimized[:3]}")
+        
+        return optimized
+    
+    def _update_domain_from_category(self, category: str) -> None:
+        """Atualizar domínio baseado na categoria para seleção inteligente"""
+        category_to_domain = {
+            'saude': 'health',
+            'saúde': 'health', 
+            'medicina': 'medical',
+            'emergencia': 'emergency',
+            'emergência': 'emergency',
+            'educacao': 'education',
+            'educação': 'education',
+            'agricultura': 'agriculture',
+            'traducao': 'translation',
+            'tradução': 'translation',
+            'geral': 'content_generation'
+        }
+        
+        new_domain = category_to_domain.get(category.lower(), 'content_generation')
+        if new_domain != self.domain:
+            self.logger.info(f"🔄 Atualizando domínio: {self.domain} → {new_domain} (categoria: {category})")
+            self.domain = new_domain
+    
+    def _reselect_model_if_needed(self, device_specs: Dict[str, Any] = None) -> None:
+        """Re-selecionar modelo se o domínio mudou e há modelos melhores disponíveis"""
+        if not self.ollama_available:
+            return
+            
+        try:
+            # Verificar modelos disponíveis novamente
+            response = requests.get(f"{self.config.OLLAMA_HOST}/api/tags", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                model_names = [model['name'] for model in data.get('models', [])]
+                available_gemma_models = [m for m in model_names if "gemma3n" in m.lower()]
+                
+                if available_gemma_models:
+                    optimal_model = self._select_optimal_gemma_model(available_gemma_models, device_specs)
+                    if optimal_model != self.config.OLLAMA_MODEL:
+                        self.logger.info(f"🔄 Mudando modelo: {self.config.OLLAMA_MODEL} → {optimal_model}")
+                        self.config.OLLAMA_MODEL = optimal_model
+        except Exception as e:
+            self.logger.warning(f"⚠️ Erro ao re-selecionar modelo: {e}")
+     
     def _check_ollama_availability(self) -> bool:
         """Verificar se Ollama está disponível"""
         try:
@@ -71,13 +253,26 @@ class GemmaService:
                 self.logger.info(f"📋 Modelos disponíveis no Ollama: {model_names}")
                 
                 # Verificar disponibilidade do Gemma-3n
-                if self.config.OLLAMA_MODEL in [model['name'] for model in models]:
+                if self.config.OLLAMA_MODEL in model_names:
                     self.ollama_available = True
                     self.logger.info(f"🚀 Gemma-3n modelo {self.config.OLLAMA_MODEL} disponível via Ollama")
                     self.logger.info(f"✅ Executando localmente conforme requisitos do desafio Gemma 3n")
                     return True
-                elif "gemma" in str(model_names).lower():
-                    # Encontrou algum modelo Gemma, mas não o específico
+                elif any("gemma3n" in model.lower() for model in model_names):
+                    # Seleção inteligente baseada no domínio
+                    available_gemma_models = [m for m in model_names if "gemma3n" in m.lower()]
+                    selected_model = self._select_optimal_gemma_model(available_gemma_models)
+                    
+                    self.logger.info(f"🔄 Selecionando modelo Gemma-3n otimizado: {selected_model}")
+                    self.logger.info(f"📊 Domínio: {getattr(self, 'domain', 'general')} - Modelos disponíveis: {available_gemma_models}")
+                    
+                    # Atualizar temporariamente o modelo configurado
+                    self.config.OLLAMA_MODEL = selected_model
+                    self.ollama_available = True
+                    self.logger.info(f"✅ Executando localmente conforme requisitos do desafio Gemma 3n")
+                    return True
+                elif any("gemma" in model.lower() for model in model_names):
+                    # Encontrou algum modelo Gemma, mas não o Gemma-3n específico
                     self.logger.warning(f"⚠️ Modelo específico {self.config.OLLAMA_MODEL} não encontrado")
                     self.logger.info(f"📋 Modelos Gemma disponíveis: {[m for m in model_names if 'gemma' in m.lower()]}")
                     self.ollama_available = False
@@ -96,6 +291,186 @@ class GemmaService:
             self.logger.warning(f"❌ Ollama não disponível: {e}")
             self.ollama_available = False
             return False
+    
+    def generate_new_portuguese_phrases(self, category: str, difficulty: str = "básico", quantity: int = 10, existing_phrases: List[str] = None, device_specs: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Gera novas frases em português para serem traduzidas pela comunidade.
+        Esta é a nova função principal do Gemma-3n no sistema de validação comunitária.
+        
+        Args:
+            category: Categoria das frases (educação, saúde, agricultura, etc.)
+            difficulty: Nível de dificuldade (básico, intermediário, avançado)
+            quantity: Quantidade de frases a gerar
+            existing_phrases: Lista de frases já existentes para evitar duplicatas
+        
+        Returns:
+            Dict com as frases geradas em formato JSON
+        """
+        if existing_phrases is None:
+            existing_phrases = []
+        
+        # Prompt especializado para geração de conteúdo
+        prompt = f"""
+{self.system_prompts['content_generator']}
+
+Tarefa: Gerar frases em português para tradução comunitária
+
+Parâmetros:
+- Categoria: {category}
+- Dificuldade: {difficulty}
+- Quantidade: {quantity}
+- Frases existentes a evitar: {existing_phrases[:5] if existing_phrases else 'Nenhuma'}
+
+Instruções:
+Gere uma lista de frases curtas e diretas em Português, focadas na categoria '{category}' e dificuldade '{difficulty}', relevantes para um ambiente de comunidades remotas da Guiné-Bissau. Evite as frases já fornecidas na lista de frases existentes. Para cada frase, inclua um 'context' simples de uso e 2-3 'tags' relevantes.
+
+A resposta DEVE ser um objeto JSON contendo uma lista chamada 'phrases' com o seguinte formato:
+{{
+  "phrases": [
+    {{
+      "word": "Frase em português",
+      "category": "{category}",
+      "context": "Contexto de uso da frase",
+      "tags": ["tag1", "tag2", "tag3"]
+    }}
+  ]
+}}
+
+Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
+"""
+        
+        try:
+            # Atualizar domínio baseado na categoria para seleção inteligente
+            self._update_domain_from_category(category)
+            
+            # Analisar qualidade do dispositivo
+            device_quality = self._analyze_device_quality(device_specs)
+            self.logger.info(f"📱 Dispositivo analisado: {device_quality} (RAM: {device_specs.get('ram_gb', 'N/A') if device_specs else 'N/A'}GB, CPU: {device_specs.get('cpu_cores', 'N/A') if device_specs else 'N/A'} cores)")
+            
+            # Usar Ollama se disponível
+            if self.ollama_available:
+                # Re-selecionar modelo se necessário baseado na nova categoria e dispositivo
+                self._reselect_model_if_needed(device_specs)
+                
+                response = self._generate_with_ollama(
+                    prompt=prompt,
+                    temperature=0.7,  # Criatividade moderada
+                    max_tokens=1500
+                )
+            else:
+                # Fallback para modelo local
+                response = self._generate_with_local_model(
+                    prompt=prompt,
+                    temperature=0.7,
+                    max_tokens=1500
+                )
+            
+            # Tentar parsear JSON da resposta
+            try:
+                import re
+                # Extrair texto da resposta se for dict
+                response_text = response.get('response', response) if isinstance(response, dict) else response
+                
+                # Extrair JSON da resposta
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group()
+                    result = json.loads(json_str)
+                    
+                    # Validar estrutura
+                    if 'phrases' in result and isinstance(result['phrases'], list):
+                        self.logger.info(f"✅ Geradas {len(result['phrases'])} frases para categoria '{category}' usando {'Ollama' if self.ollama_available else 'modelo local'} - dispositivo {device_quality}")
+                        return {
+                            'success': True,
+                            'phrases': result['phrases'],
+                            'generated_count': len(result['phrases']),
+                            'category': category,
+                            'difficulty': difficulty,
+                            'gemma_used': self.ollama_available,
+                            'device_optimized': True,
+                            'device_quality': device_quality,
+                            'selected_model': self.config.OLLAMA_MODEL if self.ollama_available else self.model_name,
+                            'fallback': not self.ollama_available
+                        }
+                    else:
+                        raise ValueError("Estrutura JSON inválida")
+                else:
+                    raise ValueError("JSON não encontrado na resposta")
+                    
+            except (json.JSONDecodeError, ValueError) as e:
+                self.logger.warning(f"Erro ao parsear JSON: {e}. Usando fallback.")
+                return self._get_portuguese_phrases_fallback(category, difficulty, quantity)
+                
+        except Exception as e:
+            self.logger.error(f"Erro ao gerar frases: {e}")
+            return self._get_portuguese_phrases_fallback(category, difficulty, quantity)
+    
+    def _get_portuguese_phrases_fallback(self, category: str, difficulty: str, quantity: int) -> Dict[str, Any]:
+        """
+        Sistema de fallback para geração de frases quando o Gemma-3n não está disponível.
+        """
+        fallback_phrases = {
+            'educação': [
+                {'word': 'Bom dia a todos.', 'context': 'Saudação para iniciar aula', 'tags': ['saudação', 'aula', 'comunidade']},
+                {'word': 'Prestem atenção, por favor.', 'context': 'Chamar atenção dos alunos', 'tags': ['instrução', 'atenção', 'aula']},
+                {'word': 'Repitam depois de mim.', 'context': 'Exercício de repetição', 'tags': ['repetição', 'aprendizagem', 'exercício']},
+                {'word': 'O que você aprendeu hoje?', 'context': 'Revisar conteúdo aprendido', 'tags': ['revisão', 'aprendizado', 'pergunta']},
+                {'word': 'Vamos contar de um a dez.', 'context': 'Ensinar números', 'tags': ['matemática', 'números', 'contagem']}
+            ],
+            'saúde': [
+                {'word': 'Onde dói?', 'context': 'Identificar local da dor', 'tags': ['dor', 'diagnóstico', 'emergência']},
+                {'word': 'Respire fundo.', 'context': 'Acalmar paciente', 'tags': ['respiração', 'calma', 'instrução']},
+                {'word': 'Vou ajudar você.', 'context': 'Tranquilizar paciente', 'tags': ['ajuda', 'tranquilidade', 'cuidado']},
+                {'word': 'Tome este remédio.', 'context': 'Administrar medicamento', 'tags': ['medicamento', 'tratamento', 'instrução']},
+                {'word': 'Precisa de médico.', 'context': 'Encaminhar para atendimento', 'tags': ['médico', 'encaminhamento', 'urgência']}
+            ],
+            'agricultura': [
+                {'word': 'A terra está seca.', 'context': 'Observar condição do solo', 'tags': ['solo', 'seca', 'observação']},
+                {'word': 'Hora de plantar.', 'context': 'Indicar momento de plantio', 'tags': ['plantio', 'tempo', 'agricultura']},
+                {'word': 'Regue as plantas.', 'context': 'Instrução de irrigação', 'tags': ['irrigação', 'cuidado', 'plantas']},
+                {'word': 'A colheita está pronta.', 'context': 'Indicar momento de colher', 'tags': ['colheita', 'tempo', 'produção']},
+                {'word': 'Cuidado com as pragas.', 'context': 'Alerta sobre pragas', 'tags': ['pragas', 'cuidado', 'proteção']}
+            ]
+        }
+        
+        # Mapear categorias alternativas
+        category_mapping = {
+            'saude': 'saúde',
+            'educacao': 'educação',
+            'geral': 'educação'  # fallback padrão
+        }
+        
+        mapped_category = category_mapping.get(category, category)
+        category_phrases = fallback_phrases.get(mapped_category, fallback_phrases['saúde'])
+        selected_phrases = category_phrases[:quantity]
+        
+        # Se não tiver frases suficientes, completar com outras categorias
+        if len(selected_phrases) < quantity:
+            remaining = quantity - len(selected_phrases)
+            for cat_name, cat_phrases in fallback_phrases.items():
+                if cat_name != mapped_category:
+                    additional_phrases = cat_phrases[:remaining]
+                    for phrase in additional_phrases:
+                        phrase_copy = phrase.copy()
+                        phrase_copy['category'] = category
+                        selected_phrases.append(phrase_copy)
+                    remaining -= len(additional_phrases)
+                    if remaining <= 0:
+                        break
+        
+        # Adicionar categoria a cada frase
+        for phrase in selected_phrases:
+            phrase['category'] = category
+        
+        return {
+            'success': True,
+            'phrases': selected_phrases,
+            'generated_count': len(selected_phrases),
+            'category': category,
+            'difficulty': difficulty,
+            'fallback': True,
+            'message': 'Frases geradas usando sistema de fallback'
+        }
     
     def _setup_kaggle_credentials(self):
         """Configurar credenciais do Kaggle para acesso ao modelo Gemma-3n"""
@@ -1383,9 +1758,10 @@ class GemmaService:
     
     def _fallback_contextual_translation(self, text: str, source_lang: str, target_lang: str, context: str) -> Dict[str, Any]:
         """Fallback para tradução contextual"""
+        translation_text = f"[Tradução contextual de '{text}' de {source_lang} para {target_lang} no contexto {context}]"
         return {
             'success': True,
-            'translation': f"[Tradução contextual de '{text}' de {source_lang} para {target_lang} no contexto {context}]",
+            'translation': translation_text,
             'emotional_analysis': {'tone': 'neutral', 'intensity': 5},
             'cultural_insights': ['Tradução contextual aplicada com fallback'],
             'alternatives': [],
@@ -1542,7 +1918,7 @@ A resposta DEVE ser um objeto JSON contendo uma lista chamada "challenges". Cada
             response = await self.generate_response(system_prompt + "\n\n" + task_prompt)
             return self._process_translation_challenges_response(response)
         except Exception as e:
-            logger.error(f"Erro ao gerar desafios de tradução: {e}")
+            self.logger.error(f"Erro ao gerar desafios de tradução: {e}")
             return self._fallback_translation_challenges(category, difficulty, quantity)
     
     async def process_user_contribution(self, contribution_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1579,7 +1955,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "analysis_result"."""
             response = await self.generate_response(system_prompt + "\n\n" + task_prompt)
             return self._process_contribution_analysis_response(response)
         except Exception as e:
-            logger.error(f"Erro ao processar contribuição: {e}")
+            self.logger.error(f"Erro ao processar contribuição: {e}")
             return self._fallback_contribution_analysis(contribution_data)
     
     async def generate_educational_content(self, subject: str, level: str = "básico", topic: str = None) -> Dict[str, Any]:
@@ -1612,7 +1988,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             response = await self.generate_response(system_prompt + "\n\n" + task_prompt)
             return self._process_educational_content_response(response)
         except Exception as e:
-            logger.error(f"Erro ao gerar conteúdo educacional: {e}")
+            self.logger.error(f"Erro ao gerar conteúdo educacional: {e}")
             return self._fallback_educational_content(subject, level, topic)
 
     async def generate_gamification_challenge(self, user_data: dict, community_status: dict) -> dict:
@@ -1651,14 +2027,14 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             - Evento comunitário ativo: {community_status.get('active_community_event', 'Nenhum')}
             
             Retorne APENAS um objeto JSON válido com:
-            {
-                "challenge": {
+            {{
+                "challenge": {{
                     "challenge_type": "tipo_do_desafio",
                     "title": "Nome criativo do desafio",
                     "description": "Descrição clara do que fazer",
                     "xp_reward": número_de_pontos
-                }
-            }
+                }}
+            }}
             """
             
             # Combinar prompts
@@ -1673,7 +2049,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
                 return self._fallback_gamification_challenge(user_data)
                 
         except Exception as e:
-            logger.error(f"Erro ao gerar desafio de gamificação: {e}")
+            self.logger.error(f"Erro ao gerar desafio de gamificação: {e}")
             return self._fallback_gamification_challenge(user_data)
 
     async def generate_reward_message(self, event_data: dict) -> dict:
@@ -1702,12 +2078,12 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             Detalhes do evento: {event_data}
             
             Retorne APENAS um objeto JSON válido com:
-            {
-                "notification": {
+            {{
+                "notification": {{
                     "title": "Título da notificação",
                     "body": "Mensagem inspiradora e personalizada"
-                }
-            }
+                }}
+            }}
             """
             
             # Combinar prompts
@@ -1722,7 +2098,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
                 return self._fallback_reward_message(event_data)
                 
         except Exception as e:
-            logger.error(f"Erro ao gerar mensagem de recompensa: {e}")
+            self.logger.error(f"Erro ao gerar mensagem de recompensa: {e}")
             return self._fallback_reward_message(event_data)
 
     async def create_badge(self, badge_criteria: str, category: str = "geral") -> dict:
@@ -1750,14 +2126,14 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             Categoria: {category}
             
             Retorne APENAS um objeto JSON válido com:
-            {
-                "badge": {
+            {{
+                "badge": {{
                     "name": "Nome criativo do badge",
                     "description": "Descrição motivadora que explica o valor da conquista",
                     "icon_suggestion": "Descrição simples para o ícone do badge",
                     "category": "{category}"
-                }
-            }
+                }}
+            }}
             """
             
             # Combinar prompts
@@ -1772,8 +2148,25 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
                 return self._fallback_badge_creation(badge_criteria, category)
                 
         except Exception as e:
-            logger.error(f"Erro ao criar badge: {e}")
+            self.logger.error(f"Erro ao criar badge: {e}")
             return self._fallback_badge_creation(badge_criteria, category)
+    
+    # ========== MÉTODOS AUXILIARES ASSÍNCRONOS ==========
+    
+    async def _make_ollama_request(self, prompt: str) -> Dict[str, Any]:
+        """Fazer requisição assíncrona para Ollama"""
+        try:
+            if self.ollama_available:
+                # Usar método síncrono existente
+                response = self._generate_with_ollama(prompt)
+                return response
+            else:
+                # Fallback para modelo local
+                response = self._generate_with_local_model(prompt)
+                return response
+        except Exception as e:
+            self.logger.error(f"Erro na requisição Ollama: {e}")
+            return None
     
     # ========== MÉTODOS DE PROCESSAMENTO DE RESPOSTA MORANSA ==========
     
@@ -1791,7 +2184,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
                         'generated_count': len(result['challenges'])
                     }
         except Exception as e:
-            logger.error(f"Erro ao processar resposta de desafios: {e}")
+            self.logger.error(f"Erro ao processar resposta de desafios: {e}")
         
         # Fallback se não conseguir processar JSON
         return {
@@ -1814,7 +2207,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
                         'analysis_result': result['analysis_result']
                     }
         except Exception as e:
-            logger.error(f"Erro ao processar análise de contribuição: {e}")
+            self.logger.error(f"Erro ao processar análise de contribuição: {e}")
         
         # Fallback se não conseguir processar JSON
         return {
@@ -1845,7 +2238,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
                         'educational_content': result['educational_content']
                     }
         except Exception as e:
-            logger.error(f"Erro ao processar conteúdo educacional: {e}")
+            self.logger.error(f"Erro ao processar conteúdo educacional: {e}")
         
         # Fallback se não conseguir processar JSON
         return {
@@ -1892,7 +2285,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             return self._fallback_gamification_challenge({})
             
         except Exception as e:
-            logger.error(f"Erro ao processar resposta de desafio de gamificação: {e}")
+            self.logger.error(f"Erro ao processar resposta de desafio de gamificação: {e}")
             return self._fallback_gamification_challenge({})
 
     def _process_reward_message_response(self, response_text: str) -> dict:
@@ -1922,7 +2315,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             return self._fallback_reward_message({})
             
         except Exception as e:
-            logger.error(f"Erro ao processar resposta de mensagem de recompensa: {e}")
+            self.logger.error(f"Erro ao processar resposta de mensagem de recompensa: {e}")
             return self._fallback_reward_message({})
 
     def _process_badge_creation_response(self, response_text: str) -> dict:
@@ -1955,7 +2348,7 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             return self._fallback_badge_creation("", "geral")
             
         except Exception as e:
-            logger.error(f"Erro ao processar resposta de criação de badge: {e}")
+            self.logger.error(f"Erro ao processar resposta de criação de badge: {e}")
             return self._fallback_badge_creation("", "geral")
     
     # ========== MÉTODOS DE FALLBACK MORANSA ==========
@@ -2196,44 +2589,46 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             'fallback': True
         }
     
-    def _fallback_gamification_challenge(self, challenge_type: str, user_level: str, category: str = None) -> Dict[str, Any]:
+    def _fallback_gamification_challenge(self, user_data: dict) -> Dict[str, Any]:
         """Fallback para desafios de gamificação"""
+        
+        user_level = user_data.get('level', 1)
+        user_name = user_data.get('user_name', 'Usuário')
+        
+        # Determinar tipo de desafio baseado no perfil do usuário
+        if user_data.get('contribution_count_today', 0) == 0:
+            challenge_type = 'daily_contributor'
+        elif user_data.get('xp_to_next_level', 100) < 50:
+            challenge_type = 'level_up_push'
+        else:
+            challenge_type = 'translation'
         
         challenges_by_type = {
             'translation': {
+                'challenge_type': 'translation',
                 'title': 'Desafio de Tradução',
-                'description': 'Traduza palavras importantes para sua comunidade',
-                'task': 'Traduza a palavra "ajuda" para Crioulo',
-                'points': 10,
-                'difficulty': user_level,
-                'time_limit': 300,  # 5 minutos
-                'hints': ['Pense em situações de emergência', 'É uma palavra muito usada']
+                'description': f'{user_name}, traduza palavras importantes para sua comunidade!',
+                'xp_reward': 15
             },
-            'knowledge': {
-                'title': 'Teste de Conhecimento',
-                'description': 'Responda perguntas sobre primeiros socorros',
-                'task': 'Qual é o primeiro passo ao encontrar uma pessoa ferida?',
-                'points': 15,
-                'difficulty': user_level,
-                'time_limit': 180,  # 3 minutos
-                'hints': ['Pense na sua segurança primeiro', 'Observe o ambiente']
+            'daily_contributor': {
+                'challenge_type': 'daily_contributor',
+                'title': 'Contribuidor Diário',
+                'description': f'{user_name}, faça sua primeira contribuição hoje e mantenha sua sequência!',
+                'xp_reward': 20
             },
-            'contribution': {
-                'title': 'Contribuição Comunitária',
-                'description': 'Adicione uma nova palavra ao dicionário',
-                'task': 'Adicione uma palavra relacionada à agricultura',
-                'points': 20,
-                'difficulty': user_level,
-                'time_limit': 600,  # 10 minutos
-                'hints': ['Pense em ferramentas agrícolas', 'Considere o contexto de uso']
+            'level_up_push': {
+                'challenge_type': 'level_up_push',
+                'title': 'Quase Lá!',
+                'description': f'{user_name}, você está quase subindo de nível! Faça mais uma contribuição.',
+                'xp_reward': 25
             }
         }
         
         challenge = challenges_by_type.get(challenge_type, challenges_by_type['translation'])
         
         # Ajustar pontos baseado no nível
-        level_multiplier = {'iniciante': 1.0, 'intermediário': 1.5, 'avançado': 2.0}
-        challenge['points'] = int(challenge['points'] * level_multiplier.get(user_level, 1.0))
+        level_multiplier = max(1.0, user_level * 0.2)
+        challenge['xp_reward'] = int(challenge['xp_reward'] * level_multiplier)
         
         return {
             'success': True,

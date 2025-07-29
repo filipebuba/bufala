@@ -9,6 +9,7 @@ para sustentabilidade e conservação.
 """
 
 import logging
+import json
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime, timedelta
 from config.settings import SystemPrompts
@@ -2428,6 +2429,919 @@ def _check_weather_alerts(weather_data, location):
     return alerts
 
 
+@environmental_bp.route('/environmental/education/generate-content', methods=['POST'])
+def generate_environmental_content():
+    """
+    Gerar conteudo educativo ambiental com prompts personalizados
+    ---
+    tags:
+      - Educacao Ambiental
+    summary: Geracao de conteudo educativo com IA personalizada
+    description: |
+      Endpoint especializado para gerar conteudo educativo ambiental usando prompts
+      personalizados do Gemma3n. Focado na educacao ambiental da Guine-Bissau.
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - topic
+            - prompt
+          properties:
+            topic:
+              type: string
+              description: Tópico ambiental específico
+              example: "biodiversidade"
+            prompt:
+              type: string
+              description: Prompt personalizado para o Gemma3n
+              example: "Explique a biodiversidade da Guiné-Bissau para adolescentes"
+            age_group:
+              type: string
+              enum: ["crianca", "adolescente", "adulto", "idoso"]
+              description: Faixa etária do público-alvo
+              example: "adolescente"
+            language:
+              type: string
+              enum: ["portugues", "crioulo", "fula", "mandinga"]
+              description: Idioma preferido
+              example: "portugues"
+            ecosystem:
+              type: string
+              enum: ["mangue", "floresta", "savana", "costeiro", "urbano", "geral"]
+              description: Ecossistema de interesse
+              example: "mangue"
+            duration:
+              type: integer
+              description: Duração desejada em minutos
+              example: 20
+            include_activities:
+              type: boolean
+              description: Incluir atividades práticas
+              example: true
+            difficulty:
+              type: string
+              enum: ["basico", "intermediario", "avancado"]
+              description: Nível de dificuldade
+              example: "intermediario"
+    responses:
+      200:
+        description: Conteúdo educativo gerado com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            data:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Biodiversidade dos Manguezais"
+                description:
+                  type: string
+                  example: "Aprenda sobre a rica biodiversidade dos manguezais da Guiné-Bissau"
+                content:
+                  type: string
+                  description: Conteúdo educativo principal gerado pela IA
+                difficulty:
+                  type: string
+                  example: "intermediario"
+                key_concepts:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Biodiversidade", "Manguezais", "Conservação"]
+                local_examples:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Arquipélago dos Bijagós", "Parque Nacional de Cantanhez"]
+                practical_activities:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      description:
+                        type: string
+                      materials:
+                        type: array
+                        items:
+                          type: string
+                cultural_connections:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Conhecimento tradicional dos pescadores", "Práticas ancestrais de conservação"]
+                generated_by:
+                  type: string
+                  example: "Gemma3n AI"
+      400:
+        description: Dados de entrada inválidos
+      500:
+        description: Erro interno do servidor
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return create_error_response(
+                'invalid_input',
+                'Dados de entrada são obrigatórios',
+                400
+            )
+        
+        # Validar campos obrigatórios
+        required_fields = ['topic', 'prompt']
+        for field in required_fields:
+            if not data.get(field):
+                return create_error_response(
+                    'missing_field',
+                    f'Campo obrigatório ausente: {field}',
+                    400
+                )
+        
+        topic = data.get('topic')
+        custom_prompt = data.get('prompt')
+        age_group = data.get('age_group', 'adolescente')
+        language = data.get('language', 'portugues')
+        ecosystem = data.get('ecosystem', 'geral')
+        duration = data.get('duration', 20)
+        include_activities = data.get('include_activities', True)
+        difficulty = data.get('difficulty', 'intermediario')
+        
+        # Construir prompt especializado para educação ambiental
+        system_prompt = f"""
+        Você é um educador ambiental especializado em criar conteúdo educativo para comunidades da Guiné-Bissau.
+        
+        CONTEXTO:
+        - Público-alvo: {age_group}
+        - Idioma: {language}
+        - Ecossistema: {ecosystem}
+        - Duração: {duration} minutos
+        - Nível: {difficulty}
+        - Incluir atividades: {'Sim' if include_activities else 'Não'}
+        
+        INSTRUÇÕES:
+        1. Crie conteúdo educativo sobre: {topic}
+        2. Use linguagem adequada para {age_group}
+        3. Inclua exemplos específicos da Guiné-Bissau
+        4. Conecte com conhecimento tradicional local
+        5. Seja prático e aplicável ao contexto local
+        
+        PROMPT PERSONALIZADO:
+        {custom_prompt}
+        
+        FORMATO DE RESPOSTA (JSON):
+        {{
+            "title": "Título atrativo do conteúdo",
+            "description": "Breve descrição do que será aprendido",
+            "content": "Conteúdo educativo principal (mínimo 300 palavras)",
+            "difficulty": "{difficulty}",
+            "key_concepts": ["conceito1", "conceito2", "conceito3"],
+            "local_examples": ["exemplo1 da Guiné-Bissau", "exemplo2"],
+            "practical_activities": [
+                {{
+                    "name": "Nome da atividade",
+                    "description": "Descrição da atividade",
+                    "materials": ["material1", "material2"]
+                }}
+            ],
+            "cultural_connections": ["conexão cultural 1", "conexão cultural 2"]
+        }}
+        """
+        
+        # Tentar usar Gemma-3n para gerar conteúdo
+        gemma_service = current_app.gemma_service
+        
+        if gemma_service and hasattr(gemma_service, 'generate_response'):
+            try:
+                response = gemma_service.generate_response(
+                    prompt=system_prompt,
+                    context="environmental_education",
+                    max_tokens=2000,
+                    temperature=0.7
+                )
+                
+                # Tentar parsear resposta JSON
+                try:
+                    import re
+                    # Extrair JSON da resposta
+                    json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                    if json_match:
+                        content_data = json.loads(json_match.group())
+                    else:
+                        # Se não encontrar JSON, criar estrutura básica
+                        content_data = _create_fallback_content(topic, custom_prompt, age_group, ecosystem)
+                        content_data['content'] = response
+                except (json.JSONDecodeError, AttributeError):
+                    # Fallback se não conseguir parsear JSON
+                    content_data = _create_fallback_content(topic, custom_prompt, age_group, ecosystem)
+                    content_data['content'] = response
+                
+                # Adicionar metadados
+                content_data['generated_by'] = 'Gemma3n AI'
+                content_data['topic'] = topic
+                content_data['age_group'] = age_group
+                content_data['ecosystem'] = ecosystem
+                content_data['language'] = language
+                content_data['duration'] = duration
+                
+                return jsonify({
+                    'success': True,
+                    'data': content_data,
+                    'message': 'Conteúdo educativo gerado com sucesso'
+                })
+                
+            except Exception as e:
+                current_app.logger.error(f"Erro no Gemma3n: {e}")
+                # Fallback para conteúdo estruturado
+                fallback_content = _create_fallback_content(topic, custom_prompt, age_group, ecosystem)
+                return jsonify({
+                    'success': True,
+                    'data': fallback_content,
+                    'message': 'Conteúdo educativo gerado (modo fallback)',
+                    'note': 'Gemma3n temporariamente indisponível'
+                })
+        else:
+            # Fallback se Gemma-3n não estiver disponível
+            fallback_content = _create_fallback_content(topic, custom_prompt, age_group, ecosystem)
+            return jsonify({
+                'success': True,
+                'data': fallback_content,
+                'message': 'Conteúdo educativo gerado (modo fallback)'
+            })
+            
+    except Exception as e:
+        current_app.logger.error(f"Erro na geração de conteúdo educativo: {e}")
+        log_error(logger, e, "geração de conteúdo educativo ambiental")
+        return create_error_response(
+            'content_generation_error',
+            'Erro ao gerar conteúdo educativo ambiental',
+            500
+        )
+
+
+def _create_fallback_content(topic, prompt, age_group, ecosystem):
+    """
+    Criar conteúdo estruturado básico quando Gemma3n não está disponível
+    """
+    topic_content = {
+        'biodiversidade': {
+            'title': 'Biodiversidade da Guiné-Bissau',
+            'description': 'Explore a rica diversidade de vida da nossa terra',
+            'content': 'A Guiné-Bissau possui uma biodiversidade única, com manguezais, florestas e savanas que abrigam centenas de espécies. Nossos ecossistemas são fundamentais para a vida das comunidades locais.',
+            'key_concepts': ['Biodiversidade', 'Ecossistemas', 'Conservação', 'Espécies endêmicas'],
+            'local_examples': ['Arquipélago dos Bijagós', 'Parque Nacional de Cantanhez', 'Reserva da Biosfera de Bolama-Bijagós'],
+            'cultural_connections': ['Conhecimento tradicional dos pescadores', 'Práticas ancestrais de conservação']
+        },
+        'mangue': {
+            'title': 'Manguezais: Berçário da Vida',
+            'description': 'Descubra a importância dos manguezais para nossa comunidade',
+            'content': 'Os manguezais da Guiné-Bissau são ecossistemas únicos que servem como berçário para peixes, proteção contra erosão e fonte de sustento para milhares de famílias.',
+            'key_concepts': ['Manguezais', 'Ecossistema costeiro', 'Proteção natural', 'Sustentabilidade'],
+            'local_examples': ['Manguezais de Cacheu', 'Zona costeira de Bissau', 'Ilhas Bijagós'],
+            'cultural_connections': ['Pesca tradicional', 'Coleta de ostras', 'Medicina tradicional']
+        },
+        'conservacao': {
+            'title': 'Conservação: Protegendo Nosso Futuro',
+            'description': 'Aprenda estratégias de conservação para nossa região',
+            'content': 'A conservação ambiental na Guiné-Bissau combina conhecimento tradicional com práticas modernas para proteger nossos recursos naturais para as futuras gerações.',
+            'key_concepts': ['Conservação', 'Sustentabilidade', 'Proteção ambiental', 'Gestão de recursos'],
+            'local_examples': ['Áreas protegidas', 'Projetos comunitários', 'Iniciativas de reflorestamento'],
+            'cultural_connections': ['Tabus tradicionais', 'Gestão comunitária de recursos', 'Conhecimento dos anciãos']
+        }
+    }
+    
+    base_content = topic_content.get(topic, topic_content['biodiversidade'])
+    
+    # Atividades práticas baseadas no tópico
+    activities = [
+        {
+            'name': f'Observação de {topic}',
+            'description': f'Atividade prática para observar e documentar {topic} na sua comunidade',
+            'materials': ['Caderno', 'Lápis', 'Câmera (se disponível)']
+        },
+        {
+            'name': 'Discussão comunitária',
+            'description': 'Conversar com anciãos sobre conhecimento tradicional',
+            'materials': ['Tempo', 'Respeito', 'Curiosidade']
+        }
+    ]
+    
+    return {
+        'title': base_content['title'],
+        'description': base_content['description'],
+        'content': base_content['content'],
+        'difficulty': 'intermediario',
+        'key_concepts': base_content['key_concepts'],
+        'local_examples': base_content['local_examples'],
+        'practical_activities': activities,
+        'cultural_connections': base_content['cultural_connections'],
+        'generated_by': 'Sistema Fallback'
+    }
+
+
+@environmental_bp.route('/environmental/education/topics', methods=['GET'])
+def get_education_topics():
+    """
+    Obter lista de tópicos educativos ambientais disponíveis
+    ---
+    tags:
+      - Educação Ambiental
+    summary: Lista de tópicos educativos disponíveis
+    description: |
+      Retorna lista completa de tópicos educativos ambientais disponíveis
+      para geração de conteúdo personalizado.
+    responses:
+      200:
+        description: Lista de tópicos obtida com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            topics:
+              type: array
+              items:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    example: "biodiversidade"
+                  label:
+                    type: string
+                    example: "Biodiversidade"
+                  icon:
+                    type: string
+                    example: "🌿"
+                  color:
+                    type: string
+                    example: "green"
+                  description:
+                    type: string
+                    example: "Diversidade de vida na Guiné-Bissau"
+                  gemma_prompt:
+                    type: string
+                    example: "Explique a biodiversidade da Guiné-Bissau..."
+    """
+    try:
+        topics = [
+            {
+                'value': 'biodiversidade',
+                'label': 'Biodiversidade',
+                'icon': '🌿',
+                'color': 'green',
+                'description': 'Diversidade de vida na Guiné-Bissau',
+                'gemma_prompt': 'Explique a biodiversidade da Guiné-Bissau, incluindo espécies endêmicas, ecossistemas únicos e importância para a comunidade local'
+            },
+            {
+                'value': 'mangue',
+                'label': 'Manguezais',
+                'icon': '🌊',
+                'color': 'blue',
+                'description': 'Ecossistemas costeiros únicos',
+                'gemma_prompt': 'Descreva os manguezais da Guiné-Bissau, sua importância ecológica, econômica e cultural para as comunidades costeiras'
+            },
+            {
+                'value': 'floresta',
+                'label': 'Florestas',
+                'icon': '🌳',
+                'color': 'brown',
+                'description': 'Florestas tropicais e sua conservação',
+                'gemma_prompt': 'Aborde as florestas da Guiné-Bissau, incluindo tipos de vegetação, fauna, desmatamento e conservação'
+            },
+            {
+                'value': 'conservacao',
+                'label': 'Conservação',
+                'icon': '🛡️',
+                'color': 'orange',
+                'description': 'Estratégias de proteção ambiental',
+                'gemma_prompt': 'Explique estratégias de conservação ambiental aplicáveis à Guiné-Bissau, incluindo práticas tradicionais e modernas'
+            },
+            {
+                'value': 'agricultura',
+                'label': 'Agricultura Sustentável',
+                'icon': '🌾',
+                'color': 'amber',
+                'description': 'Práticas agrícolas sustentáveis',
+                'gemma_prompt': 'Ensine sobre agricultura sustentável na Guiné-Bissau, incluindo técnicas tradicionais, rotação de culturas e conservação do solo'
+            },
+            {
+                'value': 'agua',
+                'label': 'Recursos Hídricos',
+                'icon': '💧',
+                'color': 'cyan',
+                'description': 'Gestão e conservação da água',
+                'gemma_prompt': 'Explique a importância dos recursos hídricos na Guiné-Bissau, incluindo rios, aquíferos e conservação da água'
+            },
+            {
+                'value': 'energia',
+                'label': 'Energia Renovável',
+                'icon': '☀️',
+                'color': 'yellow',
+                'description': 'Fontes de energia sustentável',
+                'gemma_prompt': 'Aborde as possibilidades de energia renovável na Guiné-Bissau, incluindo solar, eólica e biomassa'
+            },
+            {
+                'value': 'clima',
+                'label': 'Mudanças Climáticas',
+                'icon': '🌡️',
+                'color': 'red',
+                'description': 'Impactos e adaptação climática',
+                'gemma_prompt': 'Explique as mudanças climáticas e seus impactos na Guiné-Bissau, incluindo estratégias de adaptação e mitigação'
+            }
+        ]
+        
+        return jsonify({
+            'success': True,
+            'topics': topics,
+            'total': len(topics)
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Erro ao obter tópicos educativos: {e}")
+        log_error(logger, e, "obtenção de tópicos educativos")
+        return create_error_response(
+            'topics_error',
+            'Erro ao obter lista de tópicos educativos',
+            500
+        )
+
+
+@environmental_bp.route('/environmental/education', methods=['GET', 'POST'])
+def environmental_education():
+    """Teste simples para verificar se a rota funciona"""
+    return jsonify({'success': True, 'message': 'Rota funcionando'})
+
+@environmental_bp.route('/environmental/education-full', methods=['GET', 'POST'])
+def environmental_education_full():
+    """
+    Educação Ambiental Interativa com IA
+    ---
+    tags:
+      - Educação Ambiental
+    summary: Conteúdo educativo ambiental personalizado
+    description: |
+      Endpoint para gerar conteúdo educativo ambiental personalizado usando IA.
+      Especializado em educação ambiental para comunidades da Guiné-Bissau.
+    parameters:
+      - in: body
+        name: body
+        required: false
+        schema:
+          type: object
+          properties:
+            topic:
+              type: string
+              description: Tópico de educação ambiental
+              example: "biodiversidade"
+            age_group:
+              type: string
+              enum: ["crianca", "adolescente", "adulto", "idoso"]
+              description: Faixa etária do público-alvo
+              example: "adolescente"
+            education_level:
+              type: string
+              enum: ["basico", "medio", "superior"]
+              description: Nível educacional
+              example: "medio"
+            language:
+              type: string
+              enum: ["portugues", "crioulo", "fula", "mandinga"]
+              description: Idioma preferido
+              example: "portugues"
+            ecosystem:
+              type: string
+              enum: ["mangue", "floresta", "savana", "costeiro", "urbano"]
+              description: Ecossistema de interesse
+              example: "mangue"
+            learning_style:
+              type: string
+              enum: ["visual", "auditivo", "pratico", "teorico"]
+              description: Estilo de aprendizagem preferido
+              example: "pratico"
+            duration:
+              type: integer
+              description: Duração desejada em minutos
+              example: 15
+            include_activities:
+              type: boolean
+              description: Incluir atividades práticas
+              example: true
+    responses:
+      200:
+        description: Conteúdo educativo gerado com sucesso
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            data:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Explorando os Manguezais da Guiné-Bissau"
+                content:
+                  type: string
+                  description: Conteúdo educativo principal
+                key_concepts:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Biodiversidade", "Ecossistema", "Conservação"]
+                learning_objectives:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Identificar espécies do mangue", "Compreender importância ecológica"]
+                practical_activities:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      description:
+                        type: string
+                      materials:
+                        type: array
+                        items:
+                          type: string
+                      duration:
+                        type: integer
+                local_examples:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Parque Nacional de Cantanhez", "Arquipélago dos Bijagós"]
+                quiz_questions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      question:
+                        type: string
+                      options:
+                        type: array
+                        items:
+                          type: string
+                      correct_answer:
+                        type: integer
+                additional_resources:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      title:
+                        type: string
+                      description:
+                        type: string
+                cultural_context:
+                  type: object
+                  properties:
+                    traditional_knowledge:
+                      type: array
+                      items:
+                        type: string
+                    local_practices:
+                      type: array
+                      items:
+                        type: string
+                    community_involvement:
+                      type: array
+                      items:
+                        type: string
+      400:
+        description: Dados de entrada inválidos
+      500:
+        description: Erro interno do servidor
+    """
+    try:
+        if request.method == 'GET':
+            # Retornar módulos educativos disponíveis
+            modules = _get_available_education_modules()
+            return jsonify({
+                'success': True,
+                'modules': modules
+            })
+        
+        # POST - Gerar conteúdo educativo personalizado
+        data = request.get_json() or {}
+        
+        topic = data.get('topic', 'biodiversidade')
+        age_group = data.get('age_group', 'adolescente')
+        education_level = data.get('education_level', 'medio')
+        language = data.get('language', 'portugues')
+        ecosystem = data.get('ecosystem', 'mangue')
+        learning_style = data.get('learning_style', 'pratico')
+        duration = data.get('duration', 15)
+        include_activities = data.get('include_activities', True)
+        
+        # Tentar usar Gemma-3n para gerar conteúdo educativo
+        gemma_service = current_app.gemma_service
+        
+        if gemma_service and gemma_service.is_available():
+            educational_content = _generate_educational_content_with_gemma(
+                gemma_service, topic, age_group, education_level, 
+                language, ecosystem, learning_style, duration, include_activities
+            )
+        else:
+            # Fallback para conteúdo pré-definido
+            educational_content = _generate_fallback_educational_content(
+                topic, age_group, education_level, language, ecosystem, 
+                learning_style, duration, include_activities
+            )
+        
+        return jsonify({
+            'success': True,
+            'data': educational_content
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Erro na educação ambiental: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+
+def _get_available_education_modules():
+    """Retornar módulos educativos disponíveis"""
+    return [
+        {
+            'id': 'biodiversity_basics',
+            'title': 'Fundamentos da Biodiversidade',
+            'description': 'Introdução à diversidade biológica da Guiné-Bissau',
+            'duration': 20,
+            'difficulty': 'basico',
+            'ecosystem': 'geral',
+            'topics': ['espécies nativas', 'ecossistemas', 'conservação']
+        },
+        {
+            'id': 'mangrove_ecosystem',
+            'title': 'Ecossistema de Mangue',
+            'description': 'Explorando os manguezais únicos da Guiné-Bissau',
+            'duration': 25,
+            'difficulty': 'medio',
+            'ecosystem': 'mangue',
+            'topics': ['flora do mangue', 'fauna aquática', 'importância econômica']
+        },
+        {
+            'id': 'forest_conservation',
+            'title': 'Conservação Florestal',
+            'description': 'Proteção das florestas tropicais',
+            'duration': 30,
+            'difficulty': 'medio',
+            'ecosystem': 'floresta',
+            'topics': ['desmatamento', 'reflorestamento', 'uso sustentável']
+        },
+        {
+            'id': 'coastal_protection',
+            'title': 'Proteção Costeira',
+            'description': 'Conservação das áreas costeiras e marinhas',
+            'duration': 25,
+            'difficulty': 'medio',
+            'ecosystem': 'costeiro',
+            'topics': ['erosão costeira', 'pesca sustentável', 'turismo responsável']
+        },
+        {
+            'id': 'climate_change',
+            'title': 'Mudanças Climáticas',
+            'description': 'Impactos e adaptação às mudanças climáticas',
+            'duration': 35,
+            'difficulty': 'superior',
+            'ecosystem': 'geral',
+            'topics': ['aquecimento global', 'adaptação', 'mitigação']
+        },
+        {
+            'id': 'sustainable_agriculture',
+            'title': 'Agricultura Sustentável',
+            'description': 'Práticas agrícolas ambientalmente responsáveis',
+            'duration': 30,
+            'difficulty': 'medio',
+            'ecosystem': 'agricola',
+            'topics': ['agroecologia', 'solo saudável', 'controle biológico']
+        }
+    ]
+
+
+def _generate_educational_content_with_gemma(gemma_service, topic, age_group, education_level, language, ecosystem, learning_style, duration, include_activities):
+    """Gerar conteúdo educativo usando Gemma-3n"""
+    
+    # Construir prompt especializado para educação ambiental
+    prompt = f"""
+    Você é um educador ambiental especializado em criar conteúdo educativo para comunidades da Guiné-Bissau.
+    
+    Crie um módulo educativo com as seguintes especificações:
+    - Tópico: {topic}
+    - Faixa etária: {age_group}
+    - Nível educacional: {education_level}
+    - Idioma: {language}
+    - Ecossistema: {ecosystem}
+    - Estilo de aprendizagem: {learning_style}
+    - Duração: {duration} minutos
+    - Incluir atividades práticas: {include_activities}
+    
+    O conteúdo deve:
+    1. Ser culturalmente relevante para a Guiné-Bissau
+    2. Usar exemplos locais e espécies nativas
+    3. Incluir conhecimento tradicional quando apropriado
+    4. Ser adequado para o nível educacional especificado
+    5. Promover a conservação e sustentabilidade
+    
+    Responda APENAS com um JSON válido no seguinte formato:
+    {{
+        "title": "Título do módulo educativo",
+        "content": "Conteúdo educativo principal detalhado",
+        "key_concepts": ["conceito1", "conceito2", "conceito3"],
+        "learning_objectives": ["objetivo1", "objetivo2", "objetivo3"],
+        "practical_activities": [
+            {{
+                "name": "Nome da atividade",
+                "description": "Descrição detalhada",
+                "materials": ["material1", "material2"],
+                "duration": 10
+            }}
+        ],
+        "local_examples": ["exemplo1", "exemplo2", "exemplo3"],
+        "quiz_questions": [
+            {{
+                "question": "Pergunta sobre o conteúdo",
+                "options": ["opção1", "opção2", "opção3", "opção4"],
+                "correct_answer": 0
+            }}
+        ],
+        "additional_resources": [
+            {{
+                "type": "video",
+                "title": "Título do recurso",
+                "description": "Descrição do recurso"
+            }}
+        ],
+        "cultural_context": {{
+            "traditional_knowledge": ["conhecimento1", "conhecimento2"],
+            "local_practices": ["prática1", "prática2"],
+            "community_involvement": ["envolvimento1", "envolvimento2"]
+        }}
+    }}
+    """
+    
+    try:
+        response = gemma_service.generate_response(prompt)
+        
+        # Tentar parsear a resposta como JSON
+        import json
+        educational_content = json.loads(response)
+        
+        # Validar estrutura básica
+        required_fields = ['title', 'content', 'key_concepts', 'learning_objectives']
+        for field in required_fields:
+            if field not in educational_content:
+                raise ValueError(f"Campo obrigatório '{field}' não encontrado na resposta")
+        
+        return educational_content
+        
+    except (json.JSONDecodeError, ValueError) as e:
+        current_app.logger.warning(f"Erro ao parsear resposta do Gemma: {e}")
+        # Fallback para conteúdo pré-definido
+        return _generate_fallback_educational_content(
+            topic, age_group, education_level, language, ecosystem, 
+            learning_style, duration, include_activities
+        )
+
+
+def _generate_fallback_educational_content(topic, age_group, education_level, language, ecosystem, learning_style, duration, include_activities):
+    """Gerar conteúdo educativo de fallback quando Gemma não está disponível"""
+    
+    # Conteúdo base por tópico
+    content_templates = {
+        'biodiversidade': {
+            'title': 'Descobrindo a Biodiversidade da Guiné-Bissau',
+            'content': 'A Guiné-Bissau é um país rico em biodiversidade, com ecossistemas únicos que abrigam uma grande variedade de espécies. Desde os manguezais costeiros até as florestas tropicais do interior, cada ambiente possui características especiais que sustentam diferentes formas de vida.',
+            'key_concepts': ['Biodiversidade', 'Ecossistemas', 'Espécies nativas', 'Conservação'],
+            'local_examples': ['Parque Nacional de Cantanhez', 'Arquipélago dos Bijagós', 'Reserva da Biosfera de Bolama-Bijagós']
+        },
+        'mangue': {
+            'title': 'Os Manguezais: Berçários da Vida',
+            'content': 'Os manguezais da Guiné-Bissau são ecossistemas únicos onde a água doce dos rios encontra a água salgada do oceano. Estas áreas são fundamentais para a reprodução de peixes, proteção da costa e sustento das comunidades locais.',
+            'key_concepts': ['Mangue', 'Ecossistema costeiro', 'Biodiversidade aquática', 'Proteção costeira'],
+            'local_examples': ['Manguezais de Cacheu', 'Estuário do Rio Geba', 'Ilhas Bijagós']
+        },
+        'floresta': {
+            'title': 'Florestas Tropicais: Pulmões Verdes',
+            'content': 'As florestas da Guiné-Bissau são lar de muitas espécies endêmicas e desempenham papel crucial na regulação do clima local. Elas fornecem recursos importantes para as comunidades e ajudam a manter o equilíbrio ecológico.',
+            'key_concepts': ['Floresta tropical', 'Espécies endêmicas', 'Regulação climática', 'Recursos florestais'],
+            'local_examples': ['Floresta de Cantanhez', 'Mata de Cufada', 'Floresta de Dulombi']
+        }
+    }
+    
+    # Selecionar template baseado no tópico
+    template = content_templates.get(topic, content_templates['biodiversidade'])
+    
+    # Atividades práticas baseadas no estilo de aprendizagem
+    activities = []
+    if include_activities:
+        if learning_style == 'visual':
+            activities.append({
+                'name': 'Galeria Fotográfica da Natureza',
+                'description': 'Criar uma coleção de fotos de espécies locais e seus habitats',
+                'materials': ['Câmera ou celular', 'Caderno de anotações'],
+                'duration': 30
+            })
+        elif learning_style == 'pratico':
+            activities.append({
+                'name': 'Caminhada Ecológica',
+                'description': 'Explorar um ecossistema local identificando espécies e observando interações',
+                'materials': ['Guia de campo', 'Lupa', 'Caderno'],
+                'duration': 45
+            })
+        else:
+            activities.append({
+                'name': 'Pesquisa Comunitária',
+                'description': 'Entrevistar anciãos sobre conhecimento tradicional da natureza local',
+                'materials': ['Gravador', 'Questionário'],
+                'duration': 25
+            })
+    
+    # Perguntas de quiz adaptadas ao nível educacional
+    quiz_questions = [
+        {
+            'question': 'Qual é a principal função dos manguezais?',
+            'options': [
+                'Proteção costeira e berçário marinho',
+                'Apenas produção de madeira',
+                'Somente turismo',
+                'Agricultura intensiva'
+            ],
+            'correct_answer': 0
+        },
+        {
+            'question': 'Por que a biodiversidade é importante?',
+            'options': [
+                'Apenas para cientistas',
+                'Equilíbrio ecológico e recursos',
+                'Não tem importância',
+                'Somente para animais'
+            ],
+            'correct_answer': 1
+        }
+    ]
+    
+    return {
+        'title': template['title'],
+        'content': template['content'],
+        'key_concepts': template['key_concepts'],
+        'learning_objectives': [
+            f'Compreender a importância da {topic} na Guiné-Bissau',
+            'Identificar espécies e ecossistemas locais',
+            'Reconhecer práticas de conservação'
+        ],
+        'practical_activities': activities,
+        'local_examples': template['local_examples'],
+        'quiz_questions': quiz_questions,
+        'additional_resources': [
+            {
+                'type': 'documento',
+                'title': 'Guia de Biodiversidade da Guiné-Bissau',
+                'description': 'Manual ilustrado com espécies nativas'
+            },
+            {
+                'type': 'video',
+                'title': 'Documentário: Natureza da Guiné-Bissau',
+                'description': 'Exploração visual dos ecossistemas locais'
+            }
+        ],
+        'cultural_context': {
+            'traditional_knowledge': [
+                'Conhecimento ancestral sobre plantas medicinais',
+                'Técnicas tradicionais de pesca sustentável',
+                'Calendário agrícola baseado em observações naturais'
+            ],
+            'local_practices': [
+                'Rituais de proteção da natureza',
+                'Uso sustentável de recursos florestais',
+                'Práticas comunitárias de conservação'
+            ],
+            'community_involvement': [
+                'Participação em programas de monitoramento',
+                'Educação ambiental nas escolas',
+                'Projetos comunitários de reflorestamento'
+            ]
+        }
+    }
+
+
 def _simulate_plant_image_diagnosis(image_base64, plant_type):
     """Simular diagnóstico de planta por imagem quando Gemma não está disponível"""
     import random
@@ -3649,20 +4563,33 @@ def get_environmental_alerts():
     """
     Obter alertas ambientais em tempo real usando Gemma3
     
+    Parâmetros suportados:
+    - location: Nome da cidade/região (ex: 'São Paulo', 'New York', 'Tokyo')
+    - latitude: Coordenada de latitude (ex: -23.5505)
+    - longitude: Coordenada de longitude (ex: -46.6333)
+    - types: Tipos de alerta ['weather', 'air_quality', 'agriculture', 'emergency']
+    - severity: Filtro de severidade ['low', 'medium', 'high', 'critical', 'all']
+    - language: Idioma da resposta ['pt', 'en', 'fr', 'es'] (padrão: 'pt')
+    
     Retorna alertas baseados em:
-    - Condições meteorológicas
-    - Qualidade do ar
-    - Riscos agrícolas
+    - Condições meteorológicas locais
+    - Qualidade do ar regional
+    - Riscos agrícolas específicos
     - Emergências ambientais
     """
     try:
+        # Obter localização do usuário
+        location = _get_user_location(request)
+        
         # Obter parâmetros opcionais
-        location = request.args.get('location', 'Guinea-Bissau')
         alert_types = request.args.getlist('types') or ['weather', 'air_quality', 'agriculture', 'emergency']
         severity_filter = request.args.get('severity', 'all')  # low, medium, high, critical, all
+        language = request.args.get('language', 'pt')  # pt, en, fr, es
         
-        # Usar Gemma3 para gerar alertas dinâmicos
-        alerts = _generate_alerts_with_gemma3(location, alert_types)
+        logger.info(f"Gerando alertas para localização: {location}")
+        
+        # Usar Gemma3 para gerar alertas dinâmicos baseados na localização
+        alerts = _generate_alerts_with_gemma3(location, alert_types, language)
         
         # Filtrar por severidade se especificado
         if severity_filter != 'all':
@@ -3679,12 +4606,16 @@ def get_environmental_alerts():
             'location': location,
             'timestamp': datetime.now().isoformat(),
             'alert_types': alert_types,
-            'generated_by': 'Gemma3'
+            'language': language,
+            'generated_by': 'Gemma3-AI',
+            'ai_insights': True,
+            'location_based': True
         })
         
     except Exception as e:
         logger.error(f"Erro ao gerar alertas com Gemma3: {str(e)}")
         # Fallback para alertas estáticos em caso de erro
+        location = request.args.get('location', 'Localização Desconhecida')
         alerts = _get_fallback_alerts(location, alert_types)
         return jsonify({
             'success': True,
@@ -3694,10 +4625,317 @@ def get_environmental_alerts():
             'timestamp': datetime.now().isoformat(),
             'alert_types': alert_types,
             'generated_by': 'fallback',
+            'ai_insights': False,
             'warning': 'Usando dados de fallback devido a erro no Gemma3'
         }), 200
 
-def _generate_alerts_with_gemma3(location, alert_types):
+# Cache simples para evitar alertas repetitivos
+_alert_cache = {}
+_cache_timeout = 300  # 5 minutos
+
+def _get_user_location(request):
+    """
+    Detectar localização do usuário baseada em parâmetros da requisição
+    """
+    # Prioridade 1: Coordenadas GPS
+    latitude = request.args.get('latitude')
+    longitude = request.args.get('longitude')
+    
+    if latitude and longitude:
+        try:
+            lat = float(latitude)
+            lon = float(longitude)
+            # Converter coordenadas para nome da cidade/região
+            location = _coordinates_to_location(lat, lon)
+            logger.info(f"Localização detectada por GPS: {location} ({lat}, {lon})")
+            return location
+        except ValueError:
+            logger.warning(f"Coordenadas inválidas: lat={latitude}, lon={longitude}")
+    
+    # Prioridade 2: Nome da localização fornecido
+    location = request.args.get('location')
+    if location:
+        logger.info(f"Localização fornecida pelo usuário: {location}")
+        return location.strip()
+    
+    # Prioridade 3: Detectar por IP (simulado)
+    user_ip = request.remote_addr
+    if user_ip and user_ip != '127.0.0.1':
+        location = _ip_to_location(user_ip)
+        if location:
+            logger.info(f"Localização detectada por IP: {location}")
+            return location
+    
+    # Fallback: Localização padrão
+    default_location = "Localização Global"
+    logger.info(f"Usando localização padrão: {default_location}")
+    return default_location
+
+def _coordinates_to_location(latitude, longitude):
+    """
+    Converter coordenadas GPS para nome da localização
+    """
+    # Base de dados simplificada de coordenadas para cidades principais
+    locations = [
+        # África
+        {'name': 'Bissau, Guiné-Bissau', 'lat': 11.8636, 'lon': -15.5982, 'radius': 1.0},
+        {'name': 'Dakar, Senegal', 'lat': 14.6928, 'lon': -17.4467, 'radius': 1.0},
+        {'name': 'Lagos, Nigéria', 'lat': 6.5244, 'lon': 3.3792, 'radius': 1.0},
+        {'name': 'Accra, Gana', 'lat': 5.6037, 'lon': -0.1870, 'radius': 1.0},
+        {'name': 'Cairo, Egito', 'lat': 30.0444, 'lon': 31.2357, 'radius': 1.0},
+        
+        # Brasil
+        {'name': 'São Paulo, Brasil', 'lat': -23.5505, 'lon': -46.6333, 'radius': 1.0},
+        {'name': 'Rio de Janeiro, Brasil', 'lat': -22.9068, 'lon': -43.1729, 'radius': 1.0},
+        {'name': 'Brasília, Brasil', 'lat': -15.8267, 'lon': -47.9218, 'radius': 1.0},
+        {'name': 'Salvador, Brasil', 'lat': -12.9714, 'lon': -38.5014, 'radius': 1.0},
+        {'name': 'Manaus, Brasil', 'lat': -3.1190, 'lon': -60.0217, 'radius': 1.0},
+        
+        # Europa
+        {'name': 'Lisboa, Portugal', 'lat': 38.7223, 'lon': -9.1393, 'radius': 1.0},
+        {'name': 'Madrid, Espanha', 'lat': 40.4168, 'lon': -3.7038, 'radius': 1.0},
+        {'name': 'Paris, França', 'lat': 48.8566, 'lon': 2.3522, 'radius': 1.0},
+        {'name': 'Londres, Reino Unido', 'lat': 51.5074, 'lon': -0.1278, 'radius': 1.0},
+        {'name': 'Roma, Itália', 'lat': 41.9028, 'lon': 12.4964, 'radius': 1.0},
+        
+        # América do Norte
+        {'name': 'Nova York, EUA', 'lat': 40.7128, 'lon': -74.0060, 'radius': 1.0},
+        {'name': 'Los Angeles, EUA', 'lat': 34.0522, 'lon': -118.2437, 'radius': 1.0},
+        {'name': 'Miami, EUA', 'lat': 25.7617, 'lon': -80.1918, 'radius': 1.0},
+        {'name': 'Toronto, Canadá', 'lat': 43.6532, 'lon': -79.3832, 'radius': 1.0},
+        
+        # Ásia
+        {'name': 'Tóquio, Japão', 'lat': 35.6762, 'lon': 139.6503, 'radius': 1.0},
+        {'name': 'Mumbai, Índia', 'lat': 19.0760, 'lon': 72.8777, 'radius': 1.0},
+        {'name': 'Pequim, China', 'lat': 39.9042, 'lon': 116.4074, 'radius': 1.0},
+        {'name': 'Singapura', 'lat': 1.3521, 'lon': 103.8198, 'radius': 1.0},
+        
+        # Oceania
+        {'name': 'Sydney, Austrália', 'lat': -33.8688, 'lon': 151.2093, 'radius': 1.0},
+        {'name': 'Melbourne, Austrália', 'lat': -37.8136, 'lon': 144.9631, 'radius': 1.0},
+    ]
+    
+    # Encontrar a cidade mais próxima
+    import math
+    
+    def distance(lat1, lon1, lat2, lon2):
+        # Fórmula de Haversine para calcular distância
+        R = 6371  # Raio da Terra em km
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        return R * c
+    
+    closest_location = None
+    min_distance = float('inf')
+    
+    for loc in locations:
+        dist = distance(latitude, longitude, loc['lat'], loc['lon'])
+        if dist < min_distance and dist <= loc['radius'] * 100:  # Raio de 100km
+            min_distance = dist
+            closest_location = loc['name']
+    
+    if closest_location:
+        return closest_location
+    
+    # Se não encontrou cidade específica, determinar região geral
+    if -90 <= latitude <= 90 and -180 <= longitude <= 180:
+        if -35 <= latitude <= 37:  # África
+            if -20 <= longitude <= 55:
+                return f"África ({latitude:.2f}, {longitude:.2f})"
+        elif -60 <= latitude <= 15:  # América do Sul
+            if -85 <= longitude <= -30:
+                return f"América do Sul ({latitude:.2f}, {longitude:.2f})"
+        elif 15 <= latitude <= 85:  # América do Norte/Europa/Ásia
+            if -170 <= longitude <= -50:
+                return f"América do Norte ({latitude:.2f}, {longitude:.2f})"
+            elif -15 <= longitude <= 180:
+                if longitude <= 45:
+                    return f"Europa ({latitude:.2f}, {longitude:.2f})"
+                else:
+                    return f"Ásia ({latitude:.2f}, {longitude:.2f})"
+        elif -50 <= latitude <= -10:  # Oceania
+            if 110 <= longitude <= 180:
+                return f"Oceania ({latitude:.2f}, {longitude:.2f})"
+    
+    return f"Coordenadas ({latitude:.2f}, {longitude:.2f})"
+
+def _ip_to_location(ip_address):
+    """
+    Detectar localização aproximada baseada no IP (simulado)
+    """
+    # Em um ambiente real, usaria serviços como GeoIP
+    # Por enquanto, retorna None para usar fallback
+    return None
+
+def _get_region_info(location):
+    """
+    Detectar informações da região baseado na localização
+    """
+    location_lower = location.lower()
+    
+    # Base de dados de regiões e características climáticas
+    region_data = {
+        # África Ocidental
+        'bissau': {
+            'region': 'África Ocidental',
+            'climate': 'Tropical savana',
+            'characteristics': 'Costeiro, estação seca/chuvosa, agricultura de subsistência, mangues'
+        },
+        'guinea-bissau': {
+            'region': 'África Ocidental',
+            'climate': 'Tropical savana',
+            'characteristics': 'Costeiro, estação seca/chuvosa, agricultura de subsistência, mangues'
+        },
+        'dakar': {
+            'region': 'África Ocidental',
+            'climate': 'Semi-árido',
+            'characteristics': 'Costeiro, ventos alísios, pesca, urbanização'
+        },
+        'lagos': {
+            'region': 'África Ocidental',
+            'climate': 'Tropical úmido',
+            'characteristics': 'Costeiro, alta densidade populacional, chuvas intensas, poluição urbana'
+        },
+        'accra': {
+            'region': 'África Ocidental',
+            'climate': 'Tropical savana',
+            'characteristics': 'Costeiro, duas estações chuvosas, urbanização, agricultura'
+        },
+        
+        # Brasil
+        'são paulo': {
+            'region': 'Sudeste do Brasil',
+            'climate': 'Subtropical úmido',
+            'characteristics': 'Metrópole, poluição do ar, ilha de calor urbana, chuvas de verão'
+        },
+        'rio de janeiro': {
+            'region': 'Sudeste do Brasil',
+            'climate': 'Tropical atlântico',
+            'characteristics': 'Costeiro, montanhoso, chuvas de verão, alta umidade'
+        },
+        'brasília': {
+            'region': 'Centro-Oeste do Brasil',
+            'climate': 'Tropical savana',
+            'characteristics': 'Planalto central, estação seca/chuvosa bem definidas, cerrado'
+        },
+        'manaus': {
+            'region': 'Norte do Brasil',
+            'climate': 'Equatorial úmido',
+            'characteristics': 'Amazônia, alta umidade, chuvas frequentes, biodiversidade'
+        },
+        
+        # Europa
+        'lisboa': {
+            'region': 'Europa Ocidental',
+            'climate': 'Mediterrâneo',
+            'characteristics': 'Costeiro atlântico, verões secos, invernos amenos e chuvosos'
+        },
+        'madrid': {
+            'region': 'Europa Ocidental',
+            'climate': 'Continental mediterrâneo',
+            'characteristics': 'Interior, verões quentes e secos, invernos frios'
+        },
+        'paris': {
+            'region': 'Europa Ocidental',
+            'climate': 'Oceânico temperado',
+            'characteristics': 'Continental, chuvas distribuídas, poluição urbana'
+        },
+        'london': {
+            'region': 'Europa Ocidental',
+            'climate': 'Oceânico temperado',
+            'characteristics': 'Insular, chuvas frequentes, neblina, poluição urbana'
+        },
+        
+        # América do Norte
+        'new york': {
+            'region': 'Costa Leste dos EUA',
+            'climate': 'Continental úmido',
+            'characteristics': 'Costeiro, quatro estações bem definidas, ilha de calor urbana'
+        },
+        'los angeles': {
+            'region': 'Costa Oeste dos EUA',
+            'climate': 'Mediterrâneo',
+            'characteristics': 'Costeiro, smog, risco sísmico, verões secos'
+        },
+        'miami': {
+            'region': 'Sudeste dos EUA',
+            'climate': 'Tropical',
+            'characteristics': 'Costeiro, furacões, alta umidade, nível do mar'
+        },
+        
+        # Ásia
+        'tokyo': {
+            'region': 'Ásia Oriental',
+            'climate': 'Subtropical úmido',
+            'characteristics': 'Insular, monções, tifões, alta densidade populacional'
+        },
+        'mumbai': {
+            'region': 'Ásia Meridional',
+            'climate': 'Tropical úmido',
+            'characteristics': 'Costeiro, monções intensas, alta densidade, poluição'
+        },
+        'beijing': {
+            'region': 'Ásia Oriental',
+            'climate': 'Continental úmido',
+            'characteristics': 'Continental, poluição do ar, tempestades de areia'
+        },
+        
+        # Oceania
+        'sydney': {
+            'region': 'Oceania',
+            'climate': 'Subtropical úmido',
+            'characteristics': 'Costeiro, risco de incêndios, chuvas de verão'
+        },
+        'melbourne': {
+            'region': 'Oceania',
+            'climate': 'Oceânico temperado',
+            'characteristics': 'Costeiro, quatro estações, variabilidade climática'
+        }
+    }
+    
+    # Buscar informações específicas da localização
+    for key, info in region_data.items():
+        if key in location_lower:
+            return info
+    
+    # Detectar por país ou região geral
+    if any(term in location_lower for term in ['guinea', 'bissau', 'gabú', 'bafatá']):
+        return region_data['guinea-bissau']
+    elif any(term in location_lower for term in ['brasil', 'brazil']):
+        return {
+            'region': 'América do Sul',
+            'climate': 'Tropical/Subtropical',
+            'characteristics': 'Diversidade climática, chuvas de verão, agricultura extensiva'
+        }
+    elif any(term in location_lower for term in ['portugal', 'spain', 'france']):
+        return {
+            'region': 'Europa Ocidental',
+            'climate': 'Mediterrâneo/Oceânico',
+            'characteristics': 'Temperado, chuvas de inverno, agricultura mediterrânea'
+        }
+    elif any(term in location_lower for term in ['usa', 'united states', 'america']):
+        return {
+            'region': 'América do Norte',
+            'climate': 'Variado',
+            'characteristics': 'Diversidade climática, eventos extremos, urbanização'
+        }
+    elif any(term in location_lower for term in ['africa', 'áfrica']):
+        return {
+            'region': 'África',
+            'climate': 'Tropical/Árido',
+            'characteristics': 'Estações secas/chuvosas, agricultura de subsistência, variabilidade climática'
+        }
+    
+    # Fallback para localização desconhecida
+    return {
+        'region': 'Região Global',
+        'climate': 'Variado',
+        'characteristics': 'Condições climáticas locais, riscos ambientais regionais'
+    }
+
+def _generate_alerts_with_gemma3(location, alert_types, language='pt'):
     """
     Gerar alertas ambientais usando Gemma3
     """
@@ -3706,31 +4944,136 @@ def _generate_alerts_with_gemma3(location, alert_types):
         
         gemma_service = current_app.gemma_service
         
-        # Prompt para gerar alertas ambientais
+        # Verificar cache para evitar repetições
+        import uuid
+        cache_key = f"{location}_{'-'.join(sorted(alert_types))}"
+        current_time = datetime.now()
+        
+        if cache_key in _alert_cache:
+            cached_time, cached_alerts = _alert_cache[cache_key]
+            if (current_time - cached_time).seconds < _cache_timeout:
+                logger.info(f"Usando alertas do cache para {location}")
+                # Adicionar variação temporal aos alertas em cache
+                for alert in cached_alerts:
+                    alert['timestamp'] = current_time.isoformat()
+                    alert['id'] = f"gemma3_{uuid.uuid4().hex[:8]}"
+                return cached_alerts
+        
+        # Obter dados temporais para gerar alertas dinâmicos
+        current_time = datetime.now()
+        season = "seca" if current_time.month in [11, 12, 1, 2, 3, 4] else "chuvas"
+        hour = current_time.hour
+        day_period = "manhã" if 6 <= hour < 12 else "tarde" if 12 <= hour < 18 else "noite"
+        
+        # Detectar região e características climáticas baseado na localização
+        region_info = _get_region_info(location)
+        
+        # Configurar idioma e contexto cultural
+        language_config = {
+            'pt': {
+                'task': 'TAREFA: Gere exatamente 4 alertas ambientais específicos para a localização fornecida.',
+                'context': 'CONTEXTO GEOGRÁFICO:',
+                'instructions': 'INSTRUÇÕES:',
+                'important': 'IMPORTANTE:',
+                'response_format': 'RESPONDA APENAS COM ESTE JSON (sem texto adicional):'
+            },
+            'en': {
+                'task': 'TASK: Generate exactly 4 specific environmental alerts for the provided location.',
+                'context': 'GEOGRAPHICAL CONTEXT:',
+                'instructions': 'INSTRUCTIONS:',
+                'important': 'IMPORTANT:',
+                'response_format': 'RESPOND ONLY WITH THIS JSON (no additional text):'
+            },
+            'fr': {
+                'task': 'TÂCHE: Générez exactement 4 alertes environnementales spécifiques pour la localisation fournie.',
+                'context': 'CONTEXTE GÉOGRAPHIQUE:',
+                'instructions': 'INSTRUCTIONS:',
+                'important': 'IMPORTANT:',
+                'response_format': 'RÉPONDEZ UNIQUEMENT AVEC CE JSON (sans texte supplémentaire):'
+            },
+            'es': {
+                'task': 'TAREA: Genere exactamente 4 alertas ambientales específicas para la ubicación proporcionada.',
+                'context': 'CONTEXTO GEOGRÁFICO:',
+                'instructions': 'INSTRUCCIONES:',
+                'important': 'IMPORTANTE:',
+                'response_format': 'RESPONDA SOLO CON ESTE JSON (sin texto adicional):'
+            }
+        }
+        
+        lang_config = language_config.get(language, language_config['pt'])
+        
+        # Prompt dinâmico multilíngue para gerar alertas ambientais globais
         prompt = f"""
-        Você é um especialista em monitoramento ambiental para a Guiné-Bissau.
+        {lang_config['task']}
         
-        Gere alertas ambientais realistas e relevantes para a localização: {location}
+        {lang_config['context']}
+        - Localização: {location}
+        - Região: {region_info['region']}
+        - Clima: {region_info['climate']}
+        - Características: {region_info['characteristics']}
+        - Data/Hora: {current_time.strftime('%d/%m/%Y %H:%M')}
+        - Estação local: {season}
+        - Período do dia: {day_period}
+        - Tipos solicitados: {', '.join(alert_types)}
+        - Idioma: {language}
         
-        Tipos de alertas solicitados: {', '.join(alert_types)}
+        {lang_config['instructions']}
+        1. Analise as características climáticas e geográficas específicas da região
+        2. Considere riscos ambientais reais e atuais da localização
+        3. Adapte alertas ao contexto local (urbano/rural, costeiro/interior, montanhoso/planície)
+        4. Use dados realistas e relevantes para a região específica
+        5. Considere fatores sazonais e horários locais
+        6. Inclua riscos específicos da infraestrutura e população local
+        7. Varie a severidade baseada em condições reais da região
         
-        Para cada alerta, forneça:
-        - Título conciso
-        - Mensagem clara
-        - Descrição detalhada
-        - Recomendações práticas
-        - Nível de severidade (low, medium, high, critical)
-        - Categoria específica
+        {lang_config['response_format']}
+        [
+          {{
+            "title": "Alerta específico e realista para {location}",
+            "message": "Mensagem contextualizada baseada em condições reais",
+            "description": "Descrição detalhada considerando geografia, clima e população local",
+            "severity": "low|medium|high|critical",
+            "type": "weather|air_quality|agriculture|emergency",
+            "category": "categoria específica da região",
+            "recommendations": ["Ação 1 adaptada às condições locais", "Ação 2 considerando infraestrutura", "Ação 3 baseada em recursos disponíveis"]
+          }},
+          {{
+            "title": "Segundo alerta contextual para {location}",
+            "message": "Condição ambiental relevante para a área",
+            "description": "Análise baseada em padrões climáticos e riscos regionais",
+            "severity": "low|medium|high|critical",
+            "type": "weather|air_quality|agriculture|emergency",
+            "category": "categoria apropriada ao contexto",
+            "recommendations": ["Medida 1 específica da região", "Medida 2 adaptada ao clima", "Medida 3 considerando recursos"]
+          }},
+          {{
+            "title": "Terceiro alerta ambiental regional",
+            "message": "Risco específico da localização",
+            "description": "Impacto considerando população, economia e infraestrutura local",
+            "severity": "low|medium|high|critical",
+            "type": "weather|air_quality|agriculture|emergency",
+            "category": "categoria regional específica",
+            "recommendations": ["Ação local 1", "Ação local 2", "Ação local 3"]
+          }},
+          {{
+            "title": "Quarto alerta contextualizado",
+            "message": "Condição ambiental específica da área",
+            "description": "Análise baseada em características únicas da região",
+            "severity": "low|medium|high|critical",
+            "type": "weather|air_quality|agriculture|emergency",
+            "category": "categoria específica do local",
+            "recommendations": ["Recomendação 1 adaptada", "Recomendação 2 contextual", "Recomendação 3 regional"]
+          }}
+        ]
         
-        Considere:
-        - Clima tropical da Guiné-Bissau
-        - Agricultura de subsistência
-        - Comunidades rurais
-        - Recursos limitados
-        - Idioma Crioulo local
-        
-        Retorne no formato JSON com array de alertas.
-        Máximo 5 alertas relevantes.
+        {lang_config['important']}
+        - Varie os alertas baseado na estação {season} e período {day_period}
+        - Considere características ESPECÍFICAS de {location}
+        - Use terminologia e riscos apropriados para a região
+        - Adapte severidade aos padrões climáticos locais
+        - Gere alertas DIFERENTES a cada chamada
+        - Considere contexto cultural e socioeconômico da região
+        - Use dados realistas e verificáveis para a localização
         """
         
         # Gerar resposta com Gemma3
@@ -3742,6 +5085,12 @@ def _generate_alerts_with_gemma3(location, alert_types):
         
         # Processar resposta do Gemma3
         alerts = _parse_gemma3_alerts_response(response, location)
+        
+        # Salvar no cache para evitar repetições
+        if alerts:
+            import uuid
+            _alert_cache[cache_key] = (current_time, alerts)
+            logger.info(f"Alertas salvos no cache para {location}")
         
         return alerts
         
@@ -3762,34 +5111,184 @@ def _parse_gemma3_alerts_response(response, location):
         # Verificar se a resposta é um dict (resposta do Ollama)
         if isinstance(response, dict):
             response_text = response.get('message', {}).get('content', str(response))
+            
+            # Verificar se a resposta contém um campo 'response' com JSON
+            if 'response' in response and isinstance(response['response'], str):
+                inner_response = response['response']
+                
+                # Caso 1: JSON dentro de markdown
+                if '```json' in inner_response:
+                    json_start = inner_response.find('```json') + 7
+                    json_end = inner_response.find('```', json_start)
+                    if json_end > json_start:
+                        response_text = inner_response[json_start:json_end].strip()
+                else:
+                    # Caso 2: JSON direto na resposta
+                    json_match = re.search(r'\[\s*\{.*?\}\s*\]', inner_response, re.DOTALL)
+                    if json_match:
+                        response_text = json_match.group().strip()
+                    else:
+                        response_text = inner_response
+            
+            # Tentar extrair JSON de diferentes formatos de resposta
+            elif isinstance(response_text, str):
+                # Caso 1: JSON dentro de markdown
+                if '```json' in response_text:
+                    json_start = response_text.find('```json') + 7
+                    json_end = response_text.find('```', json_start)
+                    if json_end > json_start:
+                        response_text = response_text[json_start:json_end].strip()
+                
+                # Caso 2: JSON dentro de um campo 'response' como string
+                elif "'response':" in response_text or '"response":' in response_text:
+                    # Extrair o conteúdo após 'response':
+                    if "'response': '" in response_text:
+                        start = response_text.find("'response': '") + 13
+                        # Encontrar o final da string, considerando escapes
+                        end = start
+                        quote_count = 0
+                        while end < len(response_text):
+                            if response_text[end] == "'" and (end == 0 or response_text[end-1] != '\\'):
+                                quote_count += 1
+                                if quote_count == 1:  # Primeira aspa de fechamento
+                                    break
+                            end += 1
+                        
+                        if end > start:
+                            inner_content = response_text[start:end]
+                            # Decodificar escapes
+                            inner_content = inner_content.replace("\\\\", "\\").replace("\\n", "\n").replace("\\\"", '"').replace("\\'", "'")
+                            
+                            if '```json' in inner_content:
+                                json_start = inner_content.find('```json') + 7
+                                json_end = inner_content.find('```', json_start)
+                                if json_end > json_start:
+                                    response_text = inner_content[json_start:json_end].strip()
+                            else:
+                                # Tentar extrair JSON diretamente
+                                json_match = re.search(r'\[\s*\{.*?\}\s*\]', inner_content, re.DOTALL)
+                                if json_match:
+                                    response_text = json_match.group().strip()
         else:
             response_text = str(response)
         
         logger.info(f"Processando resposta do Gemma3: {response_text[:200]}...")
+        logger.info(f"Resposta completa do Gemma3: {response_text}")
         
-        # Tentar extrair JSON da resposta
-        json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
+        # Múltiplas tentativas de extrair JSON
+        alerts_data = None
+        
+        # Tentativa 1: JSON array completo
+        json_match = re.search(r'\[.*?\]', response_text, re.DOTALL)
         if json_match:
+            json_text = json_match.group()
+            logger.info(f"JSON encontrado: {json_text[:500]}...")
+            
+            # Limpeza avançada de caracteres especiais e malformações
+            json_text = json_text.replace('\\n', ' ')  # Remove quebras de linha escapadas
+            json_text = json_text.replace('\\"', '"')  # Remove escapes desnecessários
+            json_text = json_text.replace('\\\\', '')  # Remove barras duplas
+            
+            # Corrigir erros comuns no JSON
+            json_text = json_text.replace('"recommendaions":', '"recommendations":')
+            json_text = json_text.replace('"recomendaions":', '"recommendations":')
+            json_text = json_text.replace('"recomendações":', '"recommendations":')
+            json_text = json_text.replace('"título":', '"title":')
+            json_text = json_text.replace('"mensagem":', '"message":')
+            json_text = json_text.replace('"descrição":', '"description":')
+            
+            # Remover fragmentos de JSON malformado que aparecem nos campos
+            json_text = re.sub(r'"[^"]*\\n[^"]*"\s*,\s*"[^"]*"\s*:', '"Alerta Ambiental":', json_text)
+            json_text = re.sub(r'"[^"]*severity[^"]*"\s*,\s*"[^"]*"\s*:', '"Alerta":', json_text)
+            
+            # Garantir que o JSON está completo
+            if not json_text.endswith(']'):
+                json_text += ']'
+            if not json_text.endswith('}]'):
+                json_text = json_text.rstrip(']') + '}]'
+            
             try:
-                alerts_data = json.loads(json_match.group())
-            except json.JSONDecodeError:
-                logger.warning("Erro ao decodificar JSON, criando alertas do texto")
-                alerts_data = _create_alerts_from_text(response_text)
-        else:
-            # Se não encontrar JSON, criar alertas baseados no texto
+                # Limpar caracteres problemáticos antes do parsing
+                json_text = json_text.strip()
+                if json_text.startswith('\n'):
+                    json_text = json_text.lstrip('\n').strip()
+                
+                alerts_data = json.loads(json_text)
+                logger.info(f"JSON extraído com sucesso: {len(alerts_data)} alertas")
+                logger.info(f"Dados dos alertas: {alerts_data}")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Erro ao decodificar JSON array: {e}")
+                logger.warning(f"JSON problemático: {json_text[:500]}...")
+                
+                # Tentar corrigir problemas comuns de formatação
+                try:
+                    # Remover caracteres de controle e espaços problemáticos
+                    cleaned_json = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_text)
+                    cleaned_json = re.sub(r'\s+', ' ', cleaned_json).strip()
+                    
+                    # Tentar novamente
+                    alerts_data = json.loads(cleaned_json)
+                    logger.info(f"JSON corrigido e extraído: {len(alerts_data)} alertas")
+                except json.JSONDecodeError:
+                    # Tentar extrair apenas o primeiro objeto válido
+                    try:
+                        first_obj_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', json_text)
+                        if first_obj_match:
+                            single_obj = first_obj_match.group()
+                            alerts_data = [json.loads(single_obj)]
+                            logger.info(f"Extraído objeto único: 1 alerta")
+                    except:
+                        pass
+        
+        # Tentativa 2: Múltiplos objetos JSON
+        if not alerts_data:
+            json_objects = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response_text)
+            if json_objects:
+                alerts_data = []
+                for obj_str in json_objects:
+                    try:
+                        obj = json.loads(obj_str)
+                        alerts_data.append(obj)
+                    except json.JSONDecodeError:
+                        continue
+                logger.info(f"Objetos JSON extraídos: {len(alerts_data)} alertas")
+        
+        # Tentativa 3: Criar alertas do texto
+        if not alerts_data:
+            logger.warning("Não foi possível extrair JSON, criando alertas do texto")
             alerts_data = _create_alerts_from_text(response_text)
         
+        # Garantir que temos uma lista
+        if not isinstance(alerts_data, list):
+            alerts_data = [alerts_data] if alerts_data else []
+        
         alerts = []
-        for alert_data in alerts_data[:5]:  # Máximo 5 alertas
+        for i, alert_data in enumerate(alerts_data[:5]):  # Máximo 5 alertas
+            # Garantir que alert_data é um dict
+            if not isinstance(alert_data, dict):
+                continue
+                
+            # Mapear campos em português para inglês
+            title = (alert_data.get('title') or alert_data.get('título') or 
+                    alert_data.get('titulo') or f'Alerta Ambiental {i+1}')
+            message = (alert_data.get('message') or alert_data.get('mensagem') or 
+                      alert_data.get('msg') or title)
+            description = (alert_data.get('description') or alert_data.get('descrição') or 
+                          alert_data.get('descricao') or message)
+            recommendations = (alert_data.get('recommendations') or 
+                             alert_data.get('recomendações') or 
+                             alert_data.get('recomendacoes') or 
+                             ['Monitorar situação', 'Seguir orientações locais'])
+            
             alert = {
                 'id': f"gemma3_{uuid.uuid4().hex[:8]}",
                 'type': alert_data.get('type', 'general'),
                 'category': alert_data.get('category', 'environmental'),
                 'severity': alert_data.get('severity', 'medium'),
-                'title': alert_data.get('title', 'Alerta Ambiental'),
-                'message': alert_data.get('message', ''),
-                'description': alert_data.get('description', ''),
-                'recommendations': alert_data.get('recommendations', []),
+                'title': title,
+                'message': message,
+                'description': description,
+                'recommendations': recommendations if isinstance(recommendations, list) else [str(recommendations)],
                 'timestamp': datetime.now().isoformat(),
                 'expires_at': (datetime.now() + timedelta(hours=24)).isoformat(),
                 'location': location,
@@ -3799,8 +5298,8 @@ def _parse_gemma3_alerts_response(response, location):
             }
             alerts.append(alert)
         
-        logger.info(f"Gerados {len(alerts)} alertas do Gemma3")
-        return alerts
+        logger.info(f"Processados {len(alerts)} alertas do Gemma3 com sucesso")
+        return alerts if alerts else _get_fallback_alerts(location, ['weather', 'agriculture'])
         
     except Exception as e:
         logger.error(f"Erro ao processar resposta do Gemma3: {str(e)}")
@@ -3810,24 +5309,81 @@ def _create_alerts_from_text(text):
     """
     Criar alertas a partir de texto livre do Gemma3
     """
-    # Implementação simplificada para extrair informações do texto
+    import re
+    
     alerts = []
     
-    # Dividir texto em seções
-    sections = text.split('\n\n')
+    # Padrões para identificar diferentes tipos de alertas
+    alert_patterns = {
+        'weather': ['chuva', 'vento', 'tempestade', 'seca', 'temperatura', 'clima'],
+        'agriculture': ['colheita', 'plantação', 'pragas', 'cultivo', 'agricultura', 'arroz', 'milho'],
+        'air_quality': ['poluição', 'ar', 'qualidade', 'fumaça', 'poeira'],
+        'emergency': ['emergência', 'perigo', 'risco', 'evacuação', 'socorro']
+    }
     
-    for section in sections[:3]:  # Máximo 3 alertas
-        if len(section.strip()) > 50:  # Apenas seções com conteúdo substancial
-            alert = {
-                'title': section.split('\n')[0][:50] if '\n' in section else section[:50],
-                'message': section[:200],
-                'description': section,
-                'severity': 'medium',
-                'type': 'general',
-                'category': 'environmental',
-                'recommendations': ['Monitorar situação', 'Seguir orientações locais']
-            }
-            alerts.append(alert)
+    severity_patterns = {
+        'critical': ['crítico', 'grave', 'urgente', 'imediato', 'extremo'],
+        'high': ['alto', 'elevado', 'importante', 'significativo'],
+        'medium': ['moderado', 'médio', 'atenção'],
+        'low': ['baixo', 'leve', 'menor']
+    }
+    
+    # Dividir texto em seções
+    sections = re.split(r'\n\s*\n|\.|\!|\?', text)
+    sections = [s.strip() for s in sections if len(s.strip()) > 30]
+    
+    for i, section in enumerate(sections[:5]):  # Máximo 5 alertas
+        # Determinar tipo do alerta
+        alert_type = 'general'
+        for type_key, keywords in alert_patterns.items():
+            if any(keyword in section.lower() for keyword in keywords):
+                alert_type = type_key
+                break
+        
+        # Determinar severidade
+        severity = 'medium'
+        for sev_key, keywords in severity_patterns.items():
+            if any(keyword in section.lower() for keyword in keywords):
+                severity = sev_key
+                break
+        
+        # Extrair título (primeira linha ou primeiras palavras)
+        lines = section.split('\n')
+        title = lines[0][:60] if lines else section[:60]
+        if ':' in title:
+            title = title.split(':')[0]
+        
+        # Gerar recomendações baseadas no tipo
+        recommendations = {
+            'weather': ['Verificar previsão do tempo', 'Proteger cultivos', 'Evitar atividades ao ar livre'],
+            'agriculture': ['Monitorar plantações', 'Aplicar medidas preventivas', 'Consultar técnico agrícola'],
+            'air_quality': ['Evitar atividades externas', 'Usar proteção respiratória', 'Manter janelas fechadas'],
+            'emergency': ['Seguir protocolos de segurança', 'Contactar autoridades', 'Evacuar se necessário'],
+            'general': ['Monitorar situação', 'Seguir orientações locais', 'Manter-se informado']
+        }.get(alert_type, ['Monitorar situação', 'Seguir orientações locais'])
+        
+        alert = {
+            'title': title.strip(),
+            'message': section[:150] + '...' if len(section) > 150 else section,
+            'description': section,
+            'severity': severity,
+            'type': alert_type,
+            'category': alert_type,
+            'recommendations': recommendations
+        }
+        alerts.append(alert)
+    
+    # Se não conseguiu extrair alertas, criar pelo menos um genérico
+    if not alerts:
+        alerts.append({
+            'title': 'Alerta Ambiental',
+            'message': 'Monitoramento ambiental ativo',
+            'description': 'Sistema de monitoramento detectou condições que requerem atenção.',
+            'severity': 'medium',
+            'type': 'general',
+            'category': 'environmental',
+            'recommendations': ['Monitorar situação', 'Seguir orientações locais', 'Manter-se informado']
+        })
     
     return alerts
 

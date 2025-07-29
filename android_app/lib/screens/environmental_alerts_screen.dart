@@ -485,7 +485,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  prediction['type'],
+                  _cleanGemmaText(prediction['type']),
                   style: TextStyle(
                     color: impactColor,
                     fontSize: 12,
@@ -495,7 +495,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
               ),
               const Spacer(),
               Text(
-                prediction['timeframe'],
+                _cleanGemmaText(prediction['timeframe']),
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -505,7 +505,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            prediction['description'],
+            _cleanGemmaText(prediction['description']),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -697,7 +697,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
           ),
         ),
         title: Text(
-          alert['type']?.toString() ?? 'Alerta',
+          _cleanGemmaText(alert['type']?.toString()) ?? 'Alerta',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -708,7 +708,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
           children: [
             const SizedBox(height: 4),
             Text(
-              alert['message']?.toString() ?? '',
+              _cleanGemmaText(alert['message']?.toString()),
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 8),
@@ -955,17 +955,17 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(alert['type']?.toString() ?? 'Alerta'),
+        title: Text(_cleanGemmaText(alert['type']?.toString()) ?? 'Alerta'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Região: ${alert['region']?.toString() ?? ''}',
+              'Região: ${_cleanGemmaText(alert['region']?.toString())}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(alert['message']?.toString() ?? ''),
+            Text(_cleanGemmaText(alert['message']?.toString())),
             const SizedBox(height: 16),
             Text(
               'Nível: ${alert['level']?.toString()?.toUpperCase() ?? ''}',
@@ -1044,6 +1044,28 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
     );
   }
 
+  // Função para limpar caracteres especiais dos textos do Gemma3
+  String _cleanGemmaText(String? text) {
+    if (text == null || text.isEmpty) return '';
+    
+    // Remove caracteres especiais comuns que podem aparecer na resposta do Gemma3
+    String cleanedText = text
+        .replaceAll(RegExp(r'[\*\#\`\~\^\{\}\[\]\|\\]'), '') // Remove markdown e caracteres especiais
+        .replaceAll(RegExp(r'\n\s*\n'), '\n') // Remove quebras de linha duplas
+        .replaceAll(RegExp(r'^\s*[\-\*\+]\s*'), '') // Remove marcadores de lista no início
+        .replaceAll(RegExp(r'\s+'), ' ') // Normaliza espaços múltiplos
+        .replaceAll(RegExp(r'["'']'), '"') // Normaliza aspas
+        .replaceAll(RegExp(r'[\u2013\u2014]'), '-') // Normaliza travessões
+        .replaceAll(RegExp(r'[\u2026]'), '...') // Normaliza reticências
+        .replaceAll(RegExp(r'[\u00A0]'), ' ') // Remove espaços não-quebráveis
+        .trim();
+    
+    // Remove caracteres de controle e não-ASCII problemáticos
+    cleanedText = cleanedText.replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
+    
+    return cleanedText;
+  }
+
   // Funções auxiliares para processar alertas do Gemma 3
   double _calculateConfidence(Map<String, dynamic> alert) {
     final level = alert['level']?.toString().toLowerCase() ?? 'baixo';
@@ -1071,9 +1093,9 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
   }
 
   String _generatePredictionFromAlert(Map<String, dynamic> alert) {
-    final type = alert['type']?.toString() ?? alert['category']?.toString() ?? '';
-    final message = alert['message']?.toString() ?? '';
-    final region = alert['region']?.toString() ?? 'região';
+    final type = _cleanGemmaText(alert['type']?.toString() ?? alert['category']?.toString() ?? '');
+    final message = _cleanGemmaText(alert['message']?.toString() ?? '');
+    final region = _cleanGemmaText(alert['region']?.toString() ?? 'região');
     
     if (type.toLowerCase().contains('inundação') || message.toLowerCase().contains('inundação')) {
       return '🌊 Previsão de continuidade das condições de inundação em $region. Monitoramento intensivo recomendado.';
@@ -1089,8 +1111,8 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
   }
 
   List<String> _generateRecommendations(Map<String, dynamic> alert) {
-    final type = alert['type']?.toString() ?? alert['category']?.toString() ?? '';
-    final level = alert['level']?.toString().toLowerCase() ?? 'baixo';
+    final type = _cleanGemmaText(alert['type']?.toString() ?? alert['category']?.toString() ?? '');
+    final level = _cleanGemmaText(alert['level']?.toString().toLowerCase() ?? 'baixo');
     
     final baseRecommendations = <String>[
       'Monitorar condições locais continuamente',
@@ -1120,9 +1142,9 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
   }
 
   String _generateInsightFromAlert(Map<String, dynamic> alert) {
-    final type = alert['type']?.toString() ?? alert['category']?.toString() ?? '';
-    final message = alert['message']?.toString() ?? '';
-    final region = alert['region']?.toString() ?? 'região';
+    final type = _cleanGemmaText(alert['type']?.toString() ?? alert['category']?.toString() ?? '');
+    final message = _cleanGemmaText(alert['message']?.toString() ?? '');
+    final region = _cleanGemmaText(alert['region']?.toString() ?? 'região');
     
     if (type.toLowerCase().contains('inundação') || message.toLowerCase().contains('inundação')) {
       return '🌊 Padrão de inundação detectado em $region - análise preditiva indica risco continuado';
