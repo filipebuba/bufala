@@ -2,74 +2,67 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Cores principais baseadas na bandeira da Guiné-Bissau
-  static const Color primary = Color(0xFF2E7D32); // Verde
-  static const Color primaryGreen = Color(0xFF2E7D32); // Verde (alias)
-  static const Color primaryDark = Color(0xFF1B5E20);
-  static const Color primaryLight = Color(0xFF4CAF50);
-
-  static const Color secondary = Color(0xFFFFC107); // Amarelo
-  static const Color secondaryDark = Color(0xFFF57F17);
-  static const Color secondaryLight = Color(0xFFFFEB3B);
-
-  static const Color accent = Color(0xFFD32F2F); // Vermelho
-  static const Color accentDark = Color(0xFFB71C1C);
-  static const Color accentLight = Color(0xFFEF5350);
+  static const Color primaryRed = Color(0xFFCE1126);
+  static const Color primaryYellow = Color(0xFFFCD116);
+  static const Color primaryGreen = Color(0xFF009639);
+  static const Color primaryBlack = Color(0xFF000000);
+  static const Color primaryWhite = Color(0xFFFFFFFF);
 
   // Cores funcionais
+  static const Color primary = primaryGreen;
+  static const Color secondary = primaryYellow;
+  static const Color accent = primaryRed;
   static const Color background = Color(0xFFF5F5F5);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color error = Color(0xFFD32F2F);
-  static const Color success = Color(0xFF4CAF50);
-  static const Color warning = Color(0xFFFF9800);
-  static const Color info = Color(0xFF2196F3);
+  static const Color surface = primaryWhite;
+  static const Color error = Color(0xFFB00020);
 
   // Cores de texto
   static const Color textPrimary = Color(0xFF212121);
   static const Color textSecondary = Color(0xFF757575);
-  static const Color textDisabled = Color(0xFFBDBDBD);
-  static const Color textOnPrimary = Color(0xFFFFFFFF);
+  static const Color textLight = primaryWhite;
+  static const Color textDark = primaryBlack;
 
   // Cores específicas para funcionalidades
-  static const Color medical = Color(0xFFE53935); // Vermelho para emergências
-  static const Color education = Color(0xFF1976D2); // Azul para educação
-  static const Color agriculture = Color(0xFF388E3C); // Verde para agricultura
-  static const Color translation = Color(0xFF7B1FA2); // Roxo para tradução
+  static const Color medical = Color(0xFFE53E3E);
+  static const Color education = Color(0xFF3182CE);
+  static const Color agriculture = primaryGreen;
+  static const Color translation = Color(0xFF805AD5);
 
   // Gradientes
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, primaryDark],
+    colors: [primaryGreen, Color(0xFF00C851)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient medicalGradient = LinearGradient(
-    colors: [medical, Color(0xFFB71C1C)],
+    colors: [medical, Color(0xFFFF6B6B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient educationGradient = LinearGradient(
-    colors: [education, Color(0xFF0D47A1)],
+    colors: [education, Color(0xFF4299E1)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient agricultureGradient = LinearGradient(
-    colors: [agriculture, Color(0xFF1B5E20)],
+    colors: [agriculture, Color(0xFF48BB78)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Material Color Swatch para o tema
+  // MaterialColorSwatch para o tema
   static const MaterialColor primarySwatch = MaterialColor(
-    0xFF2E7D32,
+    0xFF009639,
     <int, Color>{
       50: Color(0xFFE8F5E8),
       100: Color(0xFFC8E6C9),
       200: Color(0xFFA5D6A7),
       300: Color(0xFF81C784),
       400: Color(0xFF66BB6A),
-      500: Color(0xFF4CAF50),
+      500: Color(0xFF009639),
       600: Color(0xFF43A047),
       700: Color(0xFF388E3C),
       800: Color(0xFF2E7D32),
@@ -78,15 +71,13 @@ class AppColors {
   );
 
   // Cores para status de conexão
-  static const Color connected = Color(0xFF4CAF50);
-  static const Color disconnected = Color(0xFFE53935);
-  static const Color connecting = Color(0xFFFF9800);
+  static const Color connected = primaryGreen;
+  static const Color disconnected = error;
+  static const Color connecting = primaryYellow;
 
-  // Cores para diferentes tipos de mensagem
-  static const Color userMessage = Color(0xFFE3F2FD);
-  static const Color aiMessage = Color(0xFFF1F8E9);
-  static const Color systemMessage = Color(0xFFFFF3E0);
-  static const Color errorMessage = Color(0xFFFFEBEE);
+  // Cores para tipos de mensagem
+  static const Color messageUser = Color(0xFFE3F2FD);
+  static const Color messageBot = Color(0xFFF1F8E9);
+  static const Color messageError = Color(0xFFFFEBEE);
+  static const Color messageSuccess = Color(0xFFE8F5E8);
 }
-
-

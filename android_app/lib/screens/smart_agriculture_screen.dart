@@ -430,11 +430,33 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
     );
   }
 
+  // Função para limpar caracteres especiais dos textos do Gemma3
+  String _cleanGemmaText(String? text) {
+    if (text == null || text.isEmpty) return '';
+    
+    // Remove caracteres especiais comuns que podem aparecer na resposta do Gemma3
+    String cleanedText = text
+        .replaceAll(RegExp(r'[\*\#\`\~\^\{\}\[\]\|\\]'), '') // Remove markdown e caracteres especiais
+        .replaceAll(RegExp(r'\n\s*\n'), '\n') // Remove quebras de linha duplas
+        .replaceAll(RegExp(r'^\s*[\-\*\+]\s*'), '') // Remove marcadores de lista no início
+        .replaceAll(RegExp(r'\s+'), ' ') // Normaliza espaços múltiplos
+        .replaceAll(RegExp(r'["'']'), '"') // Normaliza aspas
+        .replaceAll(RegExp(r'[\u2013\u2014]'), '-') // Normaliza travessões
+        .replaceAll(RegExp(r'[\u2026]'), '...') // Normaliza reticências
+        .replaceAll(RegExp(r'[\u00A0]'), ' ') // Remove espaços não-quebráveis
+        .trim();
+    
+    // Remove caracteres de controle e não-ASCII problemáticos
+    cleanedText = cleanedText.replaceAll(RegExp(r'[\x00-\x1F\x7F-\x9F]'), '');
+    
+    return cleanedText;
+  }
+
   Widget _buildAlertCard(Map<String, dynamic> alert) {
-    final type = alert['type']?.toString() ?? alert['category']?.toString() ?? 'Alerta';
-    final message = alert['message']?.toString() ?? '';
-    final level = alert['level']?.toString() ?? 'médio';
-    final region = alert['region']?.toString() ?? 'Guiné-Bissau';
+    final type = _cleanGemmaText(alert['type']?.toString() ?? alert['category']?.toString()) ?? 'Alerta';
+    final message = _cleanGemmaText(alert['message']?.toString());
+    final level = _cleanGemmaText(alert['level']?.toString()) ?? 'médio';
+    final region = _cleanGemmaText(alert['region']?.toString()) ?? 'Guiné-Bissau';
     
     Color cardColor;
     IconData cardIcon;

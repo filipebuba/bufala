@@ -44,6 +44,8 @@ from routes.voice_guide_routes import voice_guide_bp
 from routes.multimodal_routes import multimodal_bp
 from routes.environmental_routes import environmental_bp
 from routes.model_management_routes import model_management_bp
+from routes.collaborative_routes import collaborative_bp
+# Router FastAPI removido - agora usando funções Flask diretamente
 
 def create_app():
     """Factory function para criar a aplicação Flask"""
@@ -100,6 +102,34 @@ def create_app():
     app.register_blueprint(multimodal_bp, url_prefix='/api')
     app.register_blueprint(environmental_bp, url_prefix='/api')
     app.register_blueprint(model_management_bp, url_prefix='/api')
+    app.register_blueprint(collaborative_bp, url_prefix='/api')
+    
+    # Registrar rotas de validação comunitária manualmente
+    from routes.collaborative_validation_routes import (
+        generate_portuguese_phrases,
+        get_phrases_to_translate,
+        propose_translation,
+        get_translations_to_validate,
+        validate_translation,
+        get_user_stats,
+        get_leaderboard
+    )
+    
+    # Registrar rotas Flask diretamente
+    app.add_url_rule('/api/collaborative-validation/generate-phrases', 
+                     'generate_phrases', generate_portuguese_phrases, methods=['POST'])
+    app.add_url_rule('/api/collaborative-validation/phrases-to-translate', 
+                     'phrases_to_translate', get_phrases_to_translate, methods=['GET'])
+    app.add_url_rule('/api/collaborative-validation/propose-translation', 
+                     'propose_translation', propose_translation, methods=['POST'])
+    app.add_url_rule('/api/collaborative-validation/translations-to-validate', 
+                     'translations_to_validate', get_translations_to_validate, methods=['GET'])
+    app.add_url_rule('/api/collaborative-validation/validate-translation', 
+                     'validate_translation', validate_translation, methods=['POST'])
+    app.add_url_rule('/api/collaborative-validation/user-stats/<user_id>', 
+                     'get_user_stats', get_user_stats, methods=['GET'])
+    app.add_url_rule('/api/collaborative-validation/leaderboard', 
+                     'get_leaderboard', get_leaderboard, methods=['GET'])
     
     # Rota raiz
     @app.route('/')
@@ -126,9 +156,67 @@ def create_app():
                 'voice_guide': '/api/voice-guide',
                 'multimodal': '/api/multimodal',
                 'environmental': '/api/environment',
+                'collaborative_validation': '/api/collaborative-validation',
                 'model_management': '/api/models'
             }
         })
+    
+    # Rota de configuração do backend
+    @app.route('/api/config/backend', methods=['GET'])
+    def get_backend_config():
+        """Retorna configurações do backend para o app Flutter"""
+        try:
+            # Verificar status do Gemma Service
+            gemma_active = False
+            if app.gemma_service:
+                health_status = app.gemma_service.get_health_status()
+                gemma_active = health_status.get('ollama_available', False) or health_status.get('model_loaded', False)
+            
+            gemma_status = 'active' if gemma_active else 'inactive'
+            
+            config = {
+                'status': 'online',
+                'version': '2.0.0',
+                'ai_model': {
+                    'name': 'Gemma-3n',
+                    'status': gemma_status,
+                    'capabilities': ['text', 'multimodal', 'offline']
+                },
+                'features': {
+                    'medical_diagnosis': True,
+                    'education_support': True,
+                    'agriculture_advice': True,
+                    'translation': True,
+                    'voice_guide': True,
+                    'offline_mode': True
+                },
+                'revolutionary_features': {
+                    'creole_support': True,
+                    'offline_ai': True,
+                    'community_focused': True,
+                    'multimodal_analysis': True,
+                    'local_language_learning': True
+                },
+                'languages': {
+                    'supported': ['pt', 'en', 'fr', 'creole'],
+                    'primary': 'pt',
+                    'learning': ['creole', 'fula', 'mandinka']
+                },
+                'connectivity': {
+                    'offline_capable': True,
+                    'sync_available': True,
+                    'local_processing': True
+                }
+            }
+            
+            return jsonify(config)
+            
+        except Exception as e:
+            logger.error(f"Erro ao obter configurações do backend: {e}")
+            return jsonify({
+                'error': 'Erro interno do servidor',
+                'message': str(e)
+            }), 500
     
     @app.route('/docs', methods=['GET'])
     def custom_swagger_ui():

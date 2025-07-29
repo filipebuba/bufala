@@ -14,6 +14,8 @@ import 'screens/smart_agriculture_screen.dart';
 import 'screens/agriculture_family_screen.dart';
 import 'screens/agriculture_navigation_screen.dart';
 import 'screens/voiceguide_accessibility_screen.dart';
+
+import 'screens/collaborative_validation_screen.dart';
 import 'services/gemma3_backend_service.dart';
 import 'services/language_service.dart';
 import 'services/offline_service.dart';
@@ -160,7 +162,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const HomeScreen(),
     const EducationScreen(),
     const AgricultureNavigationScreen(), // Navegação de agricultura unificada
+    const CollaborativeValidationScreen(), // Sistema de Validação Comunitária Unificado
     const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade
+
     const SettingsScreen(),
   ];
 
@@ -194,9 +198,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Agricultura',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.translate),
+              label: 'Colaboração',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.accessibility_new),
               label: 'Acessibilidade',
             ),
+
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),
               label: AppStrings.settings,
