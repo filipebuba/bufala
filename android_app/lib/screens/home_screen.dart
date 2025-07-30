@@ -17,7 +17,7 @@ import 'education_screen.dart';
 import 'environmental_menu_screen.dart';
 import 'medical_emergency_unified_screen.dart';
 import 'plant_diagnosis_screen.dart';
-import 'translation_screen.dart';
+// import 'translation_screen.dart'; // Removido - será implementado na v2
 import 'wellness_coaching_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -336,10 +336,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: QuickActionButton(
-                  icon: Icons.translate,
-                  label: 'Traduzir',
+                  icon: Icons.agriculture,
+                  label: 'Agricultura',
                   color: Colors.green,
-                  onTap: _translateText,
+                  onTap: _navigateToAgriculture,
                 ),
               ),
             ],
@@ -479,12 +479,5 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _translateText() {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => const TranslationScreen(),
-      ),
-    );
-  }
+  // void _translateText() - Removido, será implementado na v2
 }
