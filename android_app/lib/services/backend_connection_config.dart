@@ -23,6 +23,10 @@ class BackendConnectionConfig {
   static const Duration receiveTimeoutLong = Duration(minutes: 8);
   static const Duration sendTimeout = Duration(minutes: 2);
   
+  // Timeouts específicos para acessibilidade
+  static const Duration accessibilityAnalysisTimeout = Duration(seconds: 120); // 2 minutos para análise completa
+  static const Duration voiceResponseTimeout = Duration(seconds: 60); // 1 minuto para resposta de voz
+  
   // Headers padrão
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',
@@ -49,7 +53,7 @@ class BackendConnectionConfig {
     
     // Novos endpoints do backend modular
     'wellness': AppConfig.buildUrl('wellness'),
-    'accessibility': AppConfig.buildUrl('accessibility'),
+    'accessibility': AppConfig.buildUrl('accessibility/audio/transcribe'),
     'environmental': AppConfig.buildUrl('environmental'),
     'collaborative': AppConfig.buildUrl('collaborative'),
     'international': AppConfig.buildUrl('international'),
@@ -72,9 +76,13 @@ class BackendConnectionConfig {
                          endpoint == AppConfig.buildUrl('education') ||
                          endpoint == AppConfig.buildUrl('agriculture'):
         return receiveTimeoutMedium;
-      case String() when endpoint == AppConfig.buildUrl('multimodal') ||
-                         endpoint == AppConfig.buildUrl('accessibility/voice'):
-        return receiveTimeoutLong;
+      case String() when endpoint == AppConfig.buildUrl('multimodal'):
+        return accessibilityAnalysisTimeout; // Timeout estendido para análise de ambiente
+      case String() when endpoint == AppConfig.buildUrl('accessibility/voice') ||
+                         endpoint == AppConfig.buildUrl('accessibility/audio/transcribe'):
+        return voiceResponseTimeout; // Timeout específico para funcionalidades de voz
+      case String() when endpoint.contains('accessibility'):
+        return accessibilityAnalysisTimeout; // Timeout geral para acessibilidade
       default:
         return receiveTimeoutMedium;
     }

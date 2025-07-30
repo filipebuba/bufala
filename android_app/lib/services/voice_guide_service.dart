@@ -195,14 +195,47 @@ class VoiceGuideService {
       );
 
       if (response['success'] == true && response['data'] != null) {
-        final data = response['data'] as String;
+        final data = response['data'] as Map<String, dynamic>;
+        
+        // Extrair análise detalhada para deficientes visuais
+        String analysisText = '';
+        List<String> navigationTips = [];
+        List<String> safetyAlerts = [];
+        bool emergencyDetected = false;
+        
+        // Tentar extrair da análise de imagem com recursos de acessibilidade
+        if (data['individual_analyses']?['image']?['accessibility_features'] != null) {
+          final accessibilityFeatures = data['individual_analyses']['image']['accessibility_features'];
+          analysisText = accessibilityFeatures['detailed_description'] ?? 
+                        accessibilityFeatures['audio_description'] ?? '';
+          navigationTips = List<String>.from(accessibilityFeatures['navigation_tips'] ?? []);
+          safetyAlerts = List<String>.from(accessibilityFeatures['safety_alerts'] ?? []);
+          
+          // Detectar emergências baseado nos alertas de segurança
+          emergencyDetected = safetyAlerts.any((alert) => 
+            alert.contains('PERIGO') || alert.contains('ATENÇÃO'));
+        }
+        
+        // Fallback para análise geral
+        if (analysisText.isEmpty) {
+          analysisText = data['fused_analysis']?['unified_understanding'] ?? 
+                        data['individual_analyses']?['text']?['content'] ?? 
+                        data['individual_analyses']?['image']?['scene_description'] ??
+                        'Análise de ambiente realizada com sucesso';
+        }
+        
+        // Combinar dicas de navegação
+        if (navigationTips.isEmpty) {
+          navigationTips = [analysisText];
+        }
+        
         return EnvironmentAnalysis(
-          analysis: data,
+          analysis: analysisText.toString(),
           timestamp: DateTime.now().toIso8601String(),
           language: 'pt-BR',
           context: context,
-          emergencyDetected: false,
-          navigationSuggestions: [data],
+          emergencyDetected: emergencyDetected,
+          navigationSuggestions: navigationTips,
         );
       }
       return null;

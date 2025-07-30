@@ -163,8 +163,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const EducationScreen(),
     const AgricultureNavigationScreen(), // Navegação de agricultura unificada
     const CollaborativeValidationScreen(), // Sistema de Validação Comunitária Unificado
-    const VoiceGuideAccessibilityScreen(), // Tela de acessibilidade
-
     const SettingsScreen(),
   ];
 
@@ -201,11 +199,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.translate),
               label: 'Colaboração',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.accessibility_new),
-              label: 'Acessibilidade',
-            ),
-
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),
               label: AppStrings.settings,

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -378,8 +379,16 @@ class _VoiceGuideAccessibilityScreenState
     try {
       await _speak('Analisando ambiente... Por favor aguarde.');
       
+      // Converter imagem para base64 se disponível
+      String? imageBase64;
+      if (_selectedImage != null) {
+        final bytes = await _selectedImage!.readAsBytes();
+        imageBase64 = base64Encode(bytes);
+      }
+      
       final response = await _voiceGuideService.analyzeEnvironment(
-        context: 'Análise de ambiente para navegação segura',
+        imageBase64: imageBase64,
+        context: 'Análise de ambiente para navegação segura de pessoa com deficiência visual',
       );
 
       if (response != null) {
@@ -894,7 +903,7 @@ class _VoiceGuideAccessibilityScreenState
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _analyzeEnvironment,
+                  onPressed: _isLoading ? null : _pickImage,
                   icon: _isLoading
                       ? const SizedBox(
                           width: 20,
