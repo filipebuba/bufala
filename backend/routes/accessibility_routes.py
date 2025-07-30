@@ -53,42 +53,42 @@ def describe_environment():
         # Obter serviço Gemma
         gemma_service = getattr(current_app, 'gemma_service', None)
         
-        if gemma_service and image_data:
-            # Usar análise de imagem multimodal
-            response = gemma_service.generate_response(
-                description_context,
-                SystemPrompts.IMAGE_ANALYSIS,
-                temperature=0.4,  # Temperatura baixa para descrições precisas
-                max_new_tokens=400
-            )
-        elif gemma_service:
-            # Usar descrição textual
-            response = gemma_service.generate_response(
-                description_context,
-                SystemPrompts.GENERAL,
-                temperature=0.4,
-                max_new_tokens=400
-            )
+        if gemma_service:
+            # Gerar resposta usando Gemma3n
+            if image_data:
+                # Usar análise de imagem multimodal
+                response = gemma_service.generate_response(
+                    description_context,
+                    SystemPrompts.IMAGE_ANALYSIS,
+                    temperature=0.4,  # Temperatura baixa para descrições precisas
+                    max_new_tokens=500
+                )
+            else:
+                # Usar descrição textual com prompt de acessibilidade
+                response = gemma_service.generate_response(
+                    description_context,
+                    SystemPrompts.ACCESSIBILITY if hasattr(SystemPrompts, 'ACCESSIBILITY') else SystemPrompts.GENERAL,
+                    temperature=0.4,
+                    max_new_tokens=500
+                )
+            
+            # Adicionar informações de acessibilidade específicas
+            if response.get('success'):
+                response['accessibility_info'] = {
+                    'detail_level': detail_level,
+                    'focus_area': focus_area,
+                    'navigation_tips': _get_navigation_tips(focus_area),
+                    'safety_alerts': _get_safety_alerts(response.get('response', '')),
+                    'audio_ready': audio_output,
+                    'interaction_suggestions': _get_interaction_suggestions(focus_area),
+                    'accessibility_features': 'Descrição otimizada para deficientes visuais'
+                }
         else:
             # Resposta de fallback
             response = _get_visual_description_fallback(environment_description, focus_area)
         
-        # Processar resposta
-        if response.get('success'):
-            description = response.get('response', '')
-            
-            # Adicionar informações de acessibilidade
-            accessibility_info = {
-                'description': description,
-                'detail_level': detail_level,
-                'focus_area': focus_area,
-                'navigation_tips': _get_navigation_tips(focus_area),
-                'safety_alerts': _get_safety_alerts(description),
-                'audio_ready': audio_output,
-                'interaction_suggestions': _get_interaction_suggestions(focus_area)
-            }
-            
-            response['accessibility_info'] = accessibility_info
+        # A resposta já contém as informações de acessibilidade adicionadas acima
+        # Não é necessário processar novamente
         
         return jsonify({
             'success': True,
@@ -129,23 +129,42 @@ def voice_navigation():
                 400
             )), 400
         
-        # Processar comando de voz
-        navigation_response = _process_voice_navigation_command(
+        # Preparar contexto de navegação
+        navigation_context = _prepare_navigation_context(
             voice_command, current_location, destination, navigation_mode, accessibility_needs
         )
         
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            # Gerar resposta usando Gemma3n
+            response = gemma_service.generate_response(
+                navigation_context,
+                SystemPrompts.ACCESSIBILITY if hasattr(SystemPrompts, 'ACCESSIBILITY') else SystemPrompts.GENERAL,
+                temperature=0.5,  # Temperatura moderada para navegação
+                max_new_tokens=400
+            )
+            
+            # Adicionar informações de navegação específicas
+            if response.get('success'):
+                response['navigation_info'] = {
+                    'voice_command': voice_command,
+                    'current_location': current_location,
+                    'destination': destination,
+                    'navigation_mode': navigation_mode,
+                    'accessibility_features': _get_accessibility_features(accessibility_needs),
+                    'voice_feedback': _get_voice_feedback(response.get('response', '')),
+                    'alternative_routes': _get_alternative_accessible_routes(current_location, destination),
+                    'safety_considerations': 'Rotas otimizadas para acessibilidade'
+                }
+        else:
+            # Resposta de fallback
+            response = _get_navigation_fallback_response(voice_command, current_location, destination)
+        
         return jsonify({
             'success': True,
-            'data': {
-                'voice_command': voice_command,
-                'current_location': current_location,
-                'destination': destination,
-                'navigation_mode': navigation_mode,
-                'response': navigation_response,
-                'accessibility_features': _get_accessibility_features(accessibility_needs),
-                'voice_feedback': _get_voice_feedback(navigation_response),
-                'alternative_routes': _get_alternative_accessible_routes(current_location, destination)
-            },
+            'data': response,
             'timestamp': datetime.now().isoformat()
         })
         
@@ -464,6 +483,45 @@ def _get_interaction_suggestions(focus_area):
     }
     
     return suggestions.get(focus_area, "Use comandos de voz para mais informações")
+
+def _prepare_visual_description_context(image_data, environment_description, detail_level, focus_area):
+    """Preparar contexto para descrição visual"""
+    context = f"Descreva o ambiente para uma pessoa com deficiência visual.\n"
+    context += f"Nível de detalhe: {detail_level}\n"
+    context += f"Foco: {focus_area}\n"
+    
+    if environment_description:
+        context += f"Descrição do ambiente: {environment_description}\n"
+    
+    if image_data:
+        context += "Analise a imagem fornecida e forneça uma descrição detalhada.\n"
+    
+    context += "Inclua informações sobre obstáculos, navegação e segurança."
+    return context
+
+def _prepare_navigation_context(voice_command, current_location, destination, navigation_mode, accessibility_needs):
+    """Preparar contexto para navegação"""
+    context = f"Comando de voz para navegação: {voice_command}\n"
+    context += f"Localização atual: {current_location}\n"
+    
+    if destination:
+        context += f"Destino: {destination}\n"
+    
+    context += f"Modo de navegação: {navigation_mode}\n"
+    
+    if accessibility_needs:
+        context += f"Necessidades de acessibilidade: {', '.join(accessibility_needs)}\n"
+    
+    context += "Forneça orientações claras e acessíveis para navegação."
+    return context
+
+def _get_navigation_fallback_response(voice_command, current_location, destination):
+    """Resposta de fallback para navegação"""
+    return {
+        'response': f"Processando comando '{voice_command}' para navegação de {current_location} até {destination or 'destino não especificado'}. Use comandos de voz claros para melhor assistência.",
+        'success': True,
+        'fallback': True
+    }
 
 def _get_visual_description_fallback(description, focus_area):
     """Resposta de fallback para descrição visual"""
