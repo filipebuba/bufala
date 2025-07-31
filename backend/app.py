@@ -29,6 +29,7 @@ from swagger_config import setup_swagger, SWAGGER_TEMPLATE, COMMON_SCHEMAS
 
 from services.gemma_service import GemmaService
 from services.health_service import HealthService
+from services.demo_service import DemoService
 from utils.logger import setup_logger
 from utils.error_handler import setup_error_handlers
 
@@ -67,16 +68,28 @@ def create_app():
     # Configurar tratamento de erros
     setup_error_handlers(app)
     
+    # Verificar modo demonstração
+    demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+    
     # Inicializar serviços
     try:
         logger.info("Inicializando serviços...")
         
-        # Inicializar serviço Gemma
-        gemma_service = GemmaService()
-        app.gemma_service = gemma_service
+        if demo_mode:
+            logger.info("🎭 Modo demonstração ativado - usando DemoService")
+            # Inicializar serviço de demonstração
+            demo_service = DemoService()
+            app.demo_service = demo_service
+            app.gemma_service = None  # Não usar Gemma em modo demo
+        else:
+            logger.info("🤖 Modo produção - usando GemmaService")
+            # Inicializar serviço Gemma
+            gemma_service = GemmaService()
+            app.gemma_service = gemma_service
+            app.demo_service = None
         
         # Inicializar serviço de saúde
-        health_service = HealthService(gemma_service)
+        health_service = HealthService(app.gemma_service if not demo_mode else None)
         app.health_service = health_service
         
         logger.info("Serviços inicializados com sucesso")
@@ -86,6 +99,7 @@ def create_app():
         # Continuar sem os serviços para permitir desenvolvimento
         app.gemma_service = None
         app.health_service = None
+        app.demo_service = None
     
     # Configurar Swagger
     swagger = setup_swagger(app)
@@ -134,16 +148,25 @@ def create_app():
     # Rota raiz
     @app.route('/')
     def index():
-        return jsonify({
-            'message': 'Moransa Backend - Novo',
+        demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+        
+        response_data = {
+            'message': 'Moransa - Assistente de IA para Comunidades Rurais',
             'version': '2.0.0',
             'status': 'running',
+            'mode': 'demonstration' if demo_mode else 'production',
             'timestamp': datetime.now().isoformat(),
-            'description': 'Backend modular para o aplicativo Moransa - Hackathon Gemma 3n',
+            'description': 'Backend para o aplicativo Moransa - Hackathon Gemma 3n',
+            'hackathon': {
+                'name': 'Gemma 3n Hackathon',
+                'focus': 'IA offline para comunidades rurais da Guiné-Bissau',
+                'features': ['medicina', 'educação', 'agricultura', 'tradução']
+            },
             'documentation': {
                 'swagger_ui': '/api/docs/',
                 'swagger_json': '/api/swagger.json',
-                'custom_ui': '/docs'
+                'custom_ui': '/docs',
+                'demo_page': '/demo' if demo_mode else None
             },
             'endpoints': {
                 'health': '/api/health',
@@ -157,9 +180,19 @@ def create_app():
                 'multimodal': '/api/multimodal',
                 'environmental': '/api/environment',
                 'collaborative_validation': '/api/collaborative-validation',
-                'model_management': '/api/models'
+                'model_management': '/api/models',
+                'chat': '/api/chat' if demo_mode else None
             }
-        })
+        }
+        
+        if demo_mode:
+            response_data['demo_info'] = {
+                'note': 'Esta é uma demonstração online. A versão completa funciona 100% offline.',
+                'real_features': 'O sistema real usa Gemma 3n via Ollama para processamento local.',
+                'test_url': '/demo'
+            }
+        
+        return jsonify(response_data)
     
     # Rota de configuração do backend
     @app.route('/api/config/backend', methods=['GET'])
@@ -222,6 +255,68 @@ def create_app():
     def custom_swagger_ui():
         """Rota para interface Swagger personalizada"""
         return render_template('swagger_ui.html')
+    
+    @app.route('/demo', methods=['GET'])
+    def demo_page():
+        """Rota para página de demonstração"""
+        demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+        if demo_mode:
+            try:
+                demo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'demo', 'index.html')
+                with open(demo_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+            except FileNotFoundError:
+                return jsonify({
+                    'error': 'Página de demonstração não encontrada',
+                    'message': 'Execute o script setup_demo.py para criar a página'
+                }), 404
+        else:
+            return jsonify({
+                'message': 'Modo demonstração não ativado',
+                'note': 'Configure DEMO_MODE=true para ativar'
+            })
+    
+    @app.route('/api/chat', methods=['POST'])
+    def chat_demo():
+        """Endpoint de chat para demonstração"""
+        demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+        
+        if not demo_mode:
+            return jsonify({
+                'error': 'Endpoint disponível apenas em modo demonstração'
+            }), 404
+        
+        try:
+            data = request.get_json()
+            message = data.get('message', '')
+            
+            if not message:
+                return jsonify({
+                    'error': 'Mensagem é obrigatória'
+                }), 400
+            
+            # Usar DemoService para gerar resposta
+            if app.demo_service:
+                response = app.demo_service.get_response(message)
+                demo_info = app.demo_service.get_demo_info()
+                
+                return jsonify({
+                    'response': response,
+                    'demo_info': demo_info,
+                    'timestamp': datetime.now().isoformat()
+                })
+            else:
+                return jsonify({
+                    'response': 'Serviço de demonstração não disponível',
+                    'error': 'DemoService não inicializado'
+                }), 500
+                
+        except Exception as e:
+            logger.error(f"Erro no chat demo: {e}")
+            return jsonify({
+                'error': 'Erro interno do servidor',
+                'message': str(e)
+            }), 500
     
     @app.route('/swagger.yaml', methods=['GET'])
     def swagger_yaml():
