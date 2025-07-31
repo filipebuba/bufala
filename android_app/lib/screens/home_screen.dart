@@ -120,11 +120,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const Icon(
                       Icons.eco,
                       color: Colors.white,
-                      size: 24,
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Flexible(
+                  const SizedBox(width: 8),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 22,
+                            fontSize: 18,
                             letterSpacing: 0.5,
                           ),
                           overflow: TextOverflow.ellipsis,
