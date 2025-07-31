@@ -149,48 +149,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _checkConnection(),
           ]);
         },
-        child: ListView(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
-          children: [
-            // Status do Sistema
-            _buildSystemStatusCard(context),
-            const SizedBox(height: 16),
-            
-            // Configurações de Idioma e Região
-            _buildLanguageSection(context, appProvider),
-            const SizedBox(height: 16),
-            
-            // Configurações de Aparência
-            _buildAppearanceSection(context, appProvider),
-            const SizedBox(height: 16),
-            
-            // Modo Offline
-            _buildOfflineSection(context, appProvider),
-            const SizedBox(height: 16),
-            
-            // Funcionalidades Revolucionárias
-            _buildRevolutionaryFeaturesSection(context),
-            const SizedBox(height: 16),
-            
-            // Conectividade e Sincronização
-            _buildConnectivitySection(context, appProvider),
-            const SizedBox(height: 16),
-            
-            // Armazenamento e Dados
-            _buildStorageSection(context),
-            const SizedBox(height: 16),
-            
-            // Configurações Regionais da Guiné-Bissau
-            _buildGuineaBissauSection(context),
-            const SizedBox(height: 16),
-            
-            // Navegação para Funcionalidades
-            _buildFunctionalitiesSection(context),
-            const SizedBox(height: 16),
-            
-            // Informações do App
-            _buildInfoSection(context),
-          ],
+          child: Column(
+            children: [
+              // Status do Sistema
+              _buildSystemStatusCard(context),
+              const SizedBox(height: 16),
+              
+              // Configurações de Idioma e Região
+              _buildLanguageSection(context, appProvider),
+              const SizedBox(height: 16),
+              
+              // Configurações de Aparência
+              _buildAppearanceSection(context, appProvider),
+              const SizedBox(height: 16),
+              
+              // Modo Offline
+              _buildOfflineSection(context, appProvider),
+              const SizedBox(height: 16),
+              
+              // Funcionalidades Revolucionárias
+              _buildRevolutionaryFeaturesSection(context),
+              const SizedBox(height: 16),
+              
+              // Conectividade e Sincronização
+              _buildConnectivitySection(context, appProvider),
+              const SizedBox(height: 16),
+              
+              // Armazenamento e Dados
+              _buildStorageSection(context),
+              const SizedBox(height: 16),
+              
+              // Configurações Regionais da Guiné-Bissau
+              _buildGuineaBissauSection(context),
+              const SizedBox(height: 16),
+              
+              // Navegação para Funcionalidades
+              _buildFunctionalitiesSection(context),
+              const SizedBox(height: 16),
+              
+              // Informações do App
+              _buildInfoSection(context),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
@@ -216,10 +219,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Status do Sistema',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Status do Sistema',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -235,6 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _isConnected ? Icons.cloud_done : Icons.cloud_off,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildStatusIndicator(
                     'IA',
@@ -270,6 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               fontWeight: FontWeight.w500,
               color: color,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
           Text(
             status,
@@ -277,6 +285,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               fontSize: 10,
               color: color.withOpacity(0.8),
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -303,10 +312,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Funcionalidades Revolucionárias',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Funcionalidades Revolucionárias',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -367,8 +379,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       title: Text(
         title,
         style: const TextStyle(fontWeight: FontWeight.w500),
+        overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Text(subtitle),
+      subtitle: Text(
+        subtitle,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
@@ -390,12 +406,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           (_revolutionaryConfig[feature] as Map<String, dynamic>)[key] = value;
         });
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Configuração atualizada: $feature'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Configuração atualizada: $feature'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -429,10 +447,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Idioma e Região',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Idioma e Região',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -440,7 +461,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             Text(
               'Selecionar Idioma',
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -489,10 +510,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Aparência',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Aparência',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -534,10 +558,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Modo Offline com Gemma 3n',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Modo Offline com Gemma 3n',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -610,10 +637,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Conectividade e Sincronização',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Conectividade e Sincronização',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -670,10 +700,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Armazenamento e Dados',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Armazenamento e Dados',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -690,8 +723,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      const Text('Uso de Armazenamento'),
+                      Text('${_storageInfo['used_space'] ?? 0} MB'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       const Text('Dados Offline:'),
-                      Text('${_storageStats['offline'] ?? 0} itens'),
+                      Text('${_storageStats['offline_data'] ?? 0} itens'),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -750,14 +791,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Configurações Regionais - Guiné-Bissau',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Configurações Regionais',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 32),
+              child: Text(
+                'Guiné-Bissau',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             ListTile(
@@ -826,10 +880,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Funcionalidades do App',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Funcionalidades do App',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -849,7 +906,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             _buildFunctionalityTile(
               'Agricultura',
-              'Assistente agrícola inteligente',
+              'Assistência para cultivos',
               Icons.agriculture,
               () => _navigateToAgriculture(),
             ),
@@ -861,25 +918,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             _buildFunctionalityTile(
               'Meio Ambiente',
-              'Análise ambiental e sustentabilidade',
+              'Análise e sustentabilidade ambiental',
               Icons.eco,
               () => _navigateToEnvironmental(),
             ),
             _buildFunctionalityTile(
               'Tradução',
-              'Tradutor multilíngue inteligente',
+              'Tradutor inteligente multilíngue',
               Icons.translate,
               () => _navigateToTranslation(),
             ),
             _buildFunctionalityTile(
               'Acessibilidade',
-              'Guia por voz para deficientes visuais',
+              'Guia de voz e recursos de acessibilidade',
               Icons.accessibility,
               () => _navigateToAccessibility(),
             ),
             _buildFunctionalityTile(
               'Gamificação',
-              'Sistema de recompensas e conquistas',
+              'Sistema de conquistas e recompensas',
               Icons.emoji_events,
               () => _navigateToGamification(),
             ),
@@ -895,13 +952,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     IconData icon,
     VoidCallback onTap,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return ListTile(
       leading: Icon(
         icon,
-        color: Theme.of(context).colorScheme.primary,
+        color: colorScheme.primary,
       ),
-      title: Text(title),
-      subtitle: Text(subtitle),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        subtitle,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
@@ -927,10 +993,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Informações do App',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Informações do App',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -941,30 +1010,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Icons.info_outline,
                 color: colorScheme.primary,
               ),
-              title: const Text('Sobre o Bu Fala'),
-              subtitle: const Text('Informações sobre o aplicativo'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showAboutDialog(),
+              title: const Text('Versão'),
+              subtitle: const Text('1.0.0+1'),
             ),
             ListTile(
               leading: Icon(
-                Icons.privacy_tip,
+                Icons.code,
                 color: colorScheme.primary,
               ),
-              title: const Text('Política de Privacidade'),
-              subtitle: const Text('Como protegemos seus dados'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showPrivacyDialog(),
+              title: const Text('Build'),
+              subtitle: const Text('Debug'),
             ),
             ListTile(
               leading: Icon(
-                Icons.help,
+                Icons.support,
                 color: colorScheme.primary,
               ),
-              title: const Text('Ajuda e Suporte'),
-              subtitle: const Text('Obter ajuda e suporte técnico'),
+              title: const Text('Suporte'),
+              subtitle: const Text('Contato para ajuda e feedback'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showHelpDialog(),
+              onTap: () {
+                // Implementar navegação para suporte
+              },
             ),
           ],
         ),
@@ -972,257 +1039,290 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Funções de navegação
+  // Métodos auxiliares
+  void _showLanguageSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Selecionar Idioma Local'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                ListTile(
+                  title: const Text('Português'),
+                  onTap: () {
+                    _setLocalLanguage('pt');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Crioulo'),
+                  onTap: () {
+                    _setLocalLanguage('gcr');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Fula'),
+                  onTap: () {
+                    _setLocalLanguage('ff');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Mandinga'),
+                  onTap: () {
+                    _setLocalLanguage('mnk');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showRegionSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Selecionar Região'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                ListTile(
+                  title: const Text('Bissau'),
+                  onTap: () {
+                    _setUserRegion('bissau');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Bafatá'),
+                  onTap: () {
+                    _setUserRegion('bafata');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Gabú'),
+                  onTap: () {
+                    _setUserRegion('gabu');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Oio'),
+                  onTap: () {
+                    _setUserRegion('oio');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Quinara'),
+                  onTap: () {
+                    _setUserRegion('quinara');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Tombali'),
+                  onTap: () {
+                    _setUserRegion('tombali');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Cacheu'),
+                  onTap: () {
+                    _setUserRegion('cacheu');
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: const Text('Biombo'),
+                  onTap: () {
+                    _setUserRegion('biombo');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _setLocalLanguage(String language) async {
+    try {
+      await _storageService.saveLocalSetting('local_language', language);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Idioma local definido: $language'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao salvar idioma: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _setUserRegion(String region) async {
+    try {
+      await _storageService.saveLocalSetting('user_region', region);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Região definida: $region'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao salvar região: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _syncData() async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sincronização iniciada...'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    }
+    // Implementar lógica de sincronização
+  }
+
+  void _clearCache() async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cache limpo com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+    // Implementar limpeza de cache
+  }
+
+  // Métodos de navegação
+  void _navigateToLocalCrops() {
+    // Implementar navegação para culturas locais
+  }
+
+  void _navigateToTraditionalMedicine() {
+    // Implementar navegação para medicina tradicional
+  }
+
   void _navigateToMedical() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const MedicalEmergencyUnifiedScreen()),
+      MaterialPageRoute(
+        builder: (context) => const MedicalEmergencyUnifiedScreen(),
+      ),
     );
   }
 
   void _navigateToEducation() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const EducationScreen()),
+      MaterialPageRoute(
+        builder: (context) => const EducationScreen(),
+      ),
     );
   }
 
   void _navigateToAgriculture() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AgricultureScreen()),
+      MaterialPageRoute(
+        builder: (context) => const AgricultureScreen(),
+      ),
     );
   }
 
   void _navigateToWellness() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const WellnessCoachingScreen()),
+      MaterialPageRoute(
+        builder: (context) => const WellnessCoachingScreen(),
+      ),
     );
   }
 
   void _navigateToEnvironmental() {
-      final environmentalApiService = EnvironmentalApiService(baseUrl: AppConfig.apiBaseUrl);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => EnvironmentalMenuScreen(
-          apiService: environmentalApiService,
-        )),
-      );
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EnvironmentalMenuScreen(
+          apiService: EnvironmentalApiService(baseUrl: AppConfig.apiBaseUrl),
+        ),
+      ),
+    );
+  }
 
   void _navigateToTranslation() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const TranslateScreen()),
+      MaterialPageRoute(
+        builder: (context) => const TranslateScreen(),
+      ),
     );
   }
 
   void _navigateToAccessibility() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const VoiceGuideAccessibilityScreen()),
+      MaterialPageRoute(
+        builder: (context) => const VoiceGuideAccessibilityScreen(),
+      ),
     );
   }
 
   void _navigateToGamification() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const GamificationScreen()),
-    );
-  }
-
-  void _navigateToLocalCrops() {
-    // Implementar navegação para culturas locais
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
-    );
-  }
-
-  void _navigateToTraditionalMedicine() {
-    // Implementar navegação para medicina tradicional
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
-    );
-  }
-
-  // Funções auxiliares
-  void _showLanguageSelectionDialog() {
-    final languages = [
-      'Crioulo',
-      'Balanta',
-      'Fula',
-      'Mandinga',
-      'Papel',
-      'Bijagó',
-      'Mancanha',
-      'Português'
-    ];
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Selecionar Idioma Local'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: languages.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(languages[index]),
-                onTap: () {
-                  _setLocalLanguage(languages[index]);
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRegionSelectionDialog() {
-    final regions = [
-      'Bissau',
-      'Bafatá',
-      'Gabú',
-      'Cacheu',
-      'Oio',
-      'Quinara',
-      'Tombali',
-      'Biombo',
-      'Bolama/Bijagós'
-    ];
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Selecionar Região'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: regions.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(regions[index]),
-                onTap: () {
-                  _setUserRegion(regions[index]);
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _setLocalLanguage(String language) async {
-    await _storageService.saveLocalSetting('language', language);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Idioma local definido: $language')),
-      );
-    }
-  }
-
-  Future<void> _setUserRegion(String region) async {
-    await _storageService.saveLocalSetting('region', region);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Região definida: $region')),
-      );
-    }
-  }
-
-  Future<void> _syncData() async {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sincronizando dados...')),
-      );
-    }
-    // Implementar lógica de sincronização
-  }
-
-  Future<void> _clearCache() async {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cache limpo com sucesso')),
-      );
-    }
-    // Implementar limpeza de cache
-  }
-
-  void _showAboutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sobre o Bu Fala'),
-        content: const Text(
-          'Bu Fala é um aplicativo revolucionário desenvolvido para a comunidade da Guiné-Bissau, '
-          'oferecendo assistência médica, educacional, agrícola e muito mais através de IA avançada.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPrivacyDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Política de Privacidade'),
-        content: const Text(
-          'Seus dados são protegidos e processados localmente sempre que possível. '
-          'Respeitamos sua privacidade e seguimos as melhores práticas de segurança.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showHelpDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Ajuda e Suporte'),
-        content: const Text(
-          'Para obter ajuda:\n\n'
-          '• Consulte a documentação integrada\n'
-          '• Use o sistema de feedback do app\n'
-          '• Entre em contato com nossa equipe de suporte',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-        ],
+      MaterialPageRoute(
+        builder: (context) => const GamificationScreen(),
       ),
     );
   }
