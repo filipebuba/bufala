@@ -1,32 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-
-// Mock validators for testing - these should match actual implementation
-class Validators {
-  static bool isValidEmergencyNumber(String number) {
-    if (number.isEmpty) return false;
-    final emergencyNumbers = ['112', '911', '999', '190', '193'];
-    return emergencyNumbers.contains(number);
-  }
-  
-  static bool isValidCoordinate(double lat, double lng) => lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-  
-  static bool isValidCreoleText(String text) {
-    if (text.trim().isEmpty) return false;
-    // Basic validation for Creole text patterns
-    final creolePatterns = ['kuma', 'bu', 'sta', 'na', 'di', 'ku'];
-    final lowerText = text.toLowerCase();
-    return creolePatterns.any(lowerText.contains) || text.length > 3;
-  }
-  
-  static bool isValidPhoneNumber(String phone) {
-    if (phone.isEmpty) return false;
-    // Guinea-Bissau phone format: +245 XXX XXX XXX
-    final regex = RegExp(r'^\+245\s?\d{3}\s?\d{3}\s?\d{3}$');
-    return regex.hasMatch(phone);
-  }
-  
-  static bool isValidAge(int age) => age >= 0 && age <= 120;
-}
+import 'package:android_app/utils/validators.dart';
 
 void main() {
   group('Validators Tests', () {
