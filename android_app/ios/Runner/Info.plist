@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Moransa</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>moransa</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	
+	<!-- MediaPipe and AI Processing Permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>O Moransa precisa acessar a câmera para análise de imagens médicas e emergências.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O Moransa precisa acessar o microfone para análise de áudio e comandos de voz.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>O Moransa precisa acessar a galeria para análise de imagens médicas.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>O Moransa precisa da localização para fornecer orientações de emergência específicas da região.</string>
+	
+	<!-- Background Processing for AI -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+		<string>background-fetch</string>
+	</array>
+	
+	<!-- Metal Performance Shaders for GPU Acceleration -->
+	<key>MTLGPUFamilyApple1</key>
+	<true/>
+	<key>MTLGPUFamilyApple2</key>
+	<true/>
+	<key>MTLGPUFamilyApple3</key>
+	<true/>
+	<key>MTLGPUFamilyApple4</key>
+	<true/>
+	<key>MTLGPUFamilyApple5</key>
+	<true/>
+	<key>MTLGPUFamilyApple6</key>
+	<true/>
+	<key>MTLGPUFamilyApple7</key>
+	<true/>
+	
+	<!-- MediaPipe Model Assets -->
+	<key>CFBundleResourceSpecification</key>
+	<dict>
+		<key>task</key>
+		<string>public.data</string>
+		<key>tflite</key>
+		<string>public.data</string>
+		<key>lite</key>
+		<string>public.data</string>
+	</dict>
+	
+	<!-- Performance and Memory Optimizations -->
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+		<string>metal</string>
+	</array>
+	
+	<!-- AI Processing Capabilities -->
+	<key>NSSupportsAutomaticTermination</key>
+	<false/>
+	<key>NSSupportsSuddenTermination</key>
+	<false/>
+	
+	<!-- Accessibility for Local Languages -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>pt</string>
+		<string>en</string>
+		<string>fr</string>
+		<string>pt-GW</string>
+	</array>
+	
+	<!-- Network Security for Offline-First -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

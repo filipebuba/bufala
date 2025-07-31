@@ -40,7 +40,8 @@ dependencies:
   path_provider: ^2.1.1
   flutter_dotenv: ^5.1.0
   
-  # AI e Machine Learning
+  # AI e Machine Learning - MediaPipe GenAI
+  # mediapipe_genai: ^0.1.0    # MediaPipe GenAI (será adicionado quando disponível)
   # tflite_flutter: ^0.9.0  # Comentado para build offline sem TFLite
   
   # Processamento de Áudio

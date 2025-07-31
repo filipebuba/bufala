@@ -1,0 +1,93 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, '12.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/) 
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  
+  # MediaPipe GenAI Dependencies
+  # Uncomment when MediaPipe GenAI becomes available
+  # pod 'MediaPipeTasksGenAI', '~> 0.10.0'
+  # pod 'MediaPipeTasksVision', '~> 0.10.0'
+  # pod 'MediaPipeTasksAudio', '~> 0.10.0'
+  
+  # TensorFlow Lite for iOS
+  pod 'TensorFlowLiteSwift', '~> 2.13.0'
+  pod 'TensorFlowLiteSelectTfOps', '~> 2.13.0'
+  
+  # Additional dependencies for multimodal capabilities
+  pod 'GoogleMLKit/TextRecognition', '~> 4.0.0'
+  pod 'GoogleMLKit/ImageLabeling', '~> 4.0.0'
+  pod 'GoogleMLKit/ObjectDetection', '~> 4.0.0'
+  
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    
+    # MediaPipe and TensorFlow Lite optimizations
+    target.build_configurations.each do |config|
+      # Enable bitcode for release builds
+      config.build_settings['ENABLE_BITCODE'] = 'YES'
+      
+      # Optimize for size and performance
+      config.build_settings['GCC_OPTIMIZATION_LEVEL'] = '3'
+      config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-O'
+      
+      # Metal Performance Shaders for GPU acceleration
+      config.build_settings['MTL_ENABLE_DEBUG_INFO'] = 'NO'
+      
+      # Deployment target compatibility
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      
+      # Architecture settings for MediaPipe
+      config.build_settings['ARCHS'] = 'arm64'
+      config.build_settings['VALID_ARCHS'] = 'arm64'
+      
+      # Linker optimizations
+      config.build_settings['DEAD_CODE_STRIPPING'] = 'YES'
+      config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'YES'
+      
+      # Memory and performance optimizations
+      config.build_settings['GCC_UNROLL_LOOPS'] = 'YES'
+      config.build_settings['GCC_VECTORIZE'] = 'YES'
+      
+      # Swift settings for MediaPipe compatibility
+      if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"
+        config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      end
+    end
+  end
+end

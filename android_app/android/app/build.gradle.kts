@@ -24,14 +24,14 @@ android {
         applicationId = "com.example.android_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 24  // AUMENTAR para suporte MediaPipe
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         
-        // TensorFlow Lite configurações
+        // MediaPipe GenAI configurações
         ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            abiFilters += listOf("arm64-v8a", "x86_64") // Otimizar para 64-bit
         }
         
         // Configurações para resolver problemas de EGL/OpenGL
@@ -41,10 +41,17 @@ android {
         }
     }
     
-    // Configurações para TensorFlow Lite
+    // Configurações para MediaPipe GenAI
     aaptOptions {
         noCompress += "tflite"
         noCompress += "lite"
+        noCompress += "task"  // ADICIONAR para modelos .task
+    }
+    
+    // CONFIGURAÇÕES AVANÇADAS PARA MEDIAPIPE
+    packagingOptions {
+        pickFirst "**/libc++_shared.so"
+        pickFirst "**/libjsc.so"
     }
 
     buildTypes {
@@ -58,4 +65,13 @@ android {
 
 flutter {
     source = "../.."
+}
+
+// Dependências MediaPipe GenAI
+dependencies {
+    // MediaPipe GenAI (comentado até estar disponível)
+    // implementation 'com.google.mediapipe:tasks-genai:0.10.8'
+    // implementation 'com.google.mediapipe:framework:0.10.8'
+    // implementation 'org.tensorflow:tensorflow-lite:2.13.0'
+    // implementation 'org.tensorflow:tensorflow-lite-gpu:2.13.0'
 }
