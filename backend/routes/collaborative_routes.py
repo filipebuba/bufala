@@ -873,11 +873,25 @@ def generate_reward_message():
         gemma_service = GemmaService()
         
         if gemma_service:
+            # Preparar dados do evento para o Gemma-3
+            event_data = {
+                'event_type': achievement_type,
+                'achievement_type': achievement_type,
+                'points_earned': points_earned,
+                'user_name': user_data.get('user_name', 'Usuário'),
+                'user_data': user_data
+            }
+            
             # Gerar mensagem de recompensa usando Gemma-3
-            reward_result = gemma_service.generate_reward_message(
-                achievement_type=achievement_type,
-                points_earned=points_earned,
-                user_data=user_data
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            reward_result = loop.run_until_complete(
+                gemma_service.generate_reward_message(event_data)
             )
             
             return jsonify({

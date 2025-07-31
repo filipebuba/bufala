@@ -97,4 +97,17 @@ class ApiService implements IApiService {
     );
     return result;
   }
+  
+  /// Traduzir texto
+  Future<Map<String, dynamic>> translateText(
+    String text, {
+    String fromLanguage = 'pt',
+    String toLanguage = 'crioulo',
+  }) async {
+    return await _integratedService.translateText(
+      text,
+      fromLanguage: fromLanguage,
+      toLanguage: toLanguage,
+    );
+  }
 }

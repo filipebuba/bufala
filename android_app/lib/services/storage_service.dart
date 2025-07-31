@@ -31,4 +31,12 @@ class StorageService implements IStorageService {
       'itemCount': _storage.length,
     };
   }
+  
+  Future<void> saveLocalSetting(String key, dynamic value) async {
+    await save('local_$key', value);
+  }
+  
+  Future<dynamic> getLocalSetting(String key) async {
+    return await load('local_$key');
+  }
 }
