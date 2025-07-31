@@ -2735,10 +2735,14 @@ A resposta DEVE ser um objeto JSON contendo um campo "educational_content"."""
             'fallback': True
         }
     
-    def _fallback_reward_message(self, achievement_type: str, points_earned: int, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _fallback_reward_message(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Fallback para mensagens de recompensa"""
         
-        user_name = user_data.get('name', 'Amigo')
+        achievement_type = event_data.get('achievement_type', 'challenge_completed')
+        points_earned = event_data.get('points_earned', 0)
+        user_data = event_data.get('user_data', {})
+        
+        user_name = user_data.get('name', event_data.get('user_name', 'Amigo'))
         total_points = user_data.get('total_points', 0)
         
         messages_by_type = {
