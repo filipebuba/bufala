@@ -1,4 +1,4 @@
- openapi: 3.0.3
+openapi: 3.0.3
 info:
   title: Moransa Backend API
   version: "2.0.0"
@@ -9,13 +9,16 @@ info:
     - **Multimodalidade**: Análise de imagem, áudio e texto
     - **Acessibilidade**: VoiceGuide AI para navegação assistiva
     - **Offline-first**: Funciona sem conexão com internet
-    - **Multilíngue**: Suporte a múltiplos idiomas
+    - **Multilíngue**: Suporte a múltiplos idiomas incluindo Crioulo
     - **Sustentabilidade**: Diagnósticos ambientais e agrícolas
+    - **Validação Comunitária**: Sistema colaborativo de tradução
+    - **Gamificação**: Sistema de pontos e badges para engajamento
     
     ## Tecnologias
-    - Gemma 3n (Google)
-    - Flask Backend
+    - Gemma 3n (Google) com seleção inteligente de modelo
+    - Flask Backend modular
     - Flutter Mobile App
+    - Sistema de cache para modo offline
     
   contact:
     name: Moransa Team
@@ -34,23 +37,27 @@ tags:
   - name: Health
     description: Verificação de saúde do sistema
   - name: Medical
-    description: Orientações médicas gerais
+    description: Orientações médicas, primeiros socorros e emergências
   - name: Education
-    description: Orientações educacionais
+    description: Orientações educacionais e material didático
   - name: Agriculture
-    description: Orientações agrícolas
+    description: Orientações agrícolas e análise de cultivos
   - name: Accessibility
     description: Sistema de acessibilidade VoiceGuide AI
   - name: Voice Guide
     description: Navegação assistiva por voz
   - name: Wellness
-    description: Bem-estar e coaching
+    description: Bem-estar e coaching de saúde mental
   - name: Translation
-    description: Tradução de textos
+    description: Tradução de textos e conteúdo multimodal
   - name: Environmental
-    description: Sustentabilidade e meio ambiente
+    description: Sustentabilidade, meio ambiente e monitoramento
   - name: Multimodal
-    description: Análise multimodal (imagem, áudio, texto)
+    description: Análise multimodal (imagem, áudio, texto, vídeo)
+  - name: Collaborative
+    description: Sistema de validação comunitária e gamificação
+  - name: Model Management
+    description: Gerenciamento e otimização de modelos de IA
 
 paths:
   # Health Routes
@@ -73,12 +80,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/health/quick:
+    get:
+      tags: [Health]
+      summary: Verificação rápida de saúde
+      description: Verificação básica e rápida do status do sistema
+      responses:
+        '200':
+          description: Status básico do sistema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuickHealthResponse'
+
+  /api/health/dependencies:
+    get:
+      tags: [Health]
+      summary: Verificar dependências do sistema
+      description: Verifica status de todas as dependências externas
+      responses:
+        '200':
+          description: Status das dependências
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependenciesResponse'
+
+  /api/health/gemma:
+    get:
+      tags: [Health]
+      summary: Verificar saúde do Gemma Service
+      description: Status específico do serviço de IA Gemma
+      responses:
+        '200':
+          description: Status do Gemma Service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GemmaHealthResponse'
+
   # Medical Routes
   /api/medical:
     post:
       tags: [Medical]
-      summary: Obter orientações médicas
-      description: Fornece orientações médicas gerais baseadas em sintomas
+      summary: Consulta médica básica
+      description: Fornece orientações médicas gerais e primeiros socorros
       requestBody:
         required: true
         content:
@@ -92,6 +138,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MedicalResponse'
+        '400':
+          description: Dados inválidos
+        '500':
+          description: Erro interno
+
+  /api/medical/emergency:
+    post:
+      tags: [Medical]
+      summary: Orientação para emergências médicas
+      description: Fornece orientações específicas para situações de emergência
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmergencyRequest'
+      responses:
+        '200':
+          description: Orientação de emergência gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyResponse'
+        '400':
+          description: Dados inválidos
+        '500':
+          description: Erro interno
+
+  /api/medical/first-aid:
+    post:
+      tags: [Medical]
+      summary: Guia de primeiros socorros
+      description: Fornece instruções detalhadas de primeiros socorros
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirstAidRequest'
+      responses:
+        '200':
+          description: Guia de primeiros socorros gerado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirstAidResponse'
         '400':
           description: Dados inválidos
         '500':
@@ -262,28 +354,331 @@ paths:
           description: Diagnóstico ambiental gerado
 
   # Multimodal Routes
-  /api/multimodal/image/analyze:
+  /api/multimodal:
     post:
       tags: [Multimodal]
-      summary: Analisar imagem
-      description: Analisa imagem usando Gemma 3n
+      summary: Análise multimodal geral
+      description: Analisa conteúdo multimodal (texto, imagem, áudio, vídeo)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ImageAnalysisRequest'
+              $ref: '#/components/schemas/MultimodalAnalysisRequest'
       responses:
         '200':
-          description: Análise da imagem
+          description: Análise multimodal completa
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ImageAnalysisResponse'
+                $ref: '#/components/schemas/MultimodalAnalysisResponse'
         '400':
-          description: Imagem obrigatória
+          description: Dados inválidos
         '500':
           description: Erro no processamento
+
+  /api/multimodal/health:
+    get:
+      tags: [Multimodal]
+      summary: Verificar saúde do sistema multimodal
+      description: Status dos componentes de processamento multimodal
+      responses:
+        '200':
+          description: Status do sistema multimodal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultimodalHealthResponse'
+
+  /api/multimodal/analyze:
+    post:
+      tags: [Multimodal]
+      summary: Análise multimodal avançada
+      description: Análise detalhada de conteúdo multimodal com fusão cross-modal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MultimodalAnalysisRequest'
+      responses:
+        '200':
+          description: Análise multimodal detalhada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultimodalAnalysisResponse'
+
+  /api/multimodal/medical-analysis:
+    post:
+      tags: [Multimodal]
+      summary: Análise multimodal médica
+      description: Análise especializada para conteúdo médico
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicalMultimodalRequest'
+      responses:
+        '200':
+          description: Análise médica multimodal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalMultimodalResponse'
+
+  /api/multimodal/educational-content:
+    post:
+      tags: [Multimodal]
+      summary: Geração de conteúdo educacional multimodal
+      description: Cria material educacional usando múltiplas modalidades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EducationalMultimodalRequest'
+      responses:
+        '200':
+          description: Conteúdo educacional multimodal gerado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EducationalMultimodalResponse'
+
+  /api/multimodal/agricultural-analysis:
+    post:
+      tags: [Multimodal]
+      summary: Análise agrícola multimodal
+      description: Análise de cultivos usando imagens, dados de solo e clima
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgriculturalMultimodalRequest'
+      responses:
+        '200':
+          description: Análise agrícola multimodal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgriculturalMultimodalResponse'
+
+  /api/multimodal/translate-content:
+    post:
+      tags: [Multimodal]
+      summary: Tradução de conteúdo multimodal
+      description: Traduz texto, imagem e áudio simultaneamente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MultimodalTranslationRequest'
+      responses:
+        '200':
+          description: Conteúdo traduzido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultimodalTranslationResponse'
+
+  /api/multimodal/accessibility-enhancement:
+    post:
+      tags: [Multimodal]
+      summary: Melhoria de acessibilidade
+      description: Melhora acessibilidade de conteúdo multimodal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessibilityEnhancementRequest'
+      responses:
+        '200':
+          description: Conteúdo com acessibilidade melhorada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessibilityEnhancementResponse'
+
+  # Collaborative Validation Routes
+  /api/collaborative-validation/generate-phrases:
+    post:
+      tags: [Collaborative]
+      summary: Gerar frases para tradução
+      description: Gera frases em português usando Gemma 3n para validação comunitária
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneratePhrasesRequest'
+      responses:
+        '200':
+          description: Frases geradas para tradução
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratePhrasesResponse'
+
+  /api/collaborative-validation/phrases-to-translate:
+    get:
+      tags: [Collaborative]
+      summary: Obter frases para traduzir
+      description: Lista frases disponíveis para tradução pela comunidade
+      responses:
+        '200':
+          description: Lista de frases para tradução
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhrasesToTranslateResponse'
+
+  /api/collaborative-validation/propose-translation:
+    post:
+      tags: [Collaborative]
+      summary: Propor tradução
+      description: Submete uma proposta de tradução para validação comunitária
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposeTranslationRequest'
+      responses:
+        '200':
+          description: Tradução proposta com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposeTranslationResponse'
+
+  /api/collaborative-validation/translations-to-validate:
+    get:
+      tags: [Collaborative]
+      summary: Obter traduções para validar
+      description: Lista traduções pendentes de validação
+      responses:
+        '200':
+          description: Lista de traduções para validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationsToValidateResponse'
+
+  /api/collaborative-validation/validate-translation:
+    post:
+      tags: [Collaborative]
+      summary: Validar tradução
+      description: Vota em uma tradução proposta pela comunidade
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateTranslationRequest'
+      responses:
+        '200':
+          description: Voto registrado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateTranslationResponse'
+
+  /api/collaborative-validation/user-stats/{user_id}:
+    get:
+      tags: [Collaborative]
+      summary: Estatísticas do usuário
+      description: Obtém estatísticas e progresso do usuário no sistema
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Estatísticas do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStatsResponse'
+
+  /api/collaborative-validation/leaderboard:
+    get:
+      tags: [Collaborative]
+      summary: Ranking da comunidade
+      description: Lista os usuários mais ativos na validação comunitária
+      responses:
+        '200':
+          description: Ranking da comunidade
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+
+  # Model Management Routes
+  /api/models/health:
+    get:
+      tags: [Model Management]
+      summary: Verificar saúde dos modelos
+      description: Status de todos os modelos de IA disponíveis
+      responses:
+        '200':
+          description: Status dos modelos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsHealthResponse'
+
+  /api/models/available:
+    get:
+      tags: [Model Management]
+      summary: Listar modelos disponíveis
+      description: Lista todos os modelos de IA disponíveis no sistema
+      responses:
+        '200':
+          description: Lista de modelos disponíveis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableModelsResponse'
+
+  /api/models/optimize-config:
+    post:
+      tags: [Model Management]
+      summary: Otimizar configuração de modelos
+      description: Otimiza seleção de modelos baseada nos recursos do dispositivo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptimizeConfigRequest'
+      responses:
+        '200':
+          description: Configuração otimizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimizeConfigResponse'
+
+  # Environmental Routes
+  /api/environment/health:
+    get:
+      tags: [Environmental]
+      summary: Verificar saúde do sistema ambiental
+      description: Status dos componentes de monitoramento ambiental
+      responses:
+        '200':
+          description: Status do sistema ambiental
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentalHealthResponse'
 
 components:
   schemas:
@@ -334,6 +729,10 @@ components:
                 loading_method:
                   type: string
                   enum: [pipeline, chat_template, traditional]
+                model_loaded:
+                  type: boolean
+                ollama_available:
+                  type: boolean
             features:
               type: object
               properties:
@@ -347,10 +746,95 @@ components:
                   type: boolean
                 production_optimizations:
                   type: boolean
+                multimodal_analysis:
+                  type: boolean
+                collaborative_validation:
+                  type: boolean
             endpoints:
               type: array
               items:
                 type: string
+
+    QuickHealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            service:
+              type: string
+              example: "Moransa Backend"
+            status:
+              type: string
+              enum: [healthy, degraded, down]
+            uptime:
+              type: string
+              example: "2h 30m"
+
+    DependenciesResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            dependencies:
+              type: object
+              properties:
+                gemma_service:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [healthy, degraded, down]
+                    response_time:
+                      type: number
+                ollama:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [available, unavailable]
+                    version:
+                      type: string
+                cache:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [healthy, degraded]
+                    hit_rate:
+                      type: number
+
+    GemmaHealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            gemma_service:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, degraded, down]
+                model_loaded:
+                  type: boolean
+                ollama_available:
+                  type: boolean
+                provider:
+                  type: string
+                  enum: [ollama, local, fallback]
+                model_name:
+                  type: string
+                device:
+                  type: string
+                  enum: [cpu, cuda, mps]
+                revolutionary_features:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    creole_support:
+                      type: boolean
+                    offline_ai:
+                      type: boolean
 
     # Medical Schemas
     MedicalRequest:
@@ -388,6 +872,131 @@ components:
             disclaimer:
               type: string
               example: "Esta é uma orientação geral. Procure um médico para diagnóstico preciso."
+
+    EmergencyRequest:
+      type: object
+      properties:
+        situation:
+          type: string
+          description: Descrição da situação de emergência
+          example: "Pessoa inconsciente após queda"
+        location:
+          type: string
+          description: Localização da emergência
+          example: "Casa rural sem acesso a estrada"
+        available_resources:
+          type: array
+          items:
+            type: string
+          description: Recursos disponíveis no local
+          example: ["água limpa", "panos limpos", "telefone"]
+        responder_experience:
+          type: string
+          enum: [nenhuma, básica, intermediária, avançada]
+          description: Experiência do socorrista
+          example: "básica"
+      required: [situation]
+
+    EmergencyResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            immediate_actions:
+              type: array
+              items:
+                type: string
+              description: Ações imediatas a serem tomadas
+            step_by_step:
+              type: array
+              items:
+                type: object
+                properties:
+                  step:
+                    type: integer
+                  action:
+                    type: string
+                  warning:
+                    type: string
+              description: Instruções passo a passo
+            warnings:
+              type: array
+              items:
+                type: string
+              description: Avisos importantes
+            when_to_stop:
+              type: array
+              items:
+                type: string
+              description: Quando parar e buscar ajuda
+            emergency_contacts:
+              type: array
+              items:
+                type: string
+              description: Contatos de emergência locais
+
+    FirstAidRequest:
+      type: object
+      properties:
+        injury_type:
+          type: string
+          description: Tipo de ferimento ou condição
+          example: "corte profundo"
+        body_part:
+          type: string
+          description: Parte do corpo afetada
+          example: "mão"
+        severity:
+          type: string
+          enum: [leve, moderada, grave]
+          description: Gravidade do ferimento
+          example: "moderada"
+        bleeding:
+          type: boolean
+          description: Se há sangramento
+          example: true
+        consciousness:
+          type: string
+          enum: [consciente, semiconsciente, inconsciente]
+          description: Estado de consciência
+          example: "consciente"
+      required: [injury_type]
+
+    FirstAidResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            assessment:
+              type: string
+              description: Avaliação inicial
+            materials_needed:
+              type: array
+              items:
+                type: string
+              description: Materiais necessários
+            instructions:
+              type: array
+              items:
+                type: object
+                properties:
+                  step:
+                    type: integer
+                  instruction:
+                    type: string
+                  image_description:
+                    type: string
+              description: Instruções detalhadas
+            do_not_do:
+              type: array
+              items:
+                type: string
+              description: O que NÃO fazer
+            seek_help_if:
+              type: array
+              items:
+                type: string
+              description: Quando buscar ajuda médica
 
     # Education Schemas
     EducationRequest:
@@ -659,3 +1268,745 @@ components:
               type: string
             language:
               type: string
+
+    # Multimodal Analysis Schemas
+    MultimodalAnalysisRequest:
+      type: object
+      properties:
+        content:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Texto para análise
+              example: "Como plantar mandioca?"
+            image:
+              type: string
+              format: base64
+              description: Imagem em base64 (opcional)
+            audio:
+              type: string
+              format: base64
+              description: Áudio em base64 (opcional)
+            video:
+              type: string
+              format: base64
+              description: Vídeo em base64 (opcional)
+        analysis_type:
+          type: string
+          enum: [comprehensive, quick, focused]
+          description: Tipo de análise desejada
+          default: comprehensive
+        focus_areas:
+          type: array
+          items:
+            type: string
+            enum: [medical, educational, agricultural, cultural, accessibility]
+          description: Áreas de foco para análise
+        language:
+          type: string
+          default: "pt-BR"
+        context:
+          type: string
+          description: Contexto adicional
+          example: "agricultura"
+      required: [content]
+
+    MultimodalAnalysisResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            analysis_id:
+              type: string
+              description: ID único da análise
+            components:
+              type: object
+              properties:
+                text:
+                  type: object
+                  properties:
+                    content:
+                      type: string
+                    language:
+                      type: string
+                    sentiment:
+                      type: string
+                    key_topics:
+                      type: array
+                      items:
+                        type: string
+                image:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    objects_detected:
+                      type: array
+                      items:
+                        type: string
+                    medical_indicators:
+                      type: array
+                      items:
+                        type: string
+                audio:
+                  type: object
+                  properties:
+                    transcription:
+                      type: string
+                    language:
+                      type: string
+                    emotion:
+                      type: string
+                    quality_score:
+                      type: number
+                video:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    key_frames:
+                      type: array
+                      items:
+                        type: string
+                    duration:
+                      type: number
+            fusion_analysis:
+              type: object
+              properties:
+                coherence_score:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                key_insights:
+                  type: array
+                  items:
+                    type: string
+                recommendations:
+                  type: array
+                  items:
+                    type: string
+                cultural_context:
+                  type: string
+            confidence_score:
+              type: number
+              minimum: 0
+              maximum: 1
+
+    MultimodalHealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            multimodal_service:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, degraded, down]
+                text_processing:
+                  type: boolean
+                image_processing:
+                  type: boolean
+                audio_processing:
+                  type: boolean
+                video_processing:
+                  type: boolean
+                fusion_engine:
+                  type: boolean
+
+    MedicalMultimodalRequest:
+      type: object
+      properties:
+        patient_data:
+          type: object
+          properties:
+            symptoms_text:
+              type: string
+              description: Descrição textual dos sintomas
+            symptom_image:
+              type: string
+              format: base64
+              description: Imagem de sintomas ou ferimentos
+            audio_description:
+              type: string
+              format: base64
+              description: Descrição em áudio dos sintomas
+        analysis_focus:
+          type: string
+          enum: [diagnosis, triage, first_aid, monitoring]
+          default: diagnosis
+        urgency_level:
+          type: string
+          enum: [routine, urgent, emergency]
+          default: routine
+        language:
+          type: string
+          default: "pt-BR"
+      required: [patient_data]
+
+    MedicalMultimodalResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            medical_analysis:
+              type: object
+              properties:
+                assessment:
+                  type: string
+                urgency_level:
+                  type: string
+                recommendations:
+                  type: array
+                  items:
+                    type: string
+                warning_signs:
+                  type: array
+                  items:
+                    type: string
+            disclaimer:
+              type: string
+              example: "Esta é uma orientação geral. Procure um médico para diagnóstico preciso."
+
+    EducationalMultimodalRequest:
+      type: object
+      properties:
+        topic:
+          type: string
+          description: Tópico educacional
+          example: "fotossíntese"
+        level:
+          type: string
+          enum: [básico, intermediário, avançado]
+          default: básico
+        language:
+          type: string
+          enum: [português, crioulo, local]
+          default: português
+        multimedia_type:
+          type: string
+          enum: [text_only, with_images, with_audio, comprehensive]
+          default: comprehensive
+        cultural_adaptation:
+          type: boolean
+          description: Adaptar para contexto local
+          default: true
+        reference_materials:
+          type: object
+          properties:
+            images:
+              type: array
+              items:
+                type: string
+                format: base64
+            audio:
+              type: array
+              items:
+                type: string
+                format: base64
+      required: [topic, level]
+
+    EducationalMultimodalResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            educational_content:
+              type: object
+              properties:
+                explanation:
+                  type: string
+                visual_aids:
+                  type: array
+                  items:
+                    type: string
+                audio_content:
+                  type: string
+                exercises:
+                  type: array
+                  items:
+                    type: string
+                cultural_examples:
+                  type: array
+                  items:
+                    type: string
+
+    AgriculturalMultimodalRequest:
+      type: object
+      properties:
+        crop_data:
+          type: object
+          properties:
+            crop_type:
+              type: string
+              example: "mandioca"
+            field_image:
+              type: string
+              format: base64
+              description: Imagem do campo ou cultivo
+            farmer_description:
+              type: string
+              description: Descrição do agricultor
+            audio_notes:
+              type: string
+              format: base64
+              description: Notas em áudio
+        analysis_type:
+          type: string
+          enum: [pest_detection, soil_health, growth_monitoring, harvest_timing]
+          default: growth_monitoring
+        location_context:
+          type: string
+          description: Contexto geográfico e climático
+        language:
+          type: string
+          default: "pt-BR"
+      required: [crop_data]
+
+    AgriculturalMultimodalResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            agricultural_analysis:
+              type: object
+              properties:
+                crop_assessment:
+                  type: string
+                recommendations:
+                  type: array
+                  items:
+                    type: string
+                pest_indicators:
+                  type: array
+                  items:
+                    type: string
+                soil_conditions:
+                  type: string
+                optimal_actions:
+                  type: array
+                  items:
+                    type: string
+
+    MultimodalTranslationRequest:
+      type: object
+      properties:
+        content:
+          type: object
+          properties:
+            text:
+              type: string
+            image_text:
+              type: string
+              format: base64
+              description: Imagem com texto para traduzir
+            audio:
+              type: string
+              format: base64
+              description: Áudio para traduzir
+        source_language:
+          type: string
+          default: "auto"
+        target_language:
+          type: string
+          example: "crioulo"
+        context:
+          type: string
+          enum: [medical, educational, agricultural, general]
+          default: general
+        preserve_cultural_context:
+          type: boolean
+          default: true
+      required: [content, target_language]
+
+    MultimodalTranslationResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            translated_content:
+              type: object
+              properties:
+                text:
+                  type: string
+                audio:
+                  type: string
+                  description: Áudio traduzido
+                cultural_notes:
+                  type: array
+                  items:
+                    type: string
+            confidence:
+              type: number
+              minimum: 0
+              maximum: 1
+
+    AccessibilityEnhancementRequest:
+      type: object
+      properties:
+        content:
+          type: object
+          properties:
+            text:
+              type: string
+            image:
+              type: string
+              format: base64
+            audio:
+              type: string
+              format: base64
+        enhancement_type:
+          type: string
+          enum: [visual_description, audio_transcription, simplified_language, cultural_adaptation]
+        target_audience:
+          type: string
+          enum: [visual_impaired, hearing_impaired, low_literacy, elderly]
+        language:
+          type: string
+          default: "pt-BR"
+      required: [content, enhancement_type]
+
+    AccessibilityEnhancementResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            enhanced_content:
+              type: object
+              properties:
+                accessible_text:
+                  type: string
+                audio_description:
+                  type: string
+                simplified_version:
+                  type: string
+                cultural_adaptation:
+                  type: string
+            accessibility_features:
+              type: array
+              items:
+                type: string
+
+    # Collaborative Validation Schemas
+    GeneratePhrasesRequest:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [medical, agricultural, educational, general]
+          default: general
+        difficulty:
+          type: string
+          enum: [basic, intermediate, advanced]
+          default: basic
+        count:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+        context:
+          type: string
+          description: Contexto específico para as frases
+      required: [category]
+
+    GeneratePhrasesResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            phrases:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  text:
+                    type: string
+                  category:
+                    type: string
+                  difficulty:
+                    type: string
+                  context:
+                    type: string
+
+    PhrasesToTranslateResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            phrases:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  text:
+                    type: string
+                  category:
+                    type: string
+                  priority:
+                    type: string
+                    enum: [high, medium, low]
+
+    ProposeTranslationRequest:
+      type: object
+      properties:
+        phrase_id:
+          type: string
+        translation:
+          type: string
+        target_language:
+          type: string
+          example: "crioulo"
+        user_id:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        notes:
+          type: string
+          description: Notas sobre a tradução
+      required: [phrase_id, translation, target_language, user_id]
+
+    ProposeTranslationResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            translation_id:
+              type: string
+            points_earned:
+              type: integer
+            new_badge:
+              type: string
+              description: Badge conquistado (se houver)
+
+    TranslationsToValidateResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            translations:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  original_text:
+                    type: string
+                  proposed_translation:
+                    type: string
+                  language:
+                    type: string
+                  votes:
+                    type: integer
+                  proposer:
+                    type: string
+
+    ValidateTranslationRequest:
+      type: object
+      properties:
+        translation_id:
+          type: string
+        vote:
+          type: string
+          enum: [approve, reject, suggest_improvement]
+        user_id:
+          type: string
+        feedback:
+          type: string
+          description: Feedback opcional
+        suggested_improvement:
+          type: string
+          description: Sugestão de melhoria (se aplicável)
+      required: [translation_id, vote, user_id]
+
+    ValidateTranslationResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            vote_recorded:
+              type: boolean
+            points_earned:
+              type: integer
+            translation_status:
+              type: string
+              enum: [pending, approved, rejected]
+
+    UserStatsResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            user_stats:
+              type: object
+              properties:
+                total_points:
+                  type: integer
+                translations_proposed:
+                  type: integer
+                translations_validated:
+                  type: integer
+                accuracy_rate:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                badges:
+                  type: array
+                  items:
+                    type: string
+                level:
+                  type: string
+                rank:
+                  type: integer
+
+    LeaderboardResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            leaderboard:
+              type: array
+              items:
+                type: object
+                properties:
+                  rank:
+                    type: integer
+                  user_id:
+                    type: string
+                  username:
+                    type: string
+                  points:
+                    type: integer
+                  badges:
+                    type: array
+                    items:
+                      type: string
+
+    # Model Management Schemas
+    ModelsHealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            models:
+              type: object
+              properties:
+                gemma_3n:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [loaded, loading, error]
+                    variant:
+                      type: string
+                      enum: [2b, 9b, 27b]
+                    device:
+                      type: string
+                    memory_usage:
+                      type: string
+                multimodal_models:
+                  type: object
+                  properties:
+                    vision:
+                      type: boolean
+                    audio:
+                      type: boolean
+                    fusion:
+                      type: boolean
+
+    AvailableModelsResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            available_models:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  type:
+                    type: string
+                    enum: [text, vision, audio, multimodal]
+                  size:
+                    type: string
+                  requirements:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                      compute:
+                        type: string
+
+    OptimizeConfigRequest:
+      type: object
+      properties:
+        device_specs:
+          type: object
+          properties:
+            memory:
+              type: string
+            cpu_cores:
+              type: integer
+            gpu_available:
+              type: boolean
+            storage:
+              type: string
+        usage_patterns:
+          type: array
+          items:
+            type: string
+            enum: [medical, educational, agricultural, accessibility]
+        performance_priority:
+          type: string
+          enum: [speed, accuracy, memory_efficiency]
+          default: accuracy
+      required: [device_specs]
+
+    OptimizeConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            optimized_config:
+              type: object
+              properties:
+                recommended_models:
+                  type: array
+                  items:
+                    type: string
+                memory_allocation:
+                  type: object
+                performance_settings:
+                  type: object
+                cache_strategy:
+                  type: string
+
+    EnvironmentalHealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            environmental_service:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, degraded, down]
+                monitoring_active:
+                  type: boolean
+                data_sources:
+                  type: array
+                  items:
+                    type: string
+                last_update:
+                  type: string
+                  format: date-time

@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../services/emergency_service.dart';
 
+/// Tela principal de agricultura com informações sobre culturas e proteção
 class AgricultureScreen extends StatefulWidget {
+  /// Construtor da tela de agricultura
   const AgricultureScreen({super.key});
 
   @override
@@ -149,7 +151,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
                         borderRadius: BorderRadius.circular(15),
                         gradient: LinearGradient(
                           colors: [
-                            (agriculture['color'] as Color).withOpacity(0.1),
+                            (agriculture['color'] as Color).withValues(alpha: 0.1),
                             Colors.white,
                           ],
                         ),
