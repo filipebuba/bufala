@@ -41,17 +41,17 @@ class _TranslateScreenState extends State<TranslateScreen> {
 
     try {
       final response = await _apiService.translateText(
-        text: _textController.text,
-        sourceLanguage: _fromLanguage,
-        targetLanguage: _toLanguage,
+        _textController.text,
+        fromLanguage: _fromLanguage,
+        toLanguage: _toLanguage,
       );
 
       setState(() {
-        if (response.success && response.data != null) {
-          _translatedText = response.data!;
+        if (response['success'] == true && response['translated_text'] != null) {
+          _translatedText = response['translated_text'];
         } else {
           _translatedText =
-              'Erro na tradução: ${response.error ?? "Problema na comunicação"}';
+              'Erro na tradução: ${response['message'] ?? "Problema na comunicação"}';
         }
       });
     } catch (e) {

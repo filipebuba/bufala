@@ -7,7 +7,17 @@ import '../services/language_service.dart';
 import '../services/storage_service.dart';
 import '../services/offline_service.dart';
 import '../services/api_service.dart';
+import '../services/environmental_api_service.dart';
 import '../config/app_config.dart';
+// Imports para navegação
+import 'medical_emergency_unified_screen.dart';
+import 'education_screen.dart';
+import 'agriculture_screen.dart';
+import 'wellness_coaching_screen.dart';
+import 'environmental_menu_screen.dart';
+import 'translate_screen.dart';
+import 'voiceguide_accessibility_screen.dart';
+import 'gamification_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -164,6 +174,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             
             // Configurações Regionais da Guiné-Bissau
             _buildGuineaBissauSection(context),
+            const SizedBox(height: 16),
+            
+            // Navegação para Funcionalidades
+            _buildFunctionalitiesSection(context),
             const SizedBox(height: 16),
             
             // Informações do App
@@ -784,28 +798,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 16),
             _buildGuineaBissauTile(
-              'Idiomas Locais',
-              'Crioulo, Balanta, Fula, Mandinga',
+              'Configurar Idioma Local',
+              'Definir idioma preferido da região',
               Icons.language,
-              () => _showLanguageDialog(),
+              () => _showLanguageSelectionDialog(),
             ),
             _buildGuineaBissauTile(
-              'Regiões',
-              'Bissau, Bafatá, Gabú, Cacheu...',
+              'Selecionar Região',
+              'Configurar sua região na Guiné-Bissau',
               Icons.location_on,
-              () => _showRegionDialog(),
+              () => _showRegionSelectionDialog(),
             ),
             _buildGuineaBissauTile(
-              'Culturas Locais',
-              'Arroz, Castanha de Caju, Mandioca',
+              'Culturas da Região',
+              'Informações sobre cultivos locais',
               Icons.agriculture,
-              () => _showCropsDialog(),
+              () => _navigateToLocalCrops(),
             ),
             _buildGuineaBissauTile(
               'Medicina Tradicional',
-              'Plantas medicinais locais',
+              'Guia de plantas medicinais',
               Icons.local_pharmacy,
-              () => _showMedicineDialog(),
+              () => _navigateToTraditionalMedicine(),
             ),
           ],
         ),
@@ -814,6 +828,107 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
   
   Widget _buildGuineaBissauTile(
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return ListTile(
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+    );
+  }
+
+  // Seção de Funcionalidades
+  Widget _buildFunctionalitiesSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.apps,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Funcionalidades do App',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildFunctionalityTile(
+              'Assistência Médica',
+              'Primeiros socorros e emergências',
+              Icons.medical_services,
+              () => _navigateToMedical(),
+            ),
+            _buildFunctionalityTile(
+              'Educação',
+              'Materiais educativos e lições',
+              Icons.school,
+              () => _navigateToEducation(),
+            ),
+            _buildFunctionalityTile(
+              'Agricultura',
+              'Conselhos agrícolas e diagnósticos',
+              Icons.agriculture,
+              () => _navigateToAgriculture(),
+            ),
+            _buildFunctionalityTile(
+              'Bem-estar',
+              'Coaching e saúde mental',
+              Icons.self_improvement,
+              () => _navigateToWellness(),
+            ),
+            _buildFunctionalityTile(
+              'Meio Ambiente',
+              'Sustentabilidade e biodiversidade',
+              Icons.eco,
+              () => _navigateToEnvironmental(),
+            ),
+            _buildFunctionalityTile(
+              'Tradução',
+              'Tradução multilíngue',
+              Icons.translate,
+              () => _navigateToTranslation(),
+            ),
+            _buildFunctionalityTile(
+              'Acessibilidade',
+              'Recursos para deficiências',
+              Icons.accessibility,
+              () => _navigateToAccessibility(),
+            ),
+            _buildFunctionalityTile(
+              'Gamificação',
+              'Ranking e conquistas',
+              Icons.emoji_events,
+              () => _navigateToGamification(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildFunctionalityTile(
     String title,
     String subtitle,
     IconData icon,
@@ -928,51 +1043,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
   // Métodos para diálogos específicos da Guiné-Bissau
-  void _showLanguageDialog() {
+  void _showLanguageSelectionDialog() {
+    final languages = {
+      'crioulo': 'Crioulo Guineense',
+      'balanta': 'Balanta',
+      'fula': 'Fula',
+      'mandinga': 'Mandinga',
+      'papel': 'Papel',
+      'manjaco': 'Manjaco',
+      'portuguese': 'Português',
+    };
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Idiomas Locais'),
-        content: const Text(
-          'Configurações para idiomas locais da Guiné-Bissau:\n\n'
-          '• Crioulo Guineense\n'
-          '• Balanta\n'
-          '• Fula\n'
-          '• Mandinga\n'
-          '• Papel\n'
-          '• Manjaco',
+        title: const Text('Selecionar Idioma Local'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: languages.entries.map((entry) {
+              return ListTile(
+                title: Text(entry.value),
+                leading: const Icon(Icons.language),
+                onTap: () {
+                  _setLocalLanguage(entry.key, entry.value);
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
+            child: const Text('Cancelar'),
           ),
         ],
       ),
     );
   }
 
-  void _showRegionDialog() {
+  void _showRegionSelectionDialog() {
+    final regions = {
+      'bissau': 'Bissau (Capital)',
+      'bafata': 'Bafatá',
+      'biombo': 'Biombo',
+      'bolama': 'Bolama',
+      'cacheu': 'Cacheu',
+      'gabu': 'Gabú',
+      'oio': 'Oio',
+      'quinara': 'Quinara',
+      'tombali': 'Tombali',
+    };
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Regiões da Guiné-Bissau'),
-        content: const Text(
-          'Regiões administrativas:\n\n'
-          '• Bissau (capital)\n'
-          '• Bafatá\n'
-          '• Biombo\n'
-          '• Bolama\n'
-          '• Cacheu\n'
-          '• Gabú\n'
-          '• Oio\n'
-          '• Quinara\n'
-          '• Tombali',
+        title: const Text('Selecionar Região'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: regions.entries.map((entry) {
+              return ListTile(
+                title: Text(entry.value),
+                leading: const Icon(Icons.location_on),
+                onTap: () {
+                  _setUserRegion(entry.key, entry.value);
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
+            child: const Text('Cancelar'),
           ),
         ],
       ),
@@ -1176,5 +1324,148 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
-}
+
+  // Funções de navegação para as funcionalidades
+  void _navigateToMedical() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const MedicalEmergencyUnifiedScreen(),
+      ),
+    );
+  }
+
+  void _navigateToEducation() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const EducationScreen(),
+      ),
+    );
+  }
+
+  void _navigateToAgriculture() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const AgricultureScreen(),
+      ),
+    );
+  }
+
+  void _navigateToWellness() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const WellnessCoachingScreen(),
+      ),
+    );
+  }
+
+  void _navigateToEnvironmental() {
+    final apiService = EnvironmentalApiService(baseUrl: AppConfig.apiBaseUrl);
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => EnvironmentalMenuScreen(apiService: apiService),
+      ),
+    );
+  }
+
+  void _navigateToTranslation() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const TranslateScreen(),
+      ),
+    );
+  }
+
+  void _navigateToAccessibility() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const VoiceGuideAccessibilityScreen(),
+      ),
+    );
+  }
+
+  void _navigateToGamification() {
+     Navigator.push(
+       context,
+       MaterialPageRoute<void>(
+         builder: (context) => const GamificationScreen(),
+       ),
+     );
+   }
+
+   // Funções para configurações regionais
+   void _setLocalLanguage(String languageCode, String languageName) async {
+     try {
+       await _storageService.saveLocalSetting('local_language', languageCode);
+       await _storageService.saveLocalSetting('local_language_name', languageName);
+       
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+             content: Text('Idioma local definido: $languageName'),
+             backgroundColor: Colors.green,
+           ),
+         );
+       }
+     } catch (e) {
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+             content: Text('Erro ao salvar idioma: $e'),
+             backgroundColor: Colors.red,
+           ),
+         );
+       }
+     }
+   }
+
+   void _setUserRegion(String regionCode, String regionName) async {
+     try {
+       await _storageService.saveLocalSetting('user_region', regionCode);
+       await _storageService.saveLocalSetting('user_region_name', regionName);
+       
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+             content: Text('Região definida: $regionName'),
+             backgroundColor: Colors.green,
+           ),
+         );
+       }
+     } catch (e) {
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+             content: Text('Erro ao salvar região: $e'),
+             backgroundColor: Colors.red,
+           ),
+         );
+       }
+     }
+   }
+
+   void _navigateToLocalCrops() {
+     Navigator.push(
+       context,
+       MaterialPageRoute<void>(
+         builder: (context) => const AgricultureScreen(),
+       ),
+     );
+   }
+
+   void _navigateToTraditionalMedicine() {
+     Navigator.push(
+       context,
+       MaterialPageRoute<void>(
+         builder: (context) => const MedicalEmergencyUnifiedScreen(),
+       ),
+     );
+   }
+ }
 
