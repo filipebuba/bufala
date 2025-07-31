@@ -443,3 +443,414 @@ def _get_first_aid_steps(situation):
         "Aplique cuidados básicos",
         "Procure orientação médica"
     ])
+
+# Novos endpoints específicos para emergências
+
+@medical_bp.route('/medical/emergency/medical', methods=['POST'])
+def medical_emergency():
+    """Emergência médica - situações que requerem atendimento médico imediato"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        symptoms = data.get('symptoms', [])
+        description = data.get('description', '')
+        severity = data.get('severity', 'alta')
+        
+        # Preparar contexto específico para emergência médica
+        context = f"EMERGÊNCIA MÉDICA GRAVE\n"
+        context += f"Sintomas: {', '.join(symptoms) if symptoms else 'Não especificados'}\n"
+        context += f"Descrição: {description}\n"
+        context += f"Gravidade: {severity}\n\n"
+        context += "Forneça orientações IMEDIATAS de primeiros socorros considerando:\n"
+        context += "- Comunidade rural da Guiné-Bissau\n"
+        context += "- Recursos médicos limitados\n"
+        context += "- Necessidade de ação rápida\n"
+        context += "- Instruções claras em português\n"
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            response = gemma_service.generate_response(
+                context,
+                SystemPrompts.MEDICAL,
+                temperature=0.1,  # Muito baixa para emergências
+                max_new_tokens=400
+            )
+            
+            if response.get('success'):
+                emergency_data = {
+                    'type': 'emergencia_medica',
+                    'ai_guidance': response.get('response', ''),
+                    'immediate_actions': [
+                        "Mantenha a calma e avalie a situação",
+                        "Verifique sinais vitais (respiração, pulso)",
+                        "Posicione a pessoa adequadamente",
+                        "Procure ajuda médica IMEDIATAMENTE"
+                    ],
+                    'warning': "EMERGÊNCIA MÉDICA: Tempo é crucial. Aja rapidamente.",
+                    'gemma_used': True
+                }
+            else:
+                emergency_data = _get_medical_emergency_fallback(symptoms, description)
+        else:
+            emergency_data = _get_medical_emergency_fallback(symptoms, description)
+        
+        return jsonify({
+            'success': True,
+            'data': emergency_data,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        log_error(logger, e, "emergência médica")
+        return jsonify(create_error_response(
+            'medical_emergency_error',
+            'Erro ao processar emergência médica',
+            500
+        )), 500
+
+@medical_bp.route('/medical/emergency/childbirth', methods=['POST'])
+def emergency_childbirth():
+    """Parto de emergência - assistência para partos em locais remotos"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        stage = data.get('stage', 'inicio')  # inicio, trabalho_parto, nascimento, pos_parto
+        complications = data.get('complications', [])
+        location = data.get('location', 'casa')
+        
+        # Preparar contexto específico para parto de emergência
+        context = f"PARTO DE EMERGÊNCIA\n"
+        context += f"Estágio: {stage}\n"
+        context += f"Complicações: {', '.join(complications) if complications else 'Nenhuma relatada'}\n"
+        context += f"Local: {location}\n\n"
+        context += "Forneça orientações DETALHADAS para assistir um parto de emergência:\n"
+        context += "- Em comunidade rural da Guiné-Bissau\n"
+        context += "- Sem acesso imediato a hospital\n"
+        context += "- Usando materiais básicos disponíveis\n"
+        context += "- Instruções passo a passo em português\n"
+        context += "- Foque na segurança da mãe e bebê\n"
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            response = gemma_service.generate_response(
+                context,
+                SystemPrompts.MEDICAL,
+                temperature=0.1,
+                max_new_tokens=500
+            )
+            
+            if response.get('success'):
+                childbirth_data = {
+                    'type': 'parto_emergencia',
+                    'stage': stage,
+                    'ai_guidance': response.get('response', ''),
+                    'essential_steps': _get_childbirth_steps(stage),
+                    'materials_needed': [
+                        "Panos limpos ou toalhas",
+                        "Água fervida (se possível)",
+                        "Tesoura limpa (para cordão)",
+                        "Barbante ou fio limpo",
+                        "Cobertor para o bebê"
+                    ],
+                    'warning': "PARTO DE EMERGÊNCIA: Mantenha calma e higiene. Procure ajuda médica assim que possível.",
+                    'gemma_used': True
+                }
+            else:
+                childbirth_data = _get_childbirth_fallback(stage, complications)
+        else:
+            childbirth_data = _get_childbirth_fallback(stage, complications)
+        
+        return jsonify({
+            'success': True,
+            'data': childbirth_data,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        log_error(logger, e, "parto de emergência")
+        return jsonify(create_error_response(
+            'childbirth_emergency_error',
+            'Erro ao processar parto de emergência',
+            500
+        )), 500
+
+@medical_bp.route('/medical/emergency/accident', methods=['POST'])
+def accident_emergency():
+    """Acidente - primeiros socorros para acidentes"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        accident_type = data.get('accident_type', 'geral')
+        injuries = data.get('injuries', [])
+        consciousness = data.get('consciousness', 'consciente')
+        location = data.get('location', '')
+        
+        # Preparar contexto específico para acidente
+        context = f"ACIDENTE - PRIMEIROS SOCORROS\n"
+        context += f"Tipo de acidente: {accident_type}\n"
+        context += f"Lesões observadas: {', '.join(injuries) if injuries else 'A avaliar'}\n"
+        context += f"Estado de consciência: {consciousness}\n"
+        context += f"Local: {location}\n\n"
+        context += "Forneça orientações IMEDIATAS de primeiros socorros para acidente:\n"
+        context += "- Priorize segurança do local\n"
+        context += "- Avaliação rápida da vítima\n"
+        context += "- Cuidados com materiais básicos\n"
+        context += "- Instruções claras em português\n"
+        context += "- Quando chamar ajuda especializada\n"
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            response = gemma_service.generate_response(
+                context,
+                SystemPrompts.MEDICAL,
+                temperature=0.1,
+                max_new_tokens=400
+            )
+            
+            if response.get('success'):
+                accident_data = {
+                    'type': 'acidente',
+                    'accident_type': accident_type,
+                    'ai_guidance': response.get('response', ''),
+                    'priority_actions': [
+                        "1. SEGURANÇA: Avalie se o local é seguro",
+                        "2. CONSCIÊNCIA: Verifique se a vítima responde",
+                        "3. RESPIRAÇÃO: Confirme se está respirando",
+                        "4. SANGRAMENTO: Controle hemorragias visíveis",
+                        "5. AJUDA: Chame socorro médico"
+                    ],
+                    'warning': "ACIDENTE: Não mova a vítima se suspeitar de lesão na coluna.",
+                    'gemma_used': True
+                }
+            else:
+                accident_data = _get_accident_fallback(accident_type, injuries)
+        else:
+            accident_data = _get_accident_fallback(accident_type, injuries)
+        
+        return jsonify({
+            'success': True,
+            'data': accident_data,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        log_error(logger, e, "acidente")
+        return jsonify(create_error_response(
+            'accident_error',
+            'Erro ao processar acidente',
+            500
+        )), 500
+
+@medical_bp.route('/medical/emergency/poisoning', methods=['POST'])
+def poisoning_emergency():
+    """Intoxicação - casos de envenenamento ou intoxicação"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify(create_error_response(
+                'invalid_request',
+                'Dados JSON são obrigatórios',
+                400
+            )), 400
+        
+        poison_type = data.get('poison_type', 'desconhecido')
+        symptoms = data.get('symptoms', [])
+        time_since_exposure = data.get('time_since_exposure', 'desconhecido')
+        amount = data.get('amount', 'desconhecido')
+        
+        # Preparar contexto específico para intoxicação
+        context = f"INTOXICAÇÃO/ENVENENAMENTO\n"
+        context += f"Tipo de substância: {poison_type}\n"
+        context += f"Sintomas: {', '.join(symptoms) if symptoms else 'A observar'}\n"
+        context += f"Tempo desde exposição: {time_since_exposure}\n"
+        context += f"Quantidade: {amount}\n\n"
+        context += "Forneça orientações URGENTES para intoxicação:\n"
+        context += "- Ações imediatas de segurança\n"
+        context += "- O que fazer e NÃO fazer\n"
+        context += "- Quando induzir ou não o vômito\n"
+        context += "- Cuidados básicos disponíveis\n"
+        context += "- Instruções claras em português\n"
+        
+        # Obter serviço Gemma
+        gemma_service = getattr(current_app, 'gemma_service', None)
+        
+        if gemma_service:
+            response = gemma_service.generate_response(
+                context,
+                SystemPrompts.MEDICAL,
+                temperature=0.1,
+                max_new_tokens=400
+            )
+            
+            if response.get('success'):
+                poisoning_data = {
+                    'type': 'intoxicacao',
+                    'poison_type': poison_type,
+                    'ai_guidance': response.get('response', ''),
+                    'immediate_actions': [
+                        "Remova a pessoa da fonte de exposição",
+                        "Verifique sinais vitais",
+                        "NÃO induza vômito sem orientação",
+                        "Se consciente, dê água (se orientado)",
+                        "Chame ajuda médica URGENTEMENTE"
+                    ],
+                    'do_not_do': [
+                        "Não induza vômito se a pessoa engoliu produtos corrosivos",
+                        "Não dê leite ou óleo",
+                        "Não deixe a pessoa sozinha",
+                        "Não espere os sintomas piorarem"
+                    ],
+                    'warning': "INTOXICAÇÃO: Tempo é crucial. Contate centro de intoxicações se disponível.",
+                    'gemma_used': True
+                }
+            else:
+                poisoning_data = _get_poisoning_fallback(poison_type, symptoms)
+        else:
+            poisoning_data = _get_poisoning_fallback(poison_type, symptoms)
+        
+        return jsonify({
+            'success': True,
+            'data': poisoning_data,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        log_error(logger, e, "intoxicação")
+        return jsonify(create_error_response(
+            'poisoning_error',
+            'Erro ao processar intoxicação',
+            500
+        )), 500
+
+# Funções auxiliares para os novos endpoints
+
+def _get_medical_emergency_fallback(symptoms, description):
+    """Resposta de fallback para emergência médica"""
+    return {
+        'type': 'emergencia_medica',
+        'ai_guidance': 'Serviço de IA temporariamente indisponível. Seguindo protocolo básico de emergência médica.',
+        'immediate_actions': [
+            "Mantenha a calma e avalie a situação",
+            "Verifique sinais vitais (respiração, pulso)",
+            "Posicione a pessoa adequadamente",
+            "Procure ajuda médica IMEDIATAMENTE"
+        ],
+        'warning': "EMERGÊNCIA MÉDICA: Tempo é crucial. Aja rapidamente.",
+        'fallback': True
+    }
+
+def _get_childbirth_steps(stage):
+    """Passos específicos para cada estágio do parto"""
+    steps = {
+        'inicio': [
+            "Mantenha a calma e tranquilize a mãe",
+            "Prepare um local limpo e confortável",
+            "Lave bem as mãos",
+            "Reúna materiais limpos (toalhas, água)",
+            "Monitore as contrações"
+        ],
+        'trabalho_parto': [
+            "Ajude a mãe a encontrar posição confortável",
+            "Encoraje respiração profunda e calma",
+            "Não force o processo",
+            "Prepare-se para o nascimento",
+            "Mantenha higiene rigorosa"
+        ],
+        'nascimento': [
+            "Apoie a cabeça do bebê gentilmente",
+            "Deixe o bebê sair naturalmente",
+            "Limpe boca e nariz do bebê",
+            "Estimule a respiração se necessário",
+            "Mantenha o bebê aquecido"
+        ],
+        'pos_parto': [
+            "Aguarde a placenta sair naturalmente",
+            "Corte o cordão apenas se necessário",
+            "Monitore sangramento da mãe",
+            "Mantenha mãe e bebê aquecidos",
+            "Procure ajuda médica assim que possível"
+        ]
+    }
+    return steps.get(stage, steps['inicio'])
+
+def _get_childbirth_fallback(stage, complications):
+    """Resposta de fallback para parto de emergência"""
+    return {
+        'type': 'parto_emergencia',
+        'stage': stage,
+        'ai_guidance': 'Serviço de IA temporariamente indisponível. Seguindo protocolo básico de parto de emergência.',
+        'essential_steps': _get_childbirth_steps(stage),
+        'materials_needed': [
+            "Panos limpos ou toalhas",
+            "Água fervida (se possível)",
+            "Tesoura limpa (para cordão)",
+            "Barbante ou fio limpo",
+            "Cobertor para o bebê"
+        ],
+        'warning': "PARTO DE EMERGÊNCIA: Mantenha calma e higiene. Procure ajuda médica assim que possível.",
+        'fallback': True
+    }
+
+def _get_accident_fallback(accident_type, injuries):
+    """Resposta de fallback para acidentes"""
+    return {
+        'type': 'acidente',
+        'accident_type': accident_type,
+        'ai_guidance': 'Serviço de IA temporariamente indisponível. Seguindo protocolo básico de primeiros socorros.',
+        'priority_actions': [
+            "1. SEGURANÇA: Avalie se o local é seguro",
+            "2. CONSCIÊNCIA: Verifique se a vítima responde",
+            "3. RESPIRAÇÃO: Confirme se está respirando",
+            "4. SANGRAMENTO: Controle hemorragias visíveis",
+            "5. AJUDA: Chame socorro médico"
+        ],
+        'warning': "ACIDENTE: Não mova a vítima se suspeitar de lesão na coluna.",
+        'fallback': True
+    }
+
+def _get_poisoning_fallback(poison_type, symptoms):
+    """Resposta de fallback para intoxicação"""
+    return {
+        'type': 'intoxicacao',
+        'poison_type': poison_type,
+        'ai_guidance': 'Serviço de IA temporariamente indisponível. Seguindo protocolo básico de intoxicação.',
+        'immediate_actions': [
+            "Remova a pessoa da fonte de exposição",
+            "Verifique sinais vitais",
+            "NÃO induza vômito sem orientação",
+            "Se consciente, dê água (se orientado)",
+            "Chame ajuda médica URGENTEMENTE"
+        ],
+        'do_not_do': [
+            "Não induza vômito se a pessoa engoliu produtos corrosivos",
+            "Não dê leite ou óleo",
+            "Não deixe a pessoa sozinha",
+            "Não espere os sintomas piorarem"
+        ],
+        'warning': "INTOXICAÇÃO: Tempo é crucial. Contate centro de intoxicações se disponível.",
+        'fallback': True
+    }
