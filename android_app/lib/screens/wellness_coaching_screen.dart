@@ -39,7 +39,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _initializeServices();
   }
 
@@ -202,8 +202,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Dashboard'),
-            Tab(icon: Icon(Icons.mic), text: 'Análise Voz'),
-            Tab(icon: Icon(Icons.self_improvement), text: 'Coaching'),
             Tab(icon: Icon(Icons.calendar_today), text: 'Diário'),
           ],
         ),
@@ -212,8 +210,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
         controller: _tabController,
         children: [
           _buildDashboardTab(),
-          const Center(child: Text('Análise de Voz (em desenvolvimento)')),
-          const Center(child: Text('Sessões de Coaching (em desenvolvimento)')),
           _buildDiaryTab(),
         ],
       ),
@@ -319,7 +315,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
                   'Registre suas métricas diárias para ver sua pontuação de bem-estar.'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => _tabController.animateTo(3),
+                onPressed: () => _tabController.animateTo(1),
                 child: const Text('Registrar Métricas'),
               ),
             ],
@@ -1062,16 +1058,30 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
       length: 2,
       child: Column(
         children: [
-          Container(
-            color: Colors.white,
-            child: const TabBar(
-              labelColor: AppColors.primary,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: AppColors.primary,
-              tabs: [
-                Tab(icon: Icon(Icons.edit), text: 'Nova Entrada'),
-                Tab(icon: Icon(Icons.history), text: 'Histórico'),
-              ],
+          Material(
+            elevation: 2,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TabBar(
+                labelColor: Theme.of(context).colorScheme.primary,
+                unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                indicatorColor: Theme.of(context).colorScheme.primary,
+                indicatorWeight: 3,
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                tabs: const [
+                  Tab(icon: Icon(Icons.edit_outlined), text: 'Nova Entrada'),
+                  Tab(icon: Icon(Icons.history_outlined), text: 'Histórico'),
+                ],
+              ),
             ),
           ),
           Expanded(
@@ -1088,71 +1098,102 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   }
 
   Widget _buildNewEntryTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Cabeçalho
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Cabeçalho moderno
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colorScheme.primaryContainer,
+                        colorScheme.primaryContainer.withOpacity(0.7),
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.edit_note_outlined,
+                            color: colorScheme.onPrimaryContainer,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Diário de Bem-estar',
+                                  style: TextStyle(
+                                    color: colorScheme.onPrimaryContainer,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Como você está se sentindo hoje? ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                                  style: TextStyle(
+                                    color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '📝 Diário de Bem-estar',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Como você está se sentindo hoje? ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
+              const SizedBox(height: 16),
+
+              // Seletor de humor
+              _buildMoodSelector(),
+              const SizedBox(height: 16),
+
+              // Nível de energia
+              _buildEnergyLevelSlider(),
+              const SizedBox(height: 16),
+
+              // Tags de sentimentos
+              _buildEmotionTags(),
+              const SizedBox(height: 16),
+
+              // Campo de texto principal
+              _buildDiaryTextInput(),
+              const SizedBox(height: 24),
+
+              // Botão de salvar
+              _buildSaveButton(),
+              const SizedBox(height: 32),
+            ]),
           ),
-          const SizedBox(height: 24),
-
-          // Seletor de humor
-          _buildMoodSelector(),
-          const SizedBox(height: 24),
-
-          // Nível de energia
-          _buildEnergyLevelSlider(),
-          const SizedBox(height: 24),
-
-          // Tags de sentimentos
-          _buildEmotionTags(),
-          const SizedBox(height: 24),
-
-          // Campo de texto principal
-          _buildDiaryTextInput(),
-          const SizedBox(height: 24),
-
-          // Botão de salvar
-          _buildSaveButton(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildMoodSelector() {
+    final colorScheme = Theme.of(context).colorScheme;
     final moods = [
       {'key': 'muito_baixo', 'emoji': '😢', 'label': 'Muito Baixo', 'color': Colors.red},
       {'key': 'baixo', 'emoji': '😔', 'label': 'Baixo', 'color': Colors.orange},
@@ -1162,60 +1203,98 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     ];
 
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Como está seu humor?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: moods.map((mood) {
-                final isSelected = _selectedMood == mood['key'];
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedMood = mood['key'] as String),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                          ? (mood['color'] as Color).withValues(alpha: 0.2)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected 
-                            ? (mood['color'] as Color)
-                            : Colors.grey.withValues(alpha: 0.3),
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          mood['emoji'] as String,
-                          style: TextStyle(
-                            fontSize: isSelected ? 32 : 24,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          mood['label'] as String,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected ? (mood['color'] as Color) : Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
+              children: [
+                Icon(
+                  Icons.sentiment_satisfied_outlined,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Como está seu humor?',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
+            const SizedBox(height: 20),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: moods.map((mood) {
+                    final isSelected = _selectedMood == mood['key'];
+                    return SizedBox(
+                      width: (constraints.maxWidth - 32) / 5,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedMood = mood['key'] as String),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? (mood['color'] as Color).withOpacity(0.2)
+                                : colorScheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected 
+                                  ? (mood['color'] as Color)
+                                  : colorScheme.outline.withOpacity(0.3),
+                              width: isSelected ? 2 : 1,
+                            ),
+                            boxShadow: isSelected ? [
+                              BoxShadow(
+                                color: (mood['color'] as Color).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ] : null,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                mood['emoji'] as String,
+                                style: TextStyle(
+                                  fontSize: isSelected ? 32 : 24,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                mood['label'] as String,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  color: isSelected 
+                                      ? (mood['color'] as Color)
+                                      : colorScheme.onSurfaceVariant,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                    }).toList(),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -1223,55 +1302,92 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   }
 
   Widget _buildEnergyLevelSlider() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final energyColor = _getEnergyColor();
+    
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Nível de Energia',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Icon(
+                  Icons.battery_charging_full_outlined,
+                  color: colorScheme.primary,
+                  size: 24,
                 ),
+                const SizedBox(width: 8),
+                Text(
+                  'Nível de Energia',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _getEnergyColor().withValues(alpha: 0.1),
+                    color: energyColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: energyColor, width: 1),
                   ),
                   child: Text(
                     '${_energyLevel.toInt()}/10',
                     style: TextStyle(
-                      color: _getEnergyColor(),
+                      color: energyColor,
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: _getEnergyColor(),
-                thumbColor: _getEnergyColor(),
-                overlayColor: _getEnergyColor().withValues(alpha: 0.2),
+                activeTrackColor: energyColor,
+                inactiveTrackColor: energyColor.withOpacity(0.3),
+                thumbColor: energyColor,
+                overlayColor: energyColor.withOpacity(0.2),
+                valueIndicatorColor: energyColor,
+                trackHeight: 6,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
               ),
               child: Slider(
                 value: _energyLevel,
                 min: 1,
                 max: 10,
                 divisions: 9,
+                label: '${_energyLevel.toInt()}/10',
                 onChanged: (value) => setState(() => _energyLevel = value),
               ),
             ),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Muito Baixa', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                Text('Muito Alta', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                Text(
+                  'Muito Baixa',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  'Muito Alta',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ],
@@ -1281,20 +1397,54 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   }
 
   Widget _buildEmotionTags() {
+    final colorScheme = Theme.of(context).colorScheme;
     final availableTags = [
       'Ansioso', 'Calmo', 'Estressado', 'Feliz', 'Triste', 'Motivado',
       'Cansado', 'Esperançoso', 'Preocupado', 'Grato', 'Irritado', 'Relaxado'
     ];
 
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Como você se sente? (selecione até 3)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(
+                  Icons.psychology_outlined,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Como você se sente?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_selectedTags.length}/3',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -1302,20 +1452,40 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
               runSpacing: 8,
               children: availableTags.map((tag) {
                 final isSelected = _selectedTags.contains(tag);
-                return FilterChip(
-                  label: Text(tag),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected && _selectedTags.length < 3) {
-                        _selectedTags.add(tag);
-                      } else if (!selected) {
-                        _selectedTags.remove(tag);
-                      }
-                    });
-                  },
-                  selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                  checkmarkColor: AppColors.primary,
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  child: FilterChip(
+                    label: Text(
+                      tag,
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected 
+                            ? colorScheme.onPrimaryContainer
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected && _selectedTags.length < 3) {
+                          _selectedTags.add(tag);
+                        } else if (!selected) {
+                          _selectedTags.remove(tag);
+                        }
+                      });
+                    },
+                    selectedColor: colorScheme.primaryContainer,
+                    backgroundColor: colorScheme.surface,
+                    checkmarkColor: colorScheme.onPrimaryContainer,
+                    side: BorderSide(
+                      color: isSelected 
+                          ? colorScheme.primary
+                          : colorScheme.outline.withOpacity(0.5),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    elevation: isSelected ? 2 : 0,
+                    shadowColor: colorScheme.primary.withOpacity(0.3),
+                  ),
                 );
               }).toList(),
             ),
@@ -1326,28 +1496,75 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   }
 
   Widget _buildDiaryTextInput() {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Escreva sobre seu dia',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(
+                  Icons.edit_note_outlined,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Escreva sobre seu dia',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: _diaryController,
-              maxLines: 8,
-              decoration: InputDecoration(
-                hintText: 'O que aconteceu hoje? Como você se sentiu? O que aprendeu?\n\nEscreva livremente sobre seus pensamentos e sentimentos...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: colorScheme.outline.withOpacity(0.5),
+                  width: 1,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
+              child: TextField(
+                controller: _diaryController,
+                maxLines: 8,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: colorScheme.onSurface,
+                  height: 1.5,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'O que aconteceu hoje? Como você se sentiu? O que aprendeu?\n\nEscreva livremente sobre seus pensamentos e sentimentos...',
+                  hintStyle: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surface,
+                  contentPadding: const EdgeInsets.all(16),
                 ),
               ),
             ),
@@ -1358,42 +1575,82 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   }
 
   Widget _buildSaveButton() {
-    return SizedBox(
+    final colorScheme = Theme.of(context).colorScheme;
+    final canSave = _selectedMood.isNotEmpty && _diaryController.text.trim().isNotEmpty;
+    
+    return Container(
       width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: canSave ? LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.primary,
+            colorScheme.primary.withOpacity(0.8),
+          ],
+        ) : null,
+      ),
       child: ElevatedButton(
-        onPressed: _isSavingEntry ? null : _saveDiaryEntry,
+        onPressed: (_isSavingEntry || !canSave) ? null : _saveDiaryEntry,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: canSave ? Colors.transparent : colorScheme.surfaceVariant,
+          foregroundColor: canSave ? Colors.white : colorScheme.onSurfaceVariant,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          elevation: canSave ? 4 : 0,
+          shadowColor: canSave ? colorScheme.primary.withOpacity(0.3) : null,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: _isSavingEntry
-            ? const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: _isSavingEntry
+              ? Row(
+                  key: const ValueKey('loading'),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          canSave ? Colors.white : colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 12),
-                  Text('Salvando...'),
-                ],
-              )
-            : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.save),
-                  SizedBox(width: 8),
-                  Text('Salvar Entrada', style: TextStyle(fontSize: 16)),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Salvando...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: canSave ? Colors.white : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  key: const ValueKey('save'),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      canSave ? Icons.save_outlined : Icons.save_outlined,
+                      color: canSave ? Colors.white : colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      canSave ? 'Salvar Entrada' : 'Preencha os campos obrigatórios',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: canSave ? Colors.white : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
