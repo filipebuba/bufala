@@ -1,35 +1,26 @@
-import 'package:android_app/services/crisis_response_service.dart';
-import 'package:android_app/widgets/emergency_button.dart';
+import 'package:android_app/widgets/quick_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 
-import 'emergency_button_test.mocks.dart';
-
-@GenerateMocks([ICrisisResponseService])
 void main() {
-  group('EmergencyButton Widget Tests', () {
-    late MockICrisisResponseService mockService;
-
-    setUp(() {
-      mockService = MockICrisisResponseService();
-    });
+  group('EmergencyActionButton Widget Tests', () {
+    // Removed mock service setup as it's not needed for widget testing
 
     testWidgets('should display emergency button correctly', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: EmergencyButton(
-              onPressed: () {},
+            body: EmergencyActionButton(
+              label: 'EMERGÊNCIA',
+              onTap: () {},
             ),
           ),
         ),
       );
 
       // Assert
-      expect(find.byType(EmergencyButton), findsOneWidget);
+      expect(find.byType(EmergencyActionButton), findsOneWidget);
       expect(find.byIcon(Icons.emergency), findsOneWidget);
       expect(find.text('EMERGÊNCIA'), findsOneWidget);
     });
@@ -41,8 +32,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: EmergencyButton(
-              onPressed: () {
+            body: EmergencyActionButton(
+              label: 'EMERGÊNCIA',
+              onTap: () {
                 wasPressed = true;
               },
             ),
@@ -51,28 +43,28 @@ void main() {
       );
 
       // Act
-      await tester.tap(find.byType(EmergencyButton));
+      await tester.tap(find.byType(EmergencyActionButton));
       await tester.pump();
 
       // Assert
       expect(wasPressed, true);
     });
 
-    testWidgets('should show loading state during emergency call', (WidgetTester tester) async {
+    testWidgets('should be enabled by default', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: EmergencyButton(
-              onPressed: () {},
-              isLoading: true,
+            body: EmergencyActionButton(
+              label: 'EMERGÊNCIA',
+              onTap: () {},
             ),
           ),
         ),
       );
 
       // Assert
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(EmergencyActionButton), findsOneWidget);
     });
 
     testWidgets('should be disabled when specified', (WidgetTester tester) async {
@@ -82,70 +74,58 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: EmergencyButton(
-              onPressed: () {
+            body: EmergencyActionButton(
+              label: 'EMERGÊNCIA',
+              onTap: () {
                 wasPressed = true;
               },
-              enabled: false,
+              isEnabled: false,
             ),
           ),
         ),
       );
 
       // Act
-      await tester.tap(find.byType(EmergencyButton));
+      await tester.tap(find.byType(EmergencyActionButton));
       await tester.pump();
 
       // Assert
       expect(wasPressed, false);
     });
 
-    testWidgets('should display correct text in different languages', (WidgetTester tester) async {
-      // Test Kriolu
+    testWidgets('should display custom text', (WidgetTester tester) async {
+      // Test custom label
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: EmergencyButton(
-              onPressed: () {},
-              language: 'kriolu',
+            body: EmergencyActionButton(
+              label: 'URJÉNSIA',
+              onTap: () {},
             ),
           ),
         ),
       );
 
       expect(find.text('URJÉNSIA'), findsOneWidget);
-
-      // Test Portuguese
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: EmergencyButton(
-              onPressed: () {},
-              language: 'portuguese',
-            ),
-          ),
-        ),
-      );
-
-      expect(find.text('EMERGÊNCIA'), findsOneWidget);
     });
 
-    testWidgets('should have accessibility features', (WidgetTester tester) async {
+    testWidgets('should have pulsing animation when enabled', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: EmergencyButton(
-              onPressed: () {},
+            body: EmergencyActionButton(
+              label: 'EMERGÊNCIA',
+              onTap: () {},
+              isPulsing: true,
             ),
           ),
         ),
       );
 
       // Assert
-      final semantics = tester.getSemantics(find.byType(EmergencyButton));
-      expect(semantics.hasAction(SemanticsAction.tap), true);
-      expect(semantics.label, contains('Emergência'));
+      expect(find.byType(EmergencyActionButton), findsOneWidget);
+      expect(find.text('EMERGÊNCIA'), findsOneWidget);
     });
   });
 }

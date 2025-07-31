@@ -44,8 +44,7 @@ class _EducationScreenState extends State<EducationScreen> {
   final String _currentLevel = 'beginner';
   List<OfflineLearningContent> _availableContent = [];
   OfflineLearningContent? _currentContent;
-  List<Map<String, dynamic>> _educationAlerts = [];
-  bool _loadingEducationAlerts = false;
+
 
   @override
   void initState() {
@@ -119,82 +118,184 @@ class _EducationScreenState extends State<EducationScreen> {
         'id': 'literacy',
         'title': 'Alfabetização',
         'title_creole': 'Alfabetizason',
-        'icon': Icons.book,
+        'icon': Icons.menu_book_rounded,
         'description': 'Aprender a ler e escrever',
         'description_creole': 'Aprende lei i skrève',
+        'color': Colors.blue,
       },
       {
         'id': 'math',
         'title': 'Matemática',
         'title_creole': 'Matemátika',
-        'icon': Icons.calculate,
+        'icon': Icons.calculate_rounded,
         'description': 'Números e cálculos básicos',
         'description_creole': 'Númeru i kálkulu básiku',
+        'color': Colors.purple,
       },
       {
         'id': 'health',
         'title': 'Saúde',
         'title_creole': 'Saúdi',
-        'icon': Icons.health_and_safety,
+        'icon': Icons.health_and_safety_rounded,
         'description': 'Cuidados com a saúde',
         'description_creole': 'Kuidadu ku saúdi',
+        'color': Colors.red,
       },
       {
         'id': 'agriculture',
         'title': 'Agricultura',
         'title_creole': 'Agrikultura',
-        'icon': Icons.eco,
+        'icon': Icons.eco_rounded,
         'description': 'Técnicas de cultivo',
         'description_creole': 'Téknika di kultivo',
-      },
-      {
-        'id': 'teach_language',
-        'title': 'Ensine o Bu Fala',
-        'title_creole': 'Sina Bu Fala',
-        'icon': Icons.school_outlined,
-        'description': 'Ensine línguas africanas para a comunidade',
-        'description_creole': 'Sina língua afrikanu pa komunidadi',
+        'color': Colors.green,
       },
     ];
 
-    return Column(
-      children: [
-        _buildEducationAlertsSection(),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: subjects.length,
-            itemBuilder: (context, index) {
-        final subject = subjects[index];
-        final title = subject[_useCreole ? 'title_creole' : 'title'] as String;
-        final description =
-            subject[_useCreole ? 'description_creole' : 'description']
-                as String;
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: ListTile(
-            leading: Icon(
-              subject['icon'] as IconData,
-              size: 40,
-              color: AppColors.primaryGreen,
-            ),
-            title: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(description),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _selectSubject(subject['id'] as String),
-          ),
-        );
-      },
-    ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.green[50]!, Colors.white],
         ),
-      ],
+      ),
+      child: Column(
+        children: [
+          // Cabeçalho moderno
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.school_rounded,
+                  size: 48,
+                  color: AppColors.primaryGreen,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _useCreole ? 'Escolha o Tipo de Educação' : 'Escolha o Tipo de Educação',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _useCreole 
+                      ? 'Selecione a modalidade que melhor atende suas necessidades'
+                      : 'Selecione a modalidade que melhor atende suas necessidades',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          // Grid de matérias
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.85,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
+                final subject = subjects[index];
+                final title = subject[_useCreole ? 'title_creole' : 'title'] as String;
+                final description = subject[_useCreole ? 'description_creole' : 'description'] as String;
+                final color = subject['color'] as Color;
+
+                return _buildModernSubjectCard(
+                  subject['id'] as String,
+                  title,
+                  description,
+                  subject['icon'] as IconData,
+                  color,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernSubjectCard(
+    String id,
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+  ) {
+    return GestureDetector(
+      onTap: () => _selectSubject(id),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 32,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  height: 1.3,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -286,19 +387,6 @@ class _EducationScreenState extends State<EducationScreen> {
       );
 
   void _selectSubject(String subjectId) {
-    // Se for o sistema colaborativo, navegar para a tela específica
-    if (subjectId == 'teach_language') {
-      // Temporariamente redirecionando para educação até que o sistema colaborativo seja corrigido
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sistema de Ensino Colaborativo em desenvolvimento'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Para outras matérias, comportamento normal
     setState(() {
       _selectedSubject = subjectId;
       _isLoading = true;
@@ -800,127 +888,7 @@ $content
     return cleaned;
   }
 
-  Future<void> _loadEducationAlerts() async {
-    if (mounted) {
-      setState(() {
-        _loadingEducationAlerts = true;
-      });
-    }
 
-    try {
-      final alerts = await _environmentalApiService.getEnvironmentalAlerts();
-      
-      // Filtrar alertas relevantes para educação
-      final educationKeywords = [
-        'escola', 'educação', 'ensino', 'criança', 'estudante', 
-        'aula', 'material', 'livro', 'professor', 'aprendizagem',
-        'alfabetização', 'matemática', 'leitura', 'escrita'
-      ];
-      
-      final filteredAlerts = alerts.where((alert) {
-        final message = alert['message']?.toString().toLowerCase() ?? '';
-        final category = alert['category']?.toString().toLowerCase() ?? '';
-        final type = alert['type']?.toString().toLowerCase() ?? '';
-        
-        return educationKeywords.any((keyword) => 
-          message.contains(keyword) || 
-          category.contains(keyword) || 
-          type.contains(keyword)
-        );
-      }).toList();
-      
-      if (mounted) {
-        setState(() {
-          _educationAlerts = filteredAlerts.cast<Map<String, dynamic>>();
-          _loadingEducationAlerts = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _educationAlerts = [];
-          _loadingEducationAlerts = false;
-        });
-      }
-      print('Erro ao carregar alertas educacionais: $e');
-    }
-  }
-
-  Widget _buildEducationAlertsSection() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.orange.shade700,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _useCreole ? 'Alerta Edukasional' : 'Alertas Educacionais',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange.shade800,
-                  ),
-                ),
-              ),
-              if (_loadingEducationAlerts)
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
-                  ),
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _loadEducationAlerts,
-                  color: Colors.orange.shade700,
-                  iconSize: 20,
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_educationAlerts.isEmpty && !_loadingEducationAlerts)
-            Text(
-              _useCreole
-                  ? 'Nada alerta edukasional agora'
-                  : 'Nenhum alerta educacional no momento',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
-            )
-          else if (_educationAlerts.isNotEmpty)
-            SizedBox(
-              height: 120,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _educationAlerts.length,
-                itemBuilder: (context, index) {
-                  final alert = _educationAlerts[index];
-                  return _buildEducationAlertCard(alert);
-                },
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 
   // Função para limpar caracteres especiais dos textos do Gemma3
   String _cleanGemmaText(String? text) {
@@ -944,113 +912,7 @@ $content
     return cleanedText;
   }
 
-  Widget _buildEducationAlertCard(Map<String, dynamic> alert) {
-    final type = _cleanGemmaText(alert['type']?.toString()) ?? 'info';
-    final message = _cleanGemmaText(alert['message']?.toString());
-    final level = _cleanGemmaText(alert['level']?.toString()) ?? 'medium';
-    final region = _cleanGemmaText(alert['region']?.toString());
 
-    Color cardColor;
-    IconData cardIcon;
-    
-    switch (level.toLowerCase()) {
-      case 'high':
-      case 'alto':
-        cardColor = Colors.red.shade100;
-        cardIcon = Icons.priority_high;
-        break;
-      case 'medium':
-      case 'médio':
-        cardColor = Colors.orange.shade100;
-        cardIcon = Icons.warning;
-        break;
-      case 'low':
-      case 'baixo':
-        cardColor = Colors.yellow.shade100;
-        cardIcon = Icons.info;
-        break;
-      default:
-        cardColor = Colors.blue.shade100;
-        cardIcon = Icons.notifications;
-    }
-
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: cardColor.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(cardIcon, size: 16, color: Colors.grey.shade700),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  type.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: cardColor.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  level.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.3,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (region.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(Icons.location_on, size: 12, color: Colors.grey.shade600),
-                const SizedBox(width: 2),
-                Expanded(
-                  child: Text(
-                    region,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 
   void _showErrorDialog(String message) {
     showDialog<void>(

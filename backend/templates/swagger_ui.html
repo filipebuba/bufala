@@ -1006,11 +1006,41 @@
             <h3>🎯 Testes Rápidos</h3>
             <p>Clique nos botões abaixo para testar endpoints rapidamente:</p>
             <div class="quick-test-buttons">
+                <!-- Saúde do Sistema -->
                 <button class="test-btn" onclick="testEndpoint('/health')">🏥 Health Check</button>
+                <button class="test-btn" onclick="testEndpoint('/health/quick')">⚡ Health Rápido</button>
+                <button class="test-btn" onclick="testEndpoint('/health/gemma')">🤖 Gemma Status</button>
+                
+                <!-- Médico -->
+                <button class="test-btn" onclick="testEndpoint('/medical')">🩺 Consulta Médica</button>
+                <button class="test-btn" onclick="testEndpoint('/medical/emergency')">🚨 Emergência</button>
+                <button class="test-btn" onclick="testEndpoint('/medical/first-aid')">🆘 Primeiros Socorros</button>
+                
+                <!-- Multimodal -->
+                <button class="test-btn" onclick="testEndpoint('/multimodal')">🎭 Multimodal</button>
+                <button class="test-btn" onclick="testEndpoint('/multimodal/analyze')">🔍 Análise Avançada</button>
+                <button class="test-btn" onclick="testEndpoint('/multimodal/medical-analysis')">🏥 Análise Médica</button>
+                
+                <!-- Educação -->
+                <button class="test-btn" onclick="testEndpoint('/education')">📚 Educação</button>
+                <button class="test-btn" onclick="testEndpoint('/multimodal/educational-content')">🎓 Conteúdo Educacional</button>
+                
+                <!-- Agricultura -->
+                <button class="test-btn" onclick="testEndpoint('/agriculture')">🌱 Agricultura</button>
+                <button class="test-btn" onclick="testEndpoint('/multimodal/agricultural-analysis')">🚜 Análise Agrícola</button>
+                
+                <!-- Validação Colaborativa -->
+                <button class="test-btn" onclick="testEndpoint('/collaborative-validation/generate-phrases')">💬 Gerar Frases</button>
+                <button class="test-btn" onclick="testEndpoint('/collaborative-validation/leaderboard')">🏆 Ranking</button>
+                
+                <!-- Tradução e Acessibilidade -->
                 <button class="test-btn" onclick="testEndpoint('/translate')">🌍 Tradução</button>
-                <button class="test-btn" onclick="testEndpoint('/medical/analyze')">🩺 Análise Médica</button>
-                <button class="test-btn" onclick="testEndpoint('/education/guide')">📚 Educação</button>
-                <button class="test-btn" onclick="testEndpoint('/agriculture/analyze')">🌱 Agricultura</button>
+                <button class="test-btn" onclick="testEndpoint('/multimodal/translate-content')">🗣️ Tradução Multimodal</button>
+                <button class="test-btn" onclick="testEndpoint('/multimodal/accessibility-enhancement')">♿ Acessibilidade</button>
+                
+                <!-- Modelos -->
+                <button class="test-btn" onclick="testEndpoint('/models/health')">🧠 Status Modelos</button>
+                <button class="test-btn" onclick="testEndpoint('/models/optimize-config')">⚙️ Otimizar Config</button>
             </div>
         </div>
 

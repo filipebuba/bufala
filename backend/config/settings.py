@@ -169,9 +169,18 @@ class BackendConfig:
     USE_BFLOAT16 = os.getenv('USE_BFLOAT16', 'true').lower() == 'true'
     ENABLE_OPTIMIZATIONS = os.getenv('ENABLE_OPTIMIZATIONS', 'true').lower() == 'true'
     
-    # Configurações de quantização Unsloth
+    # Configurações Unsloth
     USE_UNSLOTH = os.getenv('USE_UNSLOTH', 'true').lower() == 'true'
     PREFER_UNSLOTH = os.getenv('PREFER_UNSLOTH', 'true').lower() == 'true'
+    UNSLOTH_MODEL_PRIMARY = os.getenv('UNSLOTH_MODEL_PRIMARY', 'unsloth/gemma-2-2b-it-bnb-4bit')
+    UNSLOTH_MODEL_FALLBACK = os.getenv('UNSLOTH_MODEL_FALLBACK', 'google/gemma-2-2b-it')
+    
+    # Configurações de Quantização
+    USE_QUANTIZATION = os.getenv('USE_QUANTIZATION', 'true').lower() == 'true'
+    QUANTIZATION_BITS = int(os.getenv('QUANTIZATION_BITS', '4'))
+    USE_BNB_4BIT = os.getenv('USE_BNB_4BIT', 'true').lower() == 'true'
+    BNB_4BIT_COMPUTE_DTYPE = os.getenv('BNB_4BIT_COMPUTE_DTYPE', 'bfloat16')
+    BNB_4BIT_USE_DOUBLE_QUANT = os.getenv('BNB_4BIT_USE_DOUBLE_QUANT', 'true').lower() == 'true'
     
     # Configurações de logging
     LOG_LEVEL = "INFO"

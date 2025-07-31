@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
@@ -10,14 +11,10 @@ import '../widgets/connection_status.dart';
 import '../widgets/feature_card.dart';
 import '../widgets/quick_action_button.dart';
 import 'agriculture_screen.dart';
-import 'api_test_screen.dart'; // NOVO: Import da tela de teste
-
-import 'gemma_meditation_test_screen.dart'; // NOVO: Import da tela de teste Gemma-3n
 import 'education_screen.dart';
 import 'environmental_menu_screen.dart';
 import 'medical_emergency_unified_screen.dart';
 import 'plant_diagnosis_screen.dart';
-// import 'translation_screen.dart'; // Removido - será implementado na v2
 import 'voiceguide_accessibility_screen.dart';
 import 'wellness_coaching_screen.dart';
 
@@ -31,15 +28,38 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isConnected = false;
   Map<String, dynamic>? _serverStatus;
-
-  // Adicione as funções ausentes para evitar erros de compilação
-// Removidas as duplicatas de métodos já existentes
-// Removido método duplicado _navigateToEnvironmental
+  late PageController _pageController;
+  int _currentCarouselIndex = 0;
+  
+  final List<Map<String, String>> _guineaBissauImages = [
+    {
+      'image': 'assets/images/bissau_island.svg',
+      'title': 'Ilhas de Bissau',
+      'description': 'Belezas naturais das ilhas da Guiné-Bissau'
+    },
+    {
+      'image': 'assets/images/village_scene.svg',
+      'title': 'Aldeias Tradicionais',
+      'description': 'Vida comunitária nas aldeias guineenses'
+    },
+    {
+      'image': 'assets/images/coastal_scene.svg',
+      'title': 'Costa Atlântica',
+      'description': 'Pescadores e manguezais da costa'
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     _checkConnection();
+  }
+  
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkConnection() async {
@@ -64,30 +84,99 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Row(
-            children: [
-              Icon(Icons.public, color: Colors.white),
-              SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  AppStrings.appName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(80),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary,
+                  AppColors.primaryDark,
+                  Color(0xFF1565C0),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            ConnectionStatus(isConnected: _isConnected),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _checkConnection,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-          ],
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              centerTitle: false,
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.eco,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          AppStrings.appName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            letterSpacing: 0.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const Text(
+                          'Comunidade Inteligente',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  child: ConnectionStatus(isConnected: _isConnected),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    onPressed: _checkConnection,
+                    tooltip: 'Atualizar conexão',
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
         ),
         body: RefreshIndicator(
           onRefresh: _checkConnection,
@@ -99,6 +188,10 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Cabeçalho de boas-vindas
                 _buildWelcomeHeader(),
+                const SizedBox(height: 24),
+                
+                // Carrossel de imagens da Guiné-Bissau
+                _buildGuineaBissauCarousel(),
                 const SizedBox(height: 24),
 
                 // Status do servidor
@@ -137,14 +230,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: _navigateToEnvironmental,
                 ),
                 const SizedBox(height: 12),
-
+                
                 FeatureCard(
-                  icon: Icons.spa,
-                  title: 'Teste Meditação Gemma-3n',
+                  icon: Icons.school,
+                  title: 'Educação',
                   description:
-                      'Teste da funcionalidade de meditação com áudio do Gemma-3n',
-                  color: Colors.deepPurple,
-                  onTap: _navigateToGemmaMeditationTest,
+                      'Materiais educativos e aprendizado em crioulo',
+                  color: Colors.blue,
+                  onTap: _navigateToEducation,
+                ),
+                const SizedBox(height: 12),
+                
+                FeatureCard(
+                  icon: Icons.agriculture,
+                  title: 'Agricultura',
+                  description:
+                      'Técnicas agrícolas e proteção de cultivos',
+                  color: Colors.green,
+                  onTap: _navigateToAgriculture,
                 ),
                 const SizedBox(height: 24),
 
@@ -159,6 +262,132 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       );
+      
+  Widget _buildGuineaBissauCarousel() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        '🏝️ Guiné-Bissau',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: 12),
+      Container(
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentCarouselIndex = index;
+              });
+            },
+            itemCount: _guineaBissauImages.length,
+            itemBuilder: (context, index) {
+              final item = _guineaBissauImages[index];
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // SVG Image
+                    Positioned.fill(
+                      child: SvgPicture.asset(
+                        item['image']!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    // Gradient overlay
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.6),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Text content
+                    Positioned(
+                      bottom: 20,
+                      left: 20,
+                      right: 20,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item['title']!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            item['description']!,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      // Dots indicator
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(
+          _guineaBissauImages.length,
+          (index) => Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: _currentCarouselIndex == index ? 12 : 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: _currentCarouselIndex == index
+                  ? AppColors.primary
+                  : Colors.grey.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 
   Widget _buildWelcomeHeader() => Container(
         width: double.infinity,
@@ -457,16 +686,6 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute<void>(
         builder: (context) => const WellnessCoachingScreen(),
-      ),
-    );
-  }
-
-
-  void _navigateToGemmaMeditationTest() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const GemmaMeditationTestScreen(),
       ),
     );
   }
