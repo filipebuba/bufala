@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../config/app_config.dart';
 // import 'package:record/record.dart'; // Temporariamente desabilitado
 import '../services/environmental_api_service.dart';
-import '../config/app_config.dart';
 
 class PlantDiagnosisScreen extends StatefulWidget {
   const PlantDiagnosisScreen({super.key});
@@ -405,7 +406,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ),
             child: _isLoading
-                ? Row(
+                ? const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
@@ -420,7 +421,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       Text('Analisando...', style: TextStyle(color: Colors.white)),
                     ],
                   )
-                : Row(
+                : const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.analytics, color: Colors.white),
@@ -460,11 +461,11 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _isRecording ? Color(0xFF2E7D32) : Colors.grey[300],
+                        color: _isRecording ? const Color(0xFF2E7D32) : Colors.grey[300],
                         boxShadow: _isRecording
                             ? [
                                 BoxShadow(
-                                  color: Color(0xFF2E7D32).withOpacity(0.3),
+                                  color: const Color(0xFF2E7D32).withOpacity(0.3),
                                   blurRadius: 20,
                                   spreadRadius: 5,
                                 ),
@@ -513,10 +514,10 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 _isRecording ? Icons.stop : Icons.mic,
                 color: Colors.white,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 _isRecording ? 'Parar Gravação' : 'Iniciar Gravação',
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
             ],
           ),
@@ -533,7 +534,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ),
             child: _isLoading
-                ? Row(
+                ? const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
@@ -548,7 +549,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       Text('Analisando...', style: TextStyle(color: Colors.white)),
                     ],
                   )
-                : Row(
+                : const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.analytics, color: Colors.white),

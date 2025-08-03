@@ -54,29 +54,62 @@ class _RecyclingScreenState extends State<RecyclingScreen>
   }
 
   Future<void> _pickImageAndSend(ImageSource source) async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, imageQuality: 80);
-    if (picked == null) return;
-
-    setState(() {
-      _loading = true;
-      _result = null;
-      _image = File(picked.path);
-    });
-
     try {
-      final bytes = await _image!.readAsBytes();
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: source, imageQuality: 70);
+      if (picked == null) return;
+
+      setState(() {
+        _loading = true;
+        _result = null;
+        _image = File(picked.path);
+      });
+
+      // Processar imagem em background para evitar bloqueio da UI
+      await _processImageInBackground(picked.path);
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _result = {'error': 'Erro ao selecionar imagem: $e'};
+      });
+    }
+  }
+
+  Future<void> _processImageInBackground(String imagePath) async {
+    try {
+      // Verificar se o arquivo existe e não está corrompido
+      final file = File(imagePath);
+      if (!await file.exists()) {
+        throw Exception('Arquivo de imagem não encontrado');
+      }
+
+      final fileSize = await file.length();
+      if (fileSize > 5 * 1024 * 1024) {
+        // Limite de 5MB
+        throw Exception('Imagem muito grande. Use uma imagem menor que 5MB.');
+      }
+
+      // Ler bytes da imagem de forma segura
+      final bytes = await file.readAsBytes();
+      if (bytes.isEmpty) {
+        throw Exception('Arquivo de imagem está vazio ou corrompido');
+      }
+
       final base64img = base64Encode(bytes);
 
-      // Usar o IntegratedApiService para análise com Gemma3n
-      final response =
-          await _apiService.post('/recycling/scan', {
+      // Adicionar timeout para a requisição
+      final response = await _apiService.post('/recycling/scan', {
         'image': base64img,
         'location': 'Bissau, Guiné-Bissau',
         'language': 'pt',
         'user_request':
             'Analise este material para reciclagem e forneça insights detalhados sobre como descartá-lo corretamente em Bissau',
-      });
+      }).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => {'error': 'Timeout na análise. Tente novamente.'},
+      );
+
+      if (!mounted) return; // Verificar se o widget ainda está ativo
 
       setState(() {
         _loading = false;
@@ -90,9 +123,11 @@ class _RecyclingScreenState extends State<RecyclingScreen>
         }
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _loading = false;
-        _result = {'error': 'Erro de conexão: $e'};
+        _result = {'error': 'Erro de processamento: $e'};
       });
     }
   }
@@ -320,8 +355,20 @@ class _RecyclingScreenState extends State<RecyclingScreen>
     }
   }
 
+  /// Conversão segura de dynamic para List<String>
+  List<String> _safeListConversion(dynamic data) {
+    if (data == null) return <String>[];
+    if (data is List) {
+      return data.map((e) => e.toString()).toList();
+    }
+    if (data is String) {
+      return [data];
+    }
+    return <String>[];
+  }
+
   void _showImageSourceDialog() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
@@ -464,7 +511,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                       'Fotografe um material e descubra insights detalhados sobre reciclagem em Bissau',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -480,7 +527,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -552,7 +599,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -642,7 +689,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -680,7 +727,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -714,13 +761,16 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                 // Status de reciclagem
                 if (_result!['recyclable'] != null) ...[
                   _buildInfoSection(
-                    icon:
-                        _result!['recyclable'] ? Icons.recycling : Icons.delete,
+                    icon: (_result!['recyclable'] == true)
+                        ? Icons.recycling
+                        : Icons.delete,
                     title: 'Status de Reciclagem',
-                    content: _result!['recyclable']
+                    content: (_result!['recyclable'] == true)
                         ? 'Reciclável'
                         : 'Não Reciclável',
-                    color: _result!['recyclable'] ? Colors.green : Colors.red,
+                    color: (_result!['recyclable'] == true)
+                        ? Colors.green
+                        : Colors.red,
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -741,7 +791,8 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                   _buildListSection(
                     icon: Icons.list_alt,
                     title: 'Como Descartar',
-                    items: List<String>.from(_result!['disposal_instructions']),
+                    items:
+                        _safeListConversion(_result!['disposal_instructions']),
                     color: Colors.purple,
                   ),
                   const SizedBox(height: 20),
@@ -764,7 +815,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                   _buildListSection(
                     icon: Icons.lightbulb,
                     title: 'Dicas Importantes',
-                    items: List<String>.from(_result!['tips']),
+                    items: _safeListConversion(_result!['tips']),
                     color: Colors.amber,
                   ),
                 ],
@@ -785,9 +836,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
       Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
@@ -802,8 +853,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color.fromRGBO(
-                          color.red, color.green, color.blue, 0.8),
+                      color: color.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -830,9 +880,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
       Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,8 +896,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color:
-                        Color.fromRGBO(color.red, color.green, color.blue, 0.8),
+                    color: color.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -885,9 +934,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -972,9 +1021,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
