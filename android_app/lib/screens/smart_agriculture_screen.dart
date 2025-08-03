@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/integrated_api_service.dart';
+
 import '../config/app_config.dart';
 import '../services/environmental_api_service.dart';
+import '../services/integrated_api_service.dart';
 
 class SmartAgricultureScreen extends StatefulWidget {
   const SmartAgricultureScreen({super.key});
@@ -981,8 +982,9 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
   IconData _getSourceIcon(String source) {
     if (source.contains('Docs Gemma')) return Icons.psychology;
     if (source.contains('Improved Gemma')) return Icons.smart_toy;
-    if (source.contains('Fallback') || source.contains('Emergência'))
+    if (source.contains('Fallback') || source.contains('Emergência')) {
       return Icons.warning;
+    }
     if (source.contains('Erro')) return Icons.error;
     return Icons.assistant;
   }
@@ -990,8 +992,9 @@ class _SmartAgricultureScreenState extends State<SmartAgricultureScreen>
   Color _getSourceColor(String source) {
     if (source.contains('Docs Gemma')) return Colors.green;
     if (source.contains('Improved Gemma')) return Colors.blue;
-    if (source.contains('Fallback') || source.contains('Emergência'))
+    if (source.contains('Fallback') || source.contains('Emergência')) {
       return Colors.orange;
+    }
     if (source.contains('Erro')) return Colors.red;
     return Colors.grey;
   }

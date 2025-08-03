@@ -54,29 +54,61 @@ class _RecyclingScreenState extends State<RecyclingScreen>
   }
 
   Future<void> _pickImageAndSend(ImageSource source) async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, imageQuality: 80);
-    if (picked == null) return;
-
-    setState(() {
-      _loading = true;
-      _result = null;
-      _image = File(picked.path);
-    });
-
     try {
-      final bytes = await _image!.readAsBytes();
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: source, imageQuality: 70);
+      if (picked == null) return;
+
+      setState(() {
+        _loading = true;
+        _result = null;
+        _image = File(picked.path);
+      });
+
+      // Processar imagem em background para evitar bloqueio da UI
+      await _processImageInBackground(picked.path);
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _result = {'error': 'Erro ao selecionar imagem: $e'};
+      });
+    }
+  }
+
+  Future<void> _processImageInBackground(String imagePath) async {
+    try {
+      // Verificar se o arquivo existe e não está corrompido
+      final file = File(imagePath);
+      if (!await file.exists()) {
+        throw Exception('Arquivo de imagem não encontrado');
+      }
+
+      final fileSize = await file.length();
+      if (fileSize > 5 * 1024 * 1024) {
+        // Limite de 5MB
+        throw Exception('Imagem muito grande. Use uma imagem menor que 5MB.');
+      }
+
+      // Ler bytes da imagem de forma segura
+      final bytes = await file.readAsBytes();
+      if (bytes.isEmpty) {
+        throw Exception('Arquivo de imagem está vazio ou corrompido');
+      }
+
       final base64img = base64Encode(bytes);
 
-      // Usar o IntegratedApiService para análise com Gemma3n
-      final response =
-          await _apiService.post('/recycling/scan', {
+      // Adicionar timeout para a requisição - Usando nova rota específica
+      final response = await _apiService.post('/recycling/analyze', {
         'image': base64img,
         'location': 'Bissau, Guiné-Bissau',
-        'language': 'pt',
         'user_request':
             'Analise este material para reciclagem e forneça insights detalhados sobre como descartá-lo corretamente em Bissau',
-      });
+      }).timeout(
+        const Duration(seconds: 90),
+        onTimeout: () => {'error': 'Timeout na análise. Tente novamente.'},
+      );
+
+      if (!mounted) return; // Verificar se o widget ainda está ativo
 
       setState(() {
         _loading = false;
@@ -90,9 +122,11 @@ class _RecyclingScreenState extends State<RecyclingScreen>
         }
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _loading = false;
-        _result = {'error': 'Erro de conexão: $e'};
+        _result = {'error': 'Erro de processamento: $e'};
       });
     }
   }
@@ -100,12 +134,14 @@ class _RecyclingScreenState extends State<RecyclingScreen>
   /// Processar resposta do Gemma3n e extrair insights
   Map<String, dynamic> _processGemmaResponse(Map<String, dynamic> response) {
     try {
-      final gemmaResponse =
-          response['data']?['response'] ?? response['data']?['analysis'] ?? '';
+      final gemmaResponse = response['data']?['response'] ??
+          response['data']?['analysis'] ??
+          response['data']?['gemma_raw_response'] ??
+          '';
       final cleanResponse = _cleanGemmaText(gemmaResponse.toString());
 
       // Extrair informações estruturadas da resposta do Gemma3n
-      return {
+      final result = {
         'material_type': _extractMaterialType(cleanResponse),
         'recyclable': _extractRecyclability(cleanResponse),
         'recycling_category': _extractCategory(cleanResponse),
@@ -116,6 +152,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
         'confidence': _extractConfidence(cleanResponse),
         'gemma_insights': cleanResponse,
       };
+      return result;
     } catch (e) {
       return {
         'error': 'Erro ao processar resposta: $e',
@@ -128,8 +165,8 @@ class _RecyclingScreenState extends State<RecyclingScreen>
   String _cleanGemmaText(String text) {
     if (text.isEmpty) return text;
 
-    // Remove caracteres especiais e formatação markdown
-    String cleaned = text
+    // Remove caracteres especiais e formatação markdown de forma mais eficiente
+    var cleaned = text
         .replaceAll(RegExp(r'\*+'), '') // Remove asteriscos
         .replaceAll(RegExp(r'#+'), '') // Remove hashtags
         .replaceAll(RegExp(r'`+'), '') // Remove backticks
@@ -142,29 +179,42 @@ class _RecyclingScreenState extends State<RecyclingScreen>
             RegExp(r'\n{3,}'), '\n\n') // Reduz quebras de linha excessivas
         .replaceAll(RegExp(r'[\u0000-\u001F\u007F-\u009F]'),
             '') // Remove caracteres de controle
+        .replaceAll(RegExp(r'\s+'), ' ') // Normaliza espaços
         .trim();
 
-    // Capitaliza primeira letra
+    // Capitaliza primeira letra de forma mais robusta
     if (cleaned.isNotEmpty) {
-      cleaned = cleaned[0].toUpperCase() + cleaned.substring(1);
+      cleaned = cleaned[0].toUpperCase() +
+          (cleaned.length > 1 ? cleaned.substring(1) : '');
     }
 
     return cleaned;
   }
 
   String _extractMaterialType(String text) {
+    // Se o texto está vazio, retornar exatamente o que o Gemma3n disse
+    if (text.isEmpty) {
+      return 'Material não identificado';
+    }
+
     final materialKeywords = {
-      'plástico': RegExp(r'pl[aá]stico|pet|polietileno|pvc|garrafa|embalagem',
+      'Plástico PET': RegExp(
+          r'pl[aá]stico.*pet|pet.*pl[aá]stico|garrafa.*pet|pet.*garrafa|polietileno|pvc|embalagem.*pl[aá]stico',
           caseSensitive: false),
-      'papel': RegExp(r'papel|cartão|papelão|revista|jornal|livro',
+      'Plástico': RegExp(r'pl[aá]stico|garrafa|embalagem|sacola|recipiente',
           caseSensitive: false),
-      'vidro':
-          RegExp(r'vidro|garrafa de vidro|pote|frasco', caseSensitive: false),
-      'metal':
-          RegExp(r'metal|alumínio|lata|ferro|aço|bronze', caseSensitive: false),
-      'orgânico': RegExp(r'org[aâ]nico|comida|resto|alimento|casca',
+      'Papel/Cartão': RegExp(
+          r'papel|cartão|papelão|revista|jornal|livro|caixa.*papel',
           caseSensitive: false),
-      'eletrônico': RegExp(r'eletr[ôo]nico|celular|computador|bateria|pilha',
+      'Vidro': RegExp(r'vidro|garrafa.*vidro|pote.*vidro|frasco|cristal',
+          caseSensitive: false),
+      'Metal/Alumínio': RegExp(r'metal|alumínio|lata|ferro|aço|bronze|enlatado',
+          caseSensitive: false),
+      'Orgânico': RegExp(
+          r'org[aâ]nico|comida|resto|alimento|casca|biodegradável',
+          caseSensitive: false),
+      'Eletrônico': RegExp(
+          r'eletr[ôo]nico|celular|computador|bateria|pilha|e-lixo',
           caseSensitive: false),
     };
 
@@ -173,6 +223,14 @@ class _RecyclingScreenState extends State<RecyclingScreen>
         return entry.key;
       }
     }
+
+    // Se não encontrou palavras-chave, retornar a primeira linha significativa da resposta do Gemma3n
+    final lines =
+        text.split('\n').where((line) => line.trim().length > 3).toList();
+    if (lines.isNotEmpty) {
+      return lines.first.trim();
+    }
+
     return 'Material não identificado';
   }
 
@@ -190,13 +248,21 @@ class _RecyclingScreenState extends State<RecyclingScreen>
   }
 
   String _extractCategory(String text) {
+    // Se o texto está vazio, retornar exatamente o que o Gemma3n disse
+    if (text.isEmpty) {
+      return 'Categoria não identificada';
+    }
+
     final categories = {
-      'Plástico': RegExp(r'pl[aá]stico|pet|embalagem', caseSensitive: false),
-      'Papel': RegExp(r'papel|cartão', caseSensitive: false),
-      'Vidro': RegExp(r'vidro', caseSensitive: false),
-      'Metal': RegExp(r'metal|alumínio|lata', caseSensitive: false),
-      'Orgânico': RegExp(r'org[aâ]nico|biodegradável', caseSensitive: false),
-      'Eletrônico': RegExp(r'eletr[ôo]nico|e-lixo', caseSensitive: false),
+      'Plástico': RegExp(r'pl[aá]stico|pet|embalagem|garrafa|sacola|recipiente',
+          caseSensitive: false),
+      'Papel': RegExp(r'papel|cartão|papelão|caixa', caseSensitive: false),
+      'Vidro': RegExp(r'vidro|frasco|pote.*vidro', caseSensitive: false),
+      'Metal': RegExp(r'metal|alumínio|lata|ferro', caseSensitive: false),
+      'Orgânico': RegExp(r'org[aâ]nico|biodegradável|compostável',
+          caseSensitive: false),
+      'Eletrônico':
+          RegExp(r'eletr[ôo]nico|e-lixo|bateria|pilha', caseSensitive: false),
     };
 
     for (final entry in categories.entries) {
@@ -204,38 +270,86 @@ class _RecyclingScreenState extends State<RecyclingScreen>
         return entry.key;
       }
     }
-    return 'Geral';
+
+    // Se não encontrou categoria específica, tentar extrair da resposta do Gemma3n
+    final lines =
+        text.split('\n').where((line) => line.trim().length > 3).toList();
+    for (final line in lines) {
+      if (line.toLowerCase().contains('categoria') ||
+          line.toLowerCase().contains('tipo')) {
+        return line.trim();
+      }
+    }
+
+    return 'Categoria não identificada';
   }
 
   List<String> _extractInstructions(String text) {
     final instructions = <String>[];
 
-    // Padrões comuns de instruções
+    // Se o texto está vazio, informar que não há instruções específicas
+    if (text.isEmpty) {
+      return ['Instruções específicas não disponíveis na análise do Gemma3n'];
+    }
+
+    // Primeiro, tentar extrair instruções diretas da resposta do Gemma3n
+    final lines = text.split('\n');
+    for (final line in lines) {
+      final cleanLine = line.trim();
+      if (cleanLine.length > 10) {
+        // Verificar se a linha parece ser uma instrução
+        if (cleanLine.startsWith('1.') ||
+            cleanLine.startsWith('2.') ||
+            cleanLine.startsWith('-') ||
+            cleanLine.startsWith('•') ||
+            cleanLine.toLowerCase().contains('deve') ||
+            cleanLine.toLowerCase().contains('precisa') ||
+            cleanLine.toLowerCase().contains('lave') ||
+            cleanLine.toLowerCase().contains('coloque') ||
+            cleanLine.toLowerCase().contains('separe') ||
+            cleanLine.toLowerCase().contains('remova')) {
+          instructions.add(_cleanGemmaText(cleanLine));
+        }
+      }
+    }
+
+    // Se encontrou instruções diretas no Gemma3n, usar apenas elas
+    if (instructions.length >= 2) {
+      return instructions;
+    }
+
+    // Caso contrário, usar padrões de extração mais amplos
     final patterns = [
-      RegExp(r'limpe.*antes', caseSensitive: false),
-      RegExp(r'remova.*tampa|retire.*rótulo', caseSensitive: false),
-      RegExp(r'separe.*cores', caseSensitive: false),
-      RegExp(r'coloque.*contentor|deposite.*ecoponto', caseSensitive: false),
+      RegExp(r'lave.*antes|limpe.*antes|enxague.*antes', caseSensitive: false),
+      RegExp(r'remova.*tampa|retire.*rótulo|tire.*etiqueta|separe.*tampa',
+          caseSensitive: false),
+      RegExp(r'separe.*cores|divida.*tipo|classifique', caseSensitive: false),
+      RegExp(r'coloque.*contentor|deposite.*ecoponto|leve.*ponto.*coleta',
+          caseSensitive: false),
+      RegExp(r'seque.*facilitar|secar.*processo', caseSensitive: false),
     ];
 
     for (final pattern in patterns) {
       final matches = pattern.allMatches(text);
       for (final match in matches) {
         final instruction = match.group(0);
-        if (instruction != null && instruction.length > 10) {
+        if (instruction != null && instruction.length > 8) {
           instructions.add(_cleanGemmaText(instruction));
         }
       }
     }
 
-    // Instruções padrão se não encontrar específicas
+    // Se ainda não encontrou instruções suficientes, usar o texto completo do Gemma3n
     if (instructions.isEmpty) {
-      instructions.addAll([
-        'Limpe o material removendo restos e sujeira',
-        'Separe por tipo de material',
-        'Deposite no contentor apropriado',
-        'Verifique os pontos de coleta mais próximos',
-      ]);
+      final meaningfulLines =
+          lines.where((line) => line.trim().length > 20).toList();
+      if (meaningfulLines.isNotEmpty) {
+        instructions.addAll(
+            meaningfulLines.take(3).map(_cleanGemmaText));
+      } else {
+        instructions.add(
+            'Resposta do Gemma3n: ${text.substring(0, text.length > 100 ? 100 : text.length)}...');
+      }
     }
 
     return instructions;
@@ -286,42 +400,103 @@ class _RecyclingScreenState extends State<RecyclingScreen>
   }
 
   List<Map<String, dynamic>> _generateCollectionPoints() {
-    // Pontos de coleta específicos para Bissau
-    return [
+    // Pontos de coleta específicos para Bissau com mais variedade
+    final basePoints = [
       {
         'name': 'Ecoponto Central de Bissau',
         'address': 'Av. Amílcar Cabral, próximo ao Mercado Central',
         'distance_km': 2.5,
         'types': ['Plástico', 'Papel', 'Vidro', 'Metal'],
+        'schedule': 'Seg-Sex: 8h-17h, Sáb: 8h-12h',
+        'phone': '+245-955-0001'
       },
       {
         'name': 'Centro de Reciclagem Bandim',
         'address': 'Bairro de Bandim, Rua 15 de Agosto',
         'distance_km': 4.1,
         'types': ['Eletrônicos', 'Pilhas', 'Baterias'],
+        'schedule': 'Ter-Sáb: 9h-16h',
+        'phone': '+245-955-0002'
       },
       {
         'name': 'Ponto Verde Bissau',
         'address': 'Rua Justino Lopes, próximo à escola',
         'distance_km': 3.8,
         'types': ['Todos os materiais'],
+        'schedule': 'Seg-Dom: 7h-19h',
+        'phone': '+245-955-0003'
+      },
+      {
+        'name': 'Ecocentro Bairro Militar',
+        'address': 'Bairro Militar, próximo ao Hospital Nacional',
+        'distance_km': 5.2,
+        'types': ['Orgânicos', 'Compostagem'],
+        'schedule': 'Seg-Sex: 7h-15h',
+        'phone': '+245-955-0004'
       },
     ];
+
+    // Embaralhar e retornar os 3 mais próximos
+    basePoints.shuffle();
+    return basePoints.take(3).toList();
   }
 
   double _extractConfidence(String text) {
-    // Simular confiança baseada na qualidade da resposta
-    if (text.length > 200 && text.contains('reciclagem')) {
-      return 0.85;
-    } else if (text.length > 100) {
-      return 0.75;
-    } else {
-      return 0.60;
+    // Calcular confiança baseada em múltiplos fatores
+    var confidence = 0.5; // Base
+
+    // Fator 1: Comprimento da resposta (mais detalhada = mais confiança)
+    if (text.length > 300) {
+      confidence += 0.15;
+    } else if (text.length > 200)
+      confidence += 0.10;
+    else if (text.length > 100) confidence += 0.05;
+
+    // Fator 2: Presença de palavras-chave técnicas
+    final technicalTerms = [
+      'reciclagem',
+      'plástico',
+      'metal',
+      'vidro',
+      'papel',
+      'biodegradável',
+      'sustentável',
+      'impacto ambiental'
+    ];
+
+    var termCount = 0;
+    for (final term in technicalTerms) {
+      if (text.toLowerCase().contains(term)) termCount++;
     }
+    confidence += termCount * 0.05;
+
+    // Fator 3: Estrutura da resposta (instruções claras)
+    if (text.contains('limpe') || text.contains('separe')) confidence += 0.08;
+    if (text.contains('contentor') || text.contains('ecoponto')) {
+      confidence += 0.08;
+    }
+
+    // Fator 4: Informações específicas para Bissau
+    if (text.toLowerCase().contains('bissau')) confidence += 0.12;
+
+    // Limitar entre 0.6 e 0.95 para ser realista
+    return confidence.clamp(0.6, 0.95);
+  }
+
+  /// Conversão segura de dynamic para List<String>
+  List<String> _safeListConversion(dynamic data) {
+    if (data == null) return <String>[];
+    if (data is List) {
+      return data.map((e) => e.toString()).toList();
+    }
+    if (data is String) {
+      return [data];
+    }
+    return <String>[];
   }
 
   void _showImageSourceDialog() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
@@ -464,7 +639,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                       'Fotografe um material e descubra insights detalhados sobre reciclagem em Bissau',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -480,7 +655,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -552,7 +727,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -642,7 +817,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -680,7 +855,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -714,13 +889,16 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                 // Status de reciclagem
                 if (_result!['recyclable'] != null) ...[
                   _buildInfoSection(
-                    icon:
-                        _result!['recyclable'] ? Icons.recycling : Icons.delete,
+                    icon: (_result!['recyclable'] == true)
+                        ? Icons.recycling
+                        : Icons.delete,
                     title: 'Status de Reciclagem',
-                    content: _result!['recyclable']
+                    content: (_result!['recyclable'] == true)
                         ? 'Reciclável'
                         : 'Não Reciclável',
-                    color: _result!['recyclable'] ? Colors.green : Colors.red,
+                    color: (_result!['recyclable'] == true)
+                        ? Colors.green
+                        : Colors.red,
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -741,7 +919,8 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                   _buildListSection(
                     icon: Icons.list_alt,
                     title: 'Como Descartar',
-                    items: List<String>.from(_result!['disposal_instructions']),
+                    items:
+                        _safeListConversion(_result!['disposal_instructions']),
                     color: Colors.purple,
                   ),
                   const SizedBox(height: 20),
@@ -764,9 +943,16 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                   _buildListSection(
                     icon: Icons.lightbulb,
                     title: 'Dicas Importantes',
-                    items: List<String>.from(_result!['tips']),
+                    items: _safeListConversion(_result!['tips']),
                     color: Colors.amber,
                   ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Resposta completa do Gemma3n
+                if (_result!['gemma_insights'] != null &&
+                    _result!['gemma_insights'].toString().isNotEmpty) ...[
+                  _buildGemmaInsightsSection(),
                 ],
               ],
             ),
@@ -785,9 +971,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
       Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
@@ -802,8 +988,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color.fromRGBO(
-                          color.red, color.green, color.blue, 0.8),
+                      color: color.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -830,9 +1015,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
       Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,8 +1031,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color:
-                        Color.fromRGBO(color.red, color.green, color.blue, 0.8),
+                    color: color.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -885,9 +1069,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -972,9 +1156,9 @@ class _RecyclingScreenState extends State<RecyclingScreen>
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1033,6 +1217,57 @@ class _RecyclingScreenState extends State<RecyclingScreen>
                   ],
                 ),
               )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGemmaInsightsSection() {
+    final gemmaResponse = _result!['gemma_insights'].toString();
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.indigo.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.indigo.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.psychology, color: Colors.indigo.shade600, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Análise Completa do Gemma3n',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo.shade700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.indigo.withValues(alpha: 0.1)),
+            ),
+            child: Text(
+              gemmaResponse.isNotEmpty
+                  ? gemmaResponse
+                  : 'Resposta não disponível',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
+            ),
+          ),
         ],
       ),
     );

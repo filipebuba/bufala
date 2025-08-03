@@ -381,8 +381,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
               else if (environmentalAlerts.isNotEmpty)
                 Column(
                   children:
-                      environmentalAlerts.take(3).map<Widget>((dynamic alert) {
-                    return Container(
+                      environmentalAlerts.take(3).map<Widget>((dynamic alert) => Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -432,7 +431,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  (alert['title']?.toString() ?? ''),
+                                  alert['title']?.toString() ?? '',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -443,7 +442,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            (alert['message']?.toString() ?? ''),
+                            alert['message']?.toString() ?? '',
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[700],
@@ -451,8 +450,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    )).toList(),
                 )
               else
                 Container(
