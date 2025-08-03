@@ -6,14 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 // Mock implementation for testing
 class MockLanguageService implements ILanguageService {
   @override
-  List<String> getAvailableLanguages() {
-    return ['pt', 'en', 'fr', 'crioulo'];
-  }
+  List<String> getAvailableLanguages() => ['pt', 'en', 'fr', 'crioulo'];
 
   @override
-  Future<String> detectLanguage() async {
-    return 'pt';
-  }
+  Future<String> detectLanguage() async => 'pt';
 
   @override
   double getLanguageLearningProgress(String language) {

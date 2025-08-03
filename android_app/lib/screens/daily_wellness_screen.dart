@@ -66,8 +66,8 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
       vsync: this,
     );
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
+      begin: 0,
+      end: 1,
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
@@ -124,10 +124,8 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
     );
   }
 
-  Widget _buildSliverAppBar(ColorScheme colorScheme) {
-    return SliverAppBar(
+  Widget _buildSliverAppBar(ColorScheme colorScheme) => SliverAppBar(
       expandedHeight: 120,
-      floating: false,
       pinned: true,
       backgroundColor: colorScheme.primary,
       foregroundColor: colorScheme.onPrimary,
@@ -165,7 +163,6 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
         ),
       ],
     );
-  }
 
   Widget _buildWelcomeCard(ColorScheme colorScheme) {
     final now = DateTime.now();
@@ -234,8 +231,7 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
     );
   }
 
-  Widget _buildMoodSection(ColorScheme colorScheme) {
-    return Card(
+  Widget _buildMoodSection(ColorScheme colorScheme) => Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -292,10 +288,8 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
         ),
       ),
     );
-  }
 
-  Widget _buildPhysicalWellbeingSection(ColorScheme colorScheme) {
-    return Card(
+  Widget _buildPhysicalWellbeingSection(ColorScheme colorScheme) => Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -367,7 +361,6 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
         ),
       ),
     );
-  }
 
   Widget _buildModernSlider(
     String label,
@@ -376,8 +369,7 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
     void Function(double) onChanged,
     List<String> emojis,
     ColorScheme colorScheme,
-  ) {
-    return Column(
+  ) => Column(
       children: [
         Row(
           children: [
@@ -424,7 +416,6 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
         ),
       ],
     );
-  }
 
   Widget _buildNumberSlider(
     String label,
@@ -435,8 +426,7 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
     String displayValue,
     void Function(double) onChanged,
     ColorScheme colorScheme,
-  ) {
-    return Column(
+  ) => Column(
       children: [
         Row(
           children: [
@@ -486,10 +476,8 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
         ),
       ],
     );
-  }
 
-  Widget _buildActivitiesSection(ColorScheme colorScheme) {
-    return Card(
+  Widget _buildActivitiesSection(ColorScheme colorScheme) => Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -531,8 +519,7 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
             ),
             const SizedBox(height: 16),
             LayoutBuilder(
-              builder: (context, constraints) {
-                return Wrap(
+              builder: (context, constraints) => Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: _availableActivities.map((activity) {
@@ -569,17 +556,14 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
                       ),
                     );
                   }).toList(),
-                );
-              },
+                ),
             ),
           ],
         ),
       ),
     );
-  }
 
-  Widget _buildFeelingsSection(ColorScheme colorScheme) {
-    return Card(
+  Widget _buildFeelingsSection(ColorScheme colorScheme) => Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -621,8 +605,7 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
             ),
             const SizedBox(height: 16),
             LayoutBuilder(
-              builder: (context, constraints) {
-                return Wrap(
+              builder: (context, constraints) => Wrap(
                   spacing: 6,
                   runSpacing: 6,
                   children: _availableFeelings.map((feeling) {
@@ -658,14 +641,12 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
                       ),
                     );
                   }).toList(),
-                );
-              },
+                ),
             ),
           ],
         ),
       ),
     );
-  }
 
   Color _getFeelingColor(String feeling, ColorScheme colorScheme) {
     const positiveFeellings = [
@@ -699,8 +680,7 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
     return colorScheme.secondary;
   }
 
-  Widget _buildNotesSection(ColorScheme colorScheme) {
-    return Card(
+  Widget _buildNotesSection(ColorScheme colorScheme) => Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -767,10 +747,8 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
         ),
       ),
     );
-  }
 
-  Widget _buildSaveButton(ColorScheme colorScheme) {
-    return SizedBox(
+  Widget _buildSaveButton(ColorScheme colorScheme) => SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
@@ -792,12 +770,12 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
                   valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                 ),
               )
-            : Row(
+            : const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.save_outlined, size: 20),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: 8),
+                  Text(
                     'Salvar Dia',
                     style: TextStyle(
                       fontSize: 16,
@@ -808,7 +786,6 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
               ),
       ),
     );
-  }
 
   Future<void> _saveDailyMetrics() async {
     setState(() {
@@ -829,11 +806,11 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Row(
+              content: const Row(
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 8),
-                  const Text('Métricas salvas com sucesso! 🎉'),
+                  SizedBox(width: 8),
+                  Text('Métricas salvas com sucesso! 🎉'),
                 ],
               ),
               backgroundColor: Colors.green,
@@ -854,7 +831,7 @@ class _DailyWellnessScreenState extends State<DailyWellnessScreen>
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error, color: Colors.white),
+                const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
                 Expanded(child: Text('Erro ao salvar: $e')),
               ],

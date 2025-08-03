@@ -2,7 +2,6 @@
 /// Otimizado para o backend modular Bu Fala
 library;
 
-import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 
 class BackendConnectionConfig {

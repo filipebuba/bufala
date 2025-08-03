@@ -1,9 +1,6 @@
 
-import 'dart:convert';
-import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 
 class ApiService {

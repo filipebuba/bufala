@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Flexible(
+                    const Flexible(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             AppStrings.appName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -191,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const Text(
+                          Text(
                             'Nha Moransa',
                             style: TextStyle(
                               color: Colors.white70,
@@ -782,7 +782,6 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: AppColors.primary.withOpacity(0.3),
-                width: 1,
               ),
             ),
             child: const Column(
