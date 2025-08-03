@@ -256,7 +256,6 @@ class _EducationScreenState extends State<EducationScreen> {
             ],
             border: Border.all(
               color: color.withOpacity(0.2),
-              width: 1,
             ),
           ),
           child: Padding(
@@ -409,7 +408,7 @@ class _EducationScreenState extends State<EducationScreen> {
       // Primeiro, tentar usar o backend integrado para conteúdo dinâmico com parâmetros específicos
       try {
         var level = _currentLevel;
-        final ageGroup = 'adultos';
+        const ageGroup = 'adultos';
 
         // Determinar nível baseado no assunto
         if (_selectedSubject.toLowerCase().contains('math')) {
@@ -758,7 +757,7 @@ Este é um conteúdo educacional básico sobre ${_getSubjectTitle()}.
         }
 
         // Formatar conteúdo final
-        var formattedContent = _formatEducationalContent(
+        final formattedContent = _formatEducationalContent(
             mainContent, learningTips, additionalResources, subject);
 
         return {
@@ -849,7 +848,7 @@ Você pode acessar lições básicas mesmo sem conexão.''',
     // Adicionar recursos adicionais se disponíveis
     if (resources.isNotEmpty) {
       formatted += '\n\n📚 **Recursos Adicionais:**\n';
-      for (var resource in resources) {
+      for (final resource in resources) {
         formatted += '• $resource\n';
       }
     }

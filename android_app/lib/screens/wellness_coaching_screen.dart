@@ -819,7 +819,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const VoiceGuidedBreathingScreen(
-          durationMinutes: 5,
           personalizedPrompt: 'Sessão de respiração para relaxamento e redução do estresse',
         ),
       ),
@@ -943,7 +942,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const ChatScreen(
-          initialLanguage: 'pt-BR',
+          
         ),
       ),
     );

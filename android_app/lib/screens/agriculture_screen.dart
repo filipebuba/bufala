@@ -381,8 +381,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
               else if (environmentalAlerts.isNotEmpty)
                 Column(
                   children:
-                      environmentalAlerts.take(3).map<Widget>((dynamic alert) {
-                    return Container(
+                      environmentalAlerts.take(3).map<Widget>((dynamic alert) => Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -451,8 +450,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    )).toList(),
                 )
               else
                 Container(

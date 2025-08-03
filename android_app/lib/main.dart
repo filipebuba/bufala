@@ -7,19 +7,15 @@ import 'config/app_config.dart';
 import 'constants/app_colors.dart';
 import 'constants/app_strings.dart';
 import 'providers/app_provider.dart';
+import 'screens/agriculture_navigation_screen.dart';
+import 'screens/collaborative_validation_screen.dart';
 import 'screens/education_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/smart_agriculture_screen.dart';
-import 'screens/agriculture_family_screen.dart';
-import 'screens/agriculture_navigation_screen.dart';
-import 'screens/voiceguide_accessibility_screen.dart';
-
-import 'screens/collaborative_validation_screen.dart';
 import 'services/gemma3_backend_service.dart';
+import 'services/integrated_api_service.dart';
 import 'services/language_service.dart';
 import 'services/offline_service.dart';
-import 'services/integrated_api_service.dart';
 import 'services/wellness_coaching_service.dart';
 
 void main() async {

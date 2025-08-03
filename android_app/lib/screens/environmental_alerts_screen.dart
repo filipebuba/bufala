@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import '../services/environmental_api_service.dart';
+import '../services/integrated_api_service.dart';
 
 class EnvironmentalAlertsScreen extends StatefulWidget {
   const EnvironmentalAlertsScreen({required this.api, super.key});
@@ -17,7 +17,8 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
     with TickerProviderStateMixin {
   List<Map<String, dynamic>> _alerts = [];
   List<Map<String, dynamic>> _predictions = [];
-  Map<String, dynamic>? _currentLocation;
+  String _selectedLocation = 'Bissau, Guiné-Bissau'; // Localização selecionada
+  final TextEditingController _locationController = TextEditingController();
   bool _loading = false;
   bool _loadingPredictions = false;
   String? _error;
@@ -25,6 +26,26 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
   Timer? _refreshTimer;
   late AnimationController _pulseController;
   late AnimationController _slideController;
+  final IntegratedApiService _apiService = IntegratedApiService();
+  
+  // Lista de localizações predefinidas para fácil seleção
+  final List<String> _predefinedLocations = [
+    'Bissau, Guiné-Bissau',
+    'São Paulo, Brasil',
+    'Lisboa, Portugal',
+    'Londres, Reino Unido',
+    'Paris, França',
+    'Nova York, Estados Unidos',
+    'Tokyo, Japão',
+    'Sydney, Austrália',
+    'Cidade do Cabo, África do Sul',
+    'Cairo, Egito',
+    'Mumbai, Índia',
+    'Berlim, Alemanha',
+    'Madrid, Espanha',
+    'Amsterdam, Holanda',
+    'Oslo, Noruega',
+  ];
   
   // Insights gerados dinamicamente baseados nos alertas do Gemma 3
   List<String> get _aiInsights {
@@ -52,6 +73,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
   @override
   void initState() {
     super.initState();
+    _locationController.text = _selectedLocation;
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -60,8 +82,18 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+    _initializeApiService();
     _initializeData();
     _startAutoRefresh();
+  }
+
+  /// Inicializar o serviço de API
+  Future<void> _initializeApiService() async {
+    try {
+      await _apiService.initialize();
+    } catch (e) {
+      print('Erro ao inicializar API: $e');
+    }
   }
 
   @override
@@ -69,62 +101,93 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
     _refreshTimer?.cancel();
     _pulseController.dispose();
     _slideController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
   Future<void> _initializeData() async {
-    await _getCurrentLocation();
-    await _fetchAlerts();
+    await _fetchAlertsForLocation(_selectedLocation);
     await _fetchAIPredictions();
     _slideController.forward();
   }
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      final position = await Geolocator.getCurrentPosition();
-      setState(() {
-        _currentLocation = {
-          'lat': position.latitude,
-          'lng': position.longitude,
-          'accuracy': position.accuracy,
-        };
-      });
-    } catch (e) {
-      // Localização padrão para Guiné-Bissau
-      setState(() {
-        _currentLocation = {'lat': 11.8037, 'lng': -15.1804};
-      });
-    }
-  }
-
   void _startAutoRefresh() {
     _refreshTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-      _fetchAlerts();
+      _fetchAlertsForLocation(_selectedLocation);
       _fetchAIPredictions();
     });
   }
 
-  Future<void> _fetchAlerts() async {
+  /// Buscar alertas usando Gemma3n para localização específica
+  Future<void> _fetchAlertsForLocation(String location) async {
     setState(() {
       _loading = true;
       _error = null;
     });
+    
     try {
-      final alerts = await widget.api.getEnvironmentalAlerts();
-      setState(() {
-        _alerts = List<Map<String, dynamic>>.from(
-          alerts.map((a) => Map<String, dynamic>.from(a as Map)),
-        );
-      });
+      // Usar o IntegratedApiService para buscar alertas ambientais via Gemma3n
+      final response = await _apiService.get('/environmental/alerts?location=$location&language=pt');
+      
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        final alertsList = data['alerts'];
+        setState(() {
+          _alerts = alertsList is List
+              ? List<Map<String, dynamic>>.from(
+                  alertsList.map((item) => Map<String, dynamic>.from(item as Map)))
+              : <Map<String, dynamic>>[];
+        });
+      } else {
+        throw Exception(response['error'] ?? 'Erro ao buscar alertas');
+      }
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = 'Erro ao carregar alertas: $e';
+        // Fallback para alertas locais
+        _alerts = _generateFallbackAlertsForLocation(location);
       });
     } finally {
       setState(() {
         _loading = false;
       });
     }
+  }
+
+  /// Gerar alertas de fallback baseados na localização
+  List<Map<String, dynamic>> _generateFallbackAlertsForLocation(String location) {
+    return [
+      {
+        'id': 'fallback_1',
+        'title': 'Monitoramento Ambiental - $location',
+        'message': 'Sistema de monitoramento ativo para $location',
+        'description': 'Acompanhamento contínuo das condições ambientais locais.',
+        'severity': 'low',
+        'type': 'monitoring',
+        'category': 'Geral',
+        'timestamp': DateTime.now().toIso8601String(),
+        'recommendations': [
+          'Verificar condições climáticas locais',
+          'Manter-se informado sobre alertas oficiais',
+          'Seguir orientações das autoridades locais'
+        ]
+      },
+      {
+        'id': 'fallback_2',
+        'title': 'Qualidade do Ar - $location',
+        'message': 'Condições atmosféricas em monitoramento',
+        'description': 'Análise das condições atmosféricas e qualidade do ar local.',
+        'severity': 'medium',
+        'type': 'air_quality',
+        'category': 'Atmosférico',
+        'timestamp': DateTime.now().toIso8601String(),
+        'recommendations': [
+          'Monitorar índices de qualidade do ar',
+          'Evitar atividades externas em caso de poluição',
+          'Usar proteção respiratória se necessário'
+        ]
+      }
+    ];
   }
 
   Future<void> _fetchAIPredictions() async {
@@ -179,9 +242,13 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            icon: const Icon(Icons.location_on),
+            onPressed: _showLocationSelector,
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              _fetchAlerts();
+              _fetchAlertsForLocation(_selectedLocation);
               _fetchAIPredictions();
             },
           ),
@@ -193,13 +260,14 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await _fetchAlerts();
+          await _fetchAlertsForLocation(_selectedLocation);
           await _fetchAIPredictions();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
+              _buildLocationSection(),
               _buildStatusHeader(),
               _buildFilterTabs(),
               _buildAIPredictionsSection(),
@@ -242,16 +310,14 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
             children: [
               AnimatedBuilder(
                 animation: _pulseController,
-                builder: (context, child) {
-                  return Transform.scale(
+                builder: (context, child) => Transform.scale(
                     scale: 1.0 + (_pulseController.value * 0.1),
                     child: const Icon(
                       Icons.psychology,
                       color: Colors.white,
                       size: 32,
                     ),
-                  );
-                },
+                  ),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -479,7 +545,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  _cleanGemmaText(prediction['type']),
+                  _cleanGemmaText(prediction['type']?.toString()),
                   style: TextStyle(
                     color: impactColor,
                     fontSize: 12,
@@ -489,7 +555,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
               ),
               const Spacer(),
               Text(
-                _cleanGemmaText(prediction['timeframe']),
+                _cleanGemmaText(prediction['timeframe']?.toString()),
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -499,7 +565,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            _cleanGemmaText(prediction['description']),
+            _cleanGemmaText(prediction['description']?.toString()),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -513,7 +579,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
               Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
               Text(
-                prediction['affectedAreas'],
+                prediction['affectedAreas']?.toString() ?? 'Região',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade600,
@@ -603,7 +669,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: _fetchAlerts,
+                    onPressed: () => _fetchAlertsForLocation(_selectedLocation),
                     child: const Text('Tentar Novamente'),
                   ),
                 ],
@@ -796,7 +862,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _showDetailedAnalysis(),
+                  onPressed: _showDetailedAnalysis,
                   icon: const Icon(Icons.analytics, size: 18),
                   label: const Text('Análise Completa'),
                   style: ElevatedButton.styleFrom(
@@ -808,7 +874,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _exportReport(),
+                  onPressed: _exportReport,
                   icon: const Icon(Icons.download, size: 18),
                   label: const Text('Exportar'),
                   style: ElevatedButton.styleFrom(
@@ -1170,7 +1236,228 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
         'impact': 'Baixo',
         'description': '🌊 Condições marítimas normais para a costa da Guiné-Bissau',
         'recommendations': ['Monitoramento costeiro', 'Atividades pesqueiras normais'],
-        'affectedAreas': 'Costa da Guiné-Bissau',
       },
     ];
+
+  /// Widget para seleção e exibição da localização atual
+  Widget _buildLocationSection() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.teal.shade400, Colors.teal.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.teal.shade200,
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.location_on, color: Colors.white, size: 24),
+              const SizedBox(width: 8),
+              const Text(
+                'Localização Selecionada',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                onPressed: _showLocationSelector,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.public, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _selectedLocation,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Mostrar seletor de localização
+  void _showLocationSelector() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle indicator
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Título
+            const Text(
+              '🌍 Selecionar Localização',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Escolha uma localização para receber alertas ambientais específicos:',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Campo de busca customizada
+            TextField(
+              controller: _locationController,
+              decoration: InputDecoration(
+                hintText: 'Digite uma cidade ou país...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.check_circle, color: Colors.green),
+                  onPressed: () {
+                    _updateLocation(_locationController.text);
+                    Navigator.pop(context);
+                  },
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onSubmitted: (value) {
+                if (value.isNotEmpty) {
+                  _updateLocation(value);
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            const SizedBox(height: 20),
+            
+            // Lista de localizações predefinidas
+            const Text(
+              'Localizações Populares:',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            Expanded(
+              child: ListView.builder(
+                itemCount: _predefinedLocations.length,
+                itemBuilder: (context, index) {
+                  final location = _predefinedLocations[index];
+                  final isSelected = location == _selectedLocation;
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.location_city,
+                        color: isSelected ? Colors.teal : Colors.grey,
+                      ),
+                      title: Text(
+                        location,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? Colors.teal : Colors.black,
+                        ),
+                      ),
+                      trailing: isSelected 
+                          ? const Icon(Icons.check_circle, color: Colors.teal)
+                          : null,
+                      onTap: () {
+                        _updateLocation(location);
+                        Navigator.pop(context);
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      tileColor: isSelected 
+                          ? Colors.teal.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.05),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Atualizar localização e buscar novos alertas
+  void _updateLocation(String newLocation) {
+    if (newLocation.trim().isEmpty) return;
+    
+    setState(() {
+      _selectedLocation = newLocation.trim();
+      _locationController.text = _selectedLocation;
+    });
+    
+    // Buscar alertas para a nova localização
+    _fetchAlertsForLocation(_selectedLocation);
+    _fetchAIPredictions();
+    
+    // Mostrar feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('📍 Localização atualizada para: $newLocation'),
+        backgroundColor: Colors.teal,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 }
