@@ -46,6 +46,7 @@ from routes.multimodal_routes import multimodal_bp
 from routes.environmental_routes import environmental_bp
 from routes.model_management_routes import model_management_bp
 from routes.collaborative_routes import collaborative_bp
+from routes.environmental.recycling_specific import recycling_specific_bp
 # Router FastAPI removido - agora usando funções Flask diretamente
 
 def create_app():
@@ -117,6 +118,7 @@ def create_app():
     app.register_blueprint(environmental_bp, url_prefix='/api')
     app.register_blueprint(model_management_bp, url_prefix='/api')
     app.register_blueprint(collaborative_bp, url_prefix='/api')
+    app.register_blueprint(recycling_specific_bp, url_prefix='/api/recycling')  # Rota específica
     
     # Registrar rotas de validação comunitária manualmente
     from routes.collaborative_validation_routes import (
