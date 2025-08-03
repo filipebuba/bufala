@@ -318,7 +318,7 @@ class _TeachLanguageScreenState extends State<TeachLanguageScreen> {
                                                 ),
                                                 DropdownButtonFormField<
                                                     DifficultyLevel>(
-                                                  value: _difficulty,
+                                                  initialValue: _difficulty,
                                                   decoration:
                                                       const InputDecoration(
                                                           labelText:

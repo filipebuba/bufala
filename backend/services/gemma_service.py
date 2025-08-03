@@ -19,6 +19,7 @@ from config.settings import BackendConfig, SystemPrompts
 from .model_selector import ModelSelector
 from .intelligent_model_selector import IntelligentModelSelector, CriticalityLevel, ContextType
 from config.system_prompts import REVOLUTIONARY_PROMPTS
+from utils.text_processor import TextProcessor
 
 class GemmaService:
     """Serviço para interação com modelos Gemma com seleção automática"""
@@ -751,24 +752,42 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
                     # Fallback para resposta padrão
                     response = self._generate_fallback_response(prompt)
             
+            # Detectar contexto automaticamente se não fornecido
+            context = "general"
+            if any(word in prompt.lower() for word in ['médico', 'saúde', 'doença', 'sintoma', 'emergência', 'socorro']):
+                context = "medical"
+            elif any(word in prompt.lower() for word in ['educação', 'escola', 'ensino', 'aprender', 'estudar']):
+                context = "education"
+            elif any(word in prompt.lower() for word in ['agricultura', 'plantio', 'cultivo', 'solo', 'colheita']):
+                context = "agriculture"
+            
+            # Processar resposta final com contexto
+            final_response = TextProcessor.process_gemma_response(response, context)
+            
             # Adicionar metadados
-            response['metadata'] = {
+            actual_model = model_config.ollama_model if model_config and hasattr(model_config, 'ollama_model') else self.config.OLLAMA_MODEL
+            final_response['metadata'] = {
                 'provider': 'ollama' if self.ollama_available else 'local' if self.model_loaded else 'fallback',
-                'model': self.config.OLLAMA_MODEL if self.ollama_available else self.model_name,
+                'model': actual_model if self.ollama_available else self.model_name,
+                'selected_model': selected_model if 'selected_model' in locals() else self.model_name,
                 'gemma_3n_challenge': True,
                 'local_execution': True,
                 'generation_time': (datetime.now() - start_time).total_seconds(),
                 'timestamp': datetime.now().isoformat(),
-                'model_config': self.model_config
+                'model_config': self.model_config,
+                'context_detected': context,
+                'text_processed': True
             }
             
             # Log específico para o desafio Gemma 3n
             if self.ollama_available:
-                self.logger.info(f"🎯 Resposta gerada usando Gemma-3n ({self.config.OLLAMA_MODEL}) via Ollama local")
+                # Usa o modelo selecionado dinamicamente se disponível
+                actual_model = model_config.ollama_model if model_config and hasattr(model_config, 'ollama_model') else self.config.OLLAMA_MODEL
+                self.logger.info(f"🎯 Resposta gerada usando Gemma-3n ({actual_model}) via Ollama local")
             else:
                 self.logger.info(f"🎯 Resposta gerada usando modelo Gemma-3n local ({self.model_name})")
             
-            return response
+            return final_response
             
         except Exception as e:
             self.logger.error(f"Erro na geração: {e}")
@@ -843,7 +862,7 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
             }
             
             self.logger.info(f"🔄 Fazendo requisição para Ollama: {self.config.OLLAMA_HOST}/api/chat")
-            self.logger.info(f"📝 Modelo: {self.config.OLLAMA_MODEL}")
+            self.logger.info(f"📝 Modelo: {model_name}")
             
             # Fazer requisição
             response = requests.post(
@@ -858,8 +877,14 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
                 result = response.json()
                 response_text = result['message']['content']
                 self.logger.info(f"✅ Resposta recebida do Ollama (tamanho: {len(response_text)} chars)")
+                
+                # Processar e limpar o texto da resposta
+                cleaned_response = TextProcessor.clean_response(response_text)
+                self.logger.info(f"🧹 Texto processado (tamanho: {len(cleaned_response)} chars)")
+                
                 return {
-                    'response': response_text,
+                    'response': cleaned_response,
+                    'original_response': response_text,
                     'success': True
                 }
             else:

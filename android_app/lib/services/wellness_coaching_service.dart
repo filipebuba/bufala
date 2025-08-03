@@ -458,7 +458,6 @@ class WellnessCoachingService {
     try {
       // Iniciar sessão de respiração guiada por voz
       final breathingSession = await _breathingService.startGuidedBreathingSession(
-        durationMinutes: 5,
         personalizedPrompt: _buildPersonalizedPrompt(session),
       );
 
@@ -693,7 +692,7 @@ class WellnessCoachingService {
     final stressLevel = session.sessionData['start_stress'] ?? 0.5;
     final timeOfDay = DateTime.now().hour;
     
-    String context = '';
+    var context = '';
     
     if (stressLevel > 0.7) {
       context = 'O usuário está com alto nível de estresse e precisa de uma abordagem mais calmante.';
@@ -730,7 +729,7 @@ class WellnessCoachingService {
      final moodLevel = session.sessionData['start_mood'] ?? 5.0;
      final timeOfDay = DateTime.now().hour;
      
-     String context = 'Tipo de meditação: $meditationType. ';
+     var context = 'Tipo de meditação: $meditationType. ';
      
      if (moodLevel < 4.0) {
        context += 'O usuário está com humor baixo, use abordagem mais suave e encorajadora. ';

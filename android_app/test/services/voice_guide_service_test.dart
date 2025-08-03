@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 // Import the service to test
-import '../../lib/services/voice_guide_service.dart';
+import 'package:android_app/services/voice_guide_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('VoiceGuideService Tests', () {

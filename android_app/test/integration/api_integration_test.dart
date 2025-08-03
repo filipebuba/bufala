@@ -6,7 +6,7 @@ class MockHttpClient extends http.BaseClient {
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     // Simulate successful API responses
-    final responseBody = '''
+    const responseBody = '''
     {
       "success": true,
       "data": {
@@ -27,9 +27,9 @@ class MockHttpClient extends http.BaseClient {
 
 // Simple API client for testing
 class TestApiClient {
-  final http.Client _client;
   
   TestApiClient({http.Client? client}) : _client = client ?? MockHttpClient();
+  final http.Client _client;
   
   Future<bool> checkConnectivity() async {
     try {

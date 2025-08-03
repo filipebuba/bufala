@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 // Import the service to test
-import '../../lib/services/offline_ai_service.dart';
+import 'package:android_app/services/offline_ai_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('OfflineAiService Tests', () {

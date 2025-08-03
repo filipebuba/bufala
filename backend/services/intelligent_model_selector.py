@@ -305,11 +305,15 @@ class IntelligentModelSelector:
             ],
             ContextType.EDUCATION: [
                 "ensino", "escola", "professor", "aluno", "aprender",
-                "estudar", "lição", "matéria", "educação", "conhecimento"
+                "estudar", "lição", "matéria", "educação", "conhecimento",
+                "explique", "como funciona", "fotossíntese", "plantas",
+                "crianças", "simples", "ensinar", "aula", "disciplina"
             ],
             ContextType.AGRICULTURE: [
                 "agricultura", "plantação", "colheita", "fazenda", "roça",
-                "sementes", "fertilizante", "praga", "irrigação", "cultivo"
+                "sementes", "fertilizante", "praga", "irrigação", "cultivo",
+                "solo", "plantio", "milho", "arroz", "mandioca", "ph",
+                "nutrientes", "manejo", "época", "análise", "terra"
             ],
             ContextType.ACCESSIBILITY: [
                 "acessibilidade", "deficiência", "inclusão", "adaptação",
@@ -423,14 +427,17 @@ class IntelligentModelSelector:
             criticality = cls.CONTEXT_CRITICALITY.get(context, CriticalityLevel.LOW)
         
         # Lista de modelos candidatos baseados na criticidade (em ordem de preferência)
+        # PRIORIZA sempre e2b/e4b em vez de latest para maior precisão
         candidate_models = []
         
         if criticality == CriticalityLevel.CRITICAL:
-            candidate_models = ["gemma3n:e4b", "gemma3n:e2b", "gemma3n:latest", "gemma3n:lite"]
+            candidate_models = ["gemma3n:e4b", "gemma3n:e2b", "gemma3n:lite"]
         elif criticality == CriticalityLevel.HIGH:
-            candidate_models = ["gemma3n:e2b", "gemma3n:latest", "gemma3n:lite"]
+            candidate_models = ["gemma3n:e2b", "gemma3n:e4b", "gemma3n:lite"]
+        elif criticality == CriticalityLevel.MEDIUM:
+            candidate_models = ["gemma3n:e2b", "gemma3n:e4b", "gemma3n:lite"]
         else:
-            candidate_models = ["gemma3n:latest", "gemma3n:lite"]
+            candidate_models = ["gemma3n:e2b", "gemma3n:lite"]
         
         # Seleciona o melhor modelo que o dispositivo pode executar
         selected_model = None

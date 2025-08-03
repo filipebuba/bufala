@@ -1,5 +1,5 @@
-import 'package:android_app/widgets/quick_action_button.dart';
 import 'package:android_app/widgets/connection_status.dart';
+import 'package:android_app/widgets/quick_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,8 +8,7 @@ class TestMoranaApp extends StatelessWidget {
   const TestMoranaApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context) => MaterialApp(
       title: 'Morana Test',
       home: Scaffold(
         appBar: AppBar(
@@ -43,7 +42,6 @@ class TestMoranaApp extends StatelessWidget {
          ),
       ),
     );
-  }
 }
 
 void main() {

@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 // Import the service to test
-import '../../lib/services/integrated_api_service.dart';
+import 'package:android_app/services/integrated_api_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('IntegratedApiService Tests', () {

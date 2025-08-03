@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'connection_state.dart' as conn_state;
-import 'modular_backend_service.dart';
 import 'integrated_api_service.dart';
+import 'modular_backend_service.dart';
 
 /// Eventos da API
 class ApiEvent {

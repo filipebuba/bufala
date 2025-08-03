@@ -389,7 +389,7 @@ class _InternationalLearningScreenState extends State<InternationalLearningScree
         
         // Profissão
         DropdownButtonFormField<String>(
-          value: _selectedProfession,
+          initialValue: _selectedProfession,
           decoration: const InputDecoration(
             labelText: 'Profissão',
             prefixIcon: Icon(Icons.work),
@@ -412,7 +412,7 @@ class _InternationalLearningScreenState extends State<InternationalLearningScree
         
         // Idioma nativo
         DropdownButtonFormField<String>(
-          value: _selectedNativeLanguage,
+          initialValue: _selectedNativeLanguage,
           decoration: const InputDecoration(
             labelText: 'Idioma Nativo',
             prefixIcon: Icon(Icons.language),
@@ -434,7 +434,7 @@ class _InternationalLearningScreenState extends State<InternationalLearningScree
         
         // Localização
         DropdownButtonFormField<String>(
-          value: _selectedLocation,
+          initialValue: _selectedLocation,
           decoration: const InputDecoration(
             labelText: 'Localização de Trabalho',
             prefixIcon: Icon(Icons.location_on),

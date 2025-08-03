@@ -172,8 +172,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('🌍 Alertas Ambientais IA'),
         backgroundColor: Colors.teal,
@@ -217,10 +216,8 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
         label: const Text('Emergência'),
       ),
     );
-  }
 
-  Widget _buildStatusHeader() {
-    return Container(
+  Widget _buildStatusHeader() => Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -308,10 +305,8 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
         ],
       ),
     );
-  }
 
-  Widget _buildStatusItem(String label, String value, IconData icon) {
-    return Column(
+  Widget _buildStatusItem(String label, String value, IconData icon) => Column(
       children: [
         Icon(icon, color: Colors.white70, size: 20),
         const SizedBox(height: 4),
@@ -332,7 +327,6 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
         ),
       ],
     );
-  }
 
   Widget _buildFilterTabs() {
     final filters = [
@@ -748,8 +742,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
     );
   }
 
-  Widget _buildInsightsSection() {
-    return Container(
+  Widget _buildInsightsSection() => Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -829,7 +822,6 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
         ],
       ),
     );
-  }
 
   Color _getColor(String? level) {
     switch (level) {
@@ -968,7 +960,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
             Text(_cleanGemmaText(alert['message']?.toString())),
             const SizedBox(height: 16),
             Text(
-              'Nível: ${alert['level']?.toString()?.toUpperCase() ?? ''}',
+              'Nível: ${alert['level']?.toString().toUpperCase() ?? ''}',
               style: TextStyle(
                 color: _getColor(alert['level']?.toString()),
                 fontWeight: FontWeight.bold,
@@ -1049,7 +1041,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
     if (text == null || text.isEmpty) return '';
     
     // Remove caracteres especiais comuns que podem aparecer na resposta do Gemma3
-    String cleanedText = text
+    var cleanedText = text
         .replaceAll(RegExp(r'[\*\#\`\~\^\{\}\[\]\|\\]'), '') // Remove markdown e caracteres especiais
         .replaceAll(RegExp(r'\n\s*\n'), '\n') // Remove quebras de linha duplas
         .replaceAll(RegExp(r'^\s*[\-\*\+]\s*'), '') // Remove marcadores de lista no início
@@ -1159,8 +1151,7 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
     return '⚠️ Condição ambiental adversa identificada em $region - análise contínua em andamento';
   }
 
-  List<Map<String, dynamic>> _generateHistoricalPredictions() {
-    return [
+  List<Map<String, dynamic>> _generateHistoricalPredictions() => [
       {
         'id': 'hist_1',
         'type': 'Climático',
@@ -1182,5 +1173,4 @@ class _EnvironmentalAlertsScreenState extends State<EnvironmentalAlertsScreen>
         'affectedAreas': 'Costa da Guiné-Bissau',
       },
     ];
-  }
 }

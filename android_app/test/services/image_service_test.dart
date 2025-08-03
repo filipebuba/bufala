@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 // Import the service to test
-import '../../lib/services/image_service.dart';
+import 'package:android_app/services/image_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ImageService Tests', () {

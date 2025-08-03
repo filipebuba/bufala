@@ -70,7 +70,6 @@ class MoranaApp extends StatelessWidget {
               primaryColor: AppColors.primary,
               colorScheme: ColorScheme.fromSeed(
                 seedColor: AppColors.primary,
-                brightness: Brightness.light,
               ),
               fontFamily: 'Roboto',
               appBarTheme: const AppBarTheme(
@@ -91,7 +90,7 @@ class MoranaApp extends StatelessWidget {
                   ),
                 ),
               ),
-              cardTheme: CardTheme(
+              cardTheme: CardThemeData(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -124,14 +123,15 @@ class MoranaApp extends StatelessWidget {
                   ),
                 ),
               ),
-              cardTheme: CardTheme(
+              cardTheme: CardThemeData(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            themeMode: appProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            themeMode:
+                appProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
