@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
+import '../config/app_config.dart';
 import 'backend_connection_config.dart';
 import 'connection_state.dart' as conn_state;
 import 'retry_interceptor.dart';
-import '../config/app_config.dart';
 
 /// Serviço Modular para conexão com Backend Bu Fala
 /// Otimizado para trabalhar com a arquitetura modular do backend

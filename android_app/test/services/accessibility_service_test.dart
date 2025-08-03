@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'dart:convert';
 
 // Import the service to test
-import '../../lib/services/accessibility_service.dart';
-import '../../lib/services/api_client.dart';
+import 'package:android_app/services/accessibility_service.dart';
+import 'package:android_app/services/api_client.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
 // Generate mocks
 @GenerateMocks([ApiClient])

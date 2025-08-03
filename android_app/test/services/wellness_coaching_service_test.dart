@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'dart:convert';
 
+import 'package:android_app/services/api_client.dart';
 // Import the service to test
-import '../../lib/services/wellness_coaching_service.dart';
-import '../../lib/services/api_client.dart';
+import 'package:android_app/services/wellness_coaching_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
 // Generate mocks
 @GenerateMocks([ApiClient])

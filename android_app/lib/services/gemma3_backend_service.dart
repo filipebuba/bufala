@@ -1,9 +1,9 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 
+import '../config/app_config.dart';
 import '../models/crisis_response_models.dart';
 import '../models/offline_learning_models.dart';
-import '../config/app_config.dart';
 // import 'tflite_gemma_service.dart';
 
 /// Serviço para conectar ao backend Gemma-3

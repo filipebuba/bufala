@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
+
+import '../config/app_config.dart';
 import '../models/collaborative_learning_models.dart';
 import 'integrated_api_service.dart';
-import '../config/app_config.dart';
 
 /// Serviço para o Sistema de Aprendizado Colaborativo - "Ensine o Bu Fala"
 class CollaborativeLearningService {

@@ -1,12 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:android_app/services/api_client.dart';
 // Import the service to test
-import '../../lib/services/audio_service.dart';
-import '../../lib/services/api_client.dart';
+import 'package:android_app/services/audio_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
 // Generate mocks
 @GenerateMocks([ApiClient])
@@ -69,7 +69,7 @@ void main() {
     group('Audio Playback', () {
       test('should play audio from base64 data', () async {
         // Arrange
-        final audioData = 'base64_audio_data';
+        const audioData = 'base64_audio_data';
         
         // Act
         final result = await audioService.playAudio(audioData);

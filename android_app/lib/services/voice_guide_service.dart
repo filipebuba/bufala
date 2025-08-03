@@ -1,7 +1,8 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+
 import 'integrated_api_service.dart';
-import '../config/app_config.dart';
 
 /// Modelo para análise de ambiente
 class EnvironmentAnalysis {
@@ -198,10 +199,10 @@ class VoiceGuideService {
         final data = response['data'] as Map<String, dynamic>;
         
         // Extrair análise detalhada para deficientes visuais
-        String analysisText = '';
-        List<String> navigationTips = [];
-        List<String> safetyAlerts = [];
-        bool emergencyDetected = false;
+        var analysisText = '';
+        var navigationTips = <String>[];
+        var safetyAlerts = <String>[];
+        var emergencyDetected = false;
         
         // Tentar extrair da análise de imagem com recursos de acessibilidade
         if (data['individual_analyses']?['image']?['accessibility_features'] != null) {

@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
+
+import '../config/app_config.dart';
 import '../models/international_learning_models.dart';
 import 'smart_api_service.dart';
-import '../config/app_config.dart';
 
 /// Serviço para o Sistema Internacional "Bu Fala Professor para ONGs"
 class InternationalLearningService {

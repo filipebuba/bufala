@@ -10,6 +10,7 @@ para sustentabilidade e conservação.
 
 import logging
 import json
+import base64
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime, timedelta
 from config.settings import SystemPrompts
@@ -3781,36 +3782,63 @@ def scan_recycling():
               $ref: '#/components/schemas/ErrorResponse'
     """
     try:
-        # Verificar se uma imagem foi enviada
-        if 'image' not in request.files:
-            return jsonify(create_error_response(
-                'missing_image',
-                'Imagem é obrigatória para análise de reciclagem',
-                400
-            )), 400
-        
-        image_file = request.files['image']
-        if image_file.filename == '':
-            return jsonify(create_error_response(
-                'empty_image',
-                'Nenhuma imagem foi selecionada',
-                400
-            )), 400
-        
-        # Parâmetros opcionais
-        location = request.form.get('location', 'Bissau')
-        language = request.form.get('language', 'pt')
-        
-        # Processar imagem com Gemma
-        gemma_service = current_app.gemma_service
-        if not gemma_service:
-            # Fallback para análise simulada
-            analysis_result = _simulate_recycling_analysis(image_file, location)
+        # Verificar se é JSON com base64 ou form-data com arquivo
+        if request.is_json:
+            # Formato JSON com base64
+            data = request.get_json()
+            if not data or 'image' not in data:
+                return jsonify(create_error_response(
+                    'missing_image',
+                    'Imagem é obrigatória para análise de reciclagem',
+                    400
+                )), 400
+            
+            image_base64 = data['image']
+            location = data.get('location', 'Bissau')
+            language = data.get('language', 'pt')
+            user_request = data.get('user_request', '')
+            
+            # Processar análise com Gemma usando base64
+            gemma_service = current_app.gemma_service
+            if not gemma_service:
+                # Fallback para análise simulada
+                analysis_result = _simulate_recycling_analysis_base64(image_base64, location)
+            else:
+                # Usar Gemma para análise real com base64
+                analysis_result = _analyze_recycling_with_gemma_base64(
+                    gemma_service, image_base64, location, language, user_request
+                )
         else:
-            # Usar Gemma para análise real
-            analysis_result = _analyze_recycling_with_gemma(
-                gemma_service, image_file, location, language
-            )
+            # Formato form-data com arquivo (mantém compatibilidade anterior)
+            if 'image' not in request.files:
+                return jsonify(create_error_response(
+                    'missing_image',
+                    'Imagem é obrigatória para análise de reciclagem',
+                    400
+                )), 400
+            
+            image_file = request.files['image']
+            if image_file.filename == '':
+                return jsonify(create_error_response(
+                    'empty_image',
+                    'Nenhuma imagem foi selecionada',
+                    400
+                )), 400
+            
+            # Parâmetros opcionais
+            location = request.form.get('location', 'Bissau')
+            language = request.form.get('language', 'pt')
+            
+            # Processar imagem com Gemma
+            gemma_service = current_app.gemma_service
+            if not gemma_service:
+                # Fallback para análise simulada
+                analysis_result = _simulate_recycling_analysis(image_file, location)
+            else:
+                # Usar Gemma para análise real
+                analysis_result = _analyze_recycling_with_gemma(
+                    gemma_service, image_file, location, language
+                )
         
         return jsonify({
             'success': True,
@@ -4183,6 +4211,228 @@ def _process_gemma_recycling_response(gemma_response, location):
         "confidence": 0.95,
         "analysis_method": "gemma_ai"
     }
+
+def _simulate_recycling_analysis_base64(image_base64, location):
+    """Analisar reciclagem usando imagem em base64 - versão simulada"""
+    # Simular análise baseada nos primeiros caracteres da base64
+    material_indicators = {
+        'iVBORw': 'plástico',  # PNG comum
+        '/9j/': 'papel',       # JPEG comum  
+        'UklGR': 'metal',      # RIFF/WAV (simular metal)
+        'R0lGOD': 'vidro',     # GIF (simular vidro)
+    }
+    
+    material_type = 'material_misto'
+    for indicator, material in material_indicators.items():
+        if image_base64.startswith(indicator):
+            material_type = material
+            break
+    
+    recyclable = material_type != 'material_misto'
+    
+    # Categorias específicas
+    categories = {
+        'plástico': 'Plástico Tipo 1 (PET)',
+        'papel': 'Papel Reciclável',
+        'metal': 'Metal Ferroso',
+        'vidro': 'Vidro Transparente',
+        'material_misto': 'Análise Necessária'
+    }
+    
+    category = categories.get(material_type, 'Geral')
+    
+    # Instruções específicas para Bissau
+    disposal_instructions = [
+        f"Identificado como {material_type}",
+        "Limpe o material removendo restos orgânicos",
+        "Separe por tipo de material conforme categoria",
+        f"Deposite no contentor específico para {category}",
+        "Verifique pontos de coleta em Bissau"
+    ]
+    
+    # Pontos de coleta específicos para Bissau
+    collection_points = [
+        {
+            "name": "Ecoponto Central Bissau",
+            "address": "Avenida Amílcar Cabral, próximo ao Mercado Central",
+            "distance_km": 2.5,
+            "accepts": [category, "Materiais Diversos"]
+        },
+        {
+            "name": "Centro de Reciclagem Bandim",
+            "address": "Bairro de Bandim, Rua 15 de Agosto",
+            "distance_km": 4.1,
+            "accepts": ["Todos os tipos", category]
+        }
+    ]
+    
+    # Impacto ambiental estimado
+    impact_values = {
+        'plástico': {"co2_saved": "2.1 kg CO2", "energy_saved": "12 kWh"},
+        'papel': {"co2_saved": "1.8 kg CO2", "energy_saved": "8 kWh"},
+        'metal': {"co2_saved": "4.2 kg CO2", "energy_saved": "25 kWh"},
+        'vidro': {"co2_saved": "0.8 kg CO2", "energy_saved": "5 kWh"},
+        'material_misto': {"co2_saved": "1.5 kg CO2", "energy_saved": "7 kWh"}
+    }
+    
+    co2_saved = impact_values[material_type]["co2_saved"]
+    energy_saved = impact_values[material_type]["energy_saved"]
+    
+    # Dicas específicas para o material e localização
+    tips = [
+        f"Dica para {material_type}: Mantenha sempre limpo e seco",
+        "Em Bissau: Procure os ecopontos próximos ao mercado central",
+        "Separe sempre por tipo de material para melhor eficiência",
+        "Reduza, reutilize e depois recicle - nesta ordem de prioridade",
+        "Participe dos programas comunitários de reciclagem local"
+    ]
+    
+    return {
+        "material_type": material_type,
+        "recyclable": recyclable,
+        "recycling_category": category,
+        "disposal_instructions": disposal_instructions,
+        "environmental_impact": {
+            "co2_saved": co2_saved,
+            "energy_saved": energy_saved
+        },
+        "nearest_collection_points": collection_points,
+        "tips": tips,
+        "confidence": 0.80,
+        "analysis_method": "base64_simulation"
+    }
+
+def _analyze_recycling_with_gemma_base64(gemma_service, image_base64, location, language, user_request):
+    """Analisar reciclagem usando o modelo Gemma com imagem base64"""
+    try:
+        # Preparar prompt detalhado para análise de reciclagem
+        recycling_prompt = f"""
+        Analise esta imagem de material para reciclagem e forneça insights detalhados.
+        
+        Localização: {location}
+        Idioma de resposta: {language}
+        Solicitação do usuário: {user_request}
+        
+        Por favor, identifique e explique:
+        1. Tipo específico de material (plástico PET, papel cartão, alumínio, etc.)
+        2. Se é reciclável ou não e por quê
+        3. Categoria de reciclagem (cor do contentor, código de reciclagem)
+        4. Instruções detalhadas de preparação e descarte
+        5. Impacto ambiental positivo da reciclagem deste material
+        6. Dicas práticas para descarte correto em {location}
+        7. Pontos de coleta próximos (se conhecer a região)
+        
+        Seja educativo e específico para a comunidade local.
+        Forneça informações práticas e úteis para cidadãos de {location}.
+        """
+        
+        # Converter base64 para bytes se necessário para análise
+        import base64
+        try:
+            image_bytes = base64.b64decode(image_base64)
+        except:
+            # Se falhar na decodificação, usar análise simulada
+            return _simulate_recycling_analysis_base64(image_base64, location)
+        
+        # Processar imagem com Gemma usando bytes
+        analysis = gemma_service.analyze_image(
+            image_bytes,
+            recycling_prompt,
+            max_tokens=1500
+        )
+        
+        # Processar resposta do Gemma e estruturar dados
+        return _process_gemma_recycling_response_base64(analysis, location)
+        
+    except Exception as e:
+        logger.warning(f"Erro na análise com Gemma base64: {e}. Usando análise simulada.")
+        return _simulate_recycling_analysis_base64(image_base64, location)
+
+def _process_gemma_recycling_response_base64(gemma_response, location):
+    """Processar resposta do Gemma para reciclagem base64 e estruturar dados"""
+    try:
+        # Extrair informações da resposta do Gemma
+        response_text = str(gemma_response).lower()
+        
+        # Identificar tipo de material
+        material_types = {
+            'pet': 'Plástico PET',
+            'plástico': 'Plástico',
+            'papel': 'Papel',
+            'cartão': 'Papelão',
+            'alumínio': 'Alumínio',
+            'metal': 'Metal',
+            'vidro': 'Vidro',
+            'orgânico': 'Material Orgânico'
+        }
+        
+        material_type = 'Material não identificado'
+        for key, value in material_types.items():
+            if key in response_text:
+                material_type = value
+                break
+        
+        # Determinar se é reciclável
+        recyclable = any(word in response_text for word in ['reciclável', 'reciclar', 'sim'])
+        
+        # Extrair categoria (simples heurística)
+        category = f"Categoria {material_type}"
+        
+        # Extrair instruções (procurar por listas ou passos)
+        base_instructions = [
+            "Limpe o material removendo restos e sujeira",
+            "Separe por tipo conforme orientações locais",
+            "Deposite no contentor adequado",
+            f"Procure pontos de coleta em {location}"
+        ]
+        
+        # Pontos de coleta para Bissau
+        collection_points = [
+            {
+                "name": "Ecoponto Central de Bissau",
+                "address": "Av. Amílcar Cabral, próximo ao Mercado Central",
+                "distance_km": 2.5,
+                "accepts": [material_type, "Materiais Diversos"]
+            },
+            {
+                "name": "Centro de Reciclagem Bandim",
+                "address": "Bairro de Bandim, Rua 15 de Agosto",
+                "distance_km": 4.1,
+                "accepts": ["Eletrônicos", "Metais", "Plásticos"]
+            },
+            {
+                "name": "Ponto Verde Bissau",
+                "address": "Rua Justino Lopes, próximo à escola",
+                "distance_km": 3.8,
+                "accepts": ["Todos os materiais recicláveis"]
+            }
+        ]
+        
+        return {
+            "material_type": material_type,
+            "recyclable": recyclable,
+            "recycling_category": category,
+            "disposal_instructions": base_instructions,
+            "environmental_impact": {
+                "co2_saved": "2.5 kg CO2 (estimativa)",
+                "energy_saved": "15 kWh (estimativa)"
+            },
+            "nearest_collection_points": collection_points,
+            "tips": [
+                "Material analisado com IA Gemma-3n",
+                f"Específico para {location}",
+                "Sempre limpe antes de descartar",
+                "Separe por tipo para melhor eficiência"
+            ],
+            "confidence": 0.95,
+            "analysis_method": "gemma_ai_base64",
+            "gemma_insights": str(gemma_response)[:500] + "..." if len(str(gemma_response)) > 500 else str(gemma_response)
+        }
+        
+    except Exception as e:
+        logger.warning(f"Erro ao processar resposta do Gemma: {e}")
+        # Fallback para análise simulada em caso de erro
+        return _simulate_recycling_analysis_base64("", location)
 
 def _generate_weather_recommendations(weather_data, data_type):
     """Gerar recomendações baseadas no tempo"""

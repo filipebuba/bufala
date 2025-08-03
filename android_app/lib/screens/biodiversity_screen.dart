@@ -58,7 +58,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
     _slideAnimation = Tween<Offset>(
@@ -272,8 +272,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       backgroundColor: const Color(0xFFF8FFFE),
       appBar: AppBar(
         title: const Text(
@@ -383,10 +382,8 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
         ],
       ),
     );
-  }
 
-  Widget _buildConfigurationCard() {
-    return Container(
+  Widget _buildConfigurationCard() => Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -478,8 +475,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
-                  items: _ecosystems.map((ecosystem) {
-                    return DropdownMenuItem<String>(
+                  items: _ecosystems.map((ecosystem) => DropdownMenuItem<String>(
                       value: ecosystem['value'],
                       child: Row(
                         children: [
@@ -503,8 +499,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    )).toList(),
                   onChanged: (value) {
                     setState(() {
                       _selectedEcosystem = value!;
@@ -546,8 +541,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
-                  items: _locations.map((location) {
-                    return DropdownMenuItem<String>(
+                  items: _locations.map((location) => DropdownMenuItem<String>(
                       value: location,
                       child: Row(
                         children: [
@@ -572,8 +566,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    )).toList(),
                   onChanged: (value) {
                     setState(() {
                       _selectedLocation = value!;
@@ -586,10 +579,8 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
         ),
       ),
     );
-  }
 
-  Widget _buildImageCard() {
-    return Container(
+  Widget _buildImageCard() => Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -761,10 +752,8 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
         ),
       ),
     );
-  }
 
-  Widget _buildActionButtons() {
-    return Column(
+  Widget _buildActionButtons() => Column(
       children: [
         Container(
           width: double.infinity,
@@ -772,8 +761,6 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
@@ -817,13 +804,9 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
             gradient: _image != null && !_loading
                 ? const LinearGradient(
                     colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
                   )
                 : LinearGradient(
                     colors: [Colors.grey[400]!, Colors.grey[500]!],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
                   ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: _image != null && !_loading
@@ -869,8 +852,6 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFFFF7043), Color(0xFFFF8A65)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
@@ -913,10 +894,8 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
         ],
       ],
     );
-  }
 
-  Widget _buildLoadingCard() {
-    return Container(
+  Widget _buildLoadingCard() => Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -1010,7 +989,6 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
         ),
       ),
     );
-  }
 
   Widget _buildResultsCard() {
     if (_result == null) return const SizedBox.shrink();
@@ -1223,7 +1201,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -1236,8 +1214,9 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
     final level = index['level'] ?? 'Indeterminado';
     
     Color scoreColor = Colors.grey;
-    if (score >= 8.0) scoreColor = Colors.green;
-    else if (score >= 6.0) scoreColor = Colors.orange;
+    if (score >= 8.0) {
+      scoreColor = Colors.green;
+    } else if (score >= 6.0) scoreColor = Colors.orange;
     else if (score > 0) scoreColor = Colors.red;
     
     return Card(
@@ -1326,8 +1305,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              ...(index['factors'] as List<dynamic>).map((factor) {
-                return Padding(
+              ...(index['factors'] as List<dynamic>).map((factor) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     children: [
@@ -1348,8 +1326,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                )),
             ],
           ],
         ),
@@ -1362,7 +1339,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
     final status = health['status'] ?? 'Indeterminado';
     
     Color statusColor = Colors.grey;
-    IconData statusIcon = Icons.help;
+    var statusIcon = Icons.help;
     
     if (status.contains('Saudável')) {
       statusColor = Colors.green;
@@ -1438,8 +1415,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              ...(health['indicators'] as List<dynamic>).map((indicator) {
-                return Padding(
+              ...(health['indicators'] as List<dynamic>).map((indicator) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     children: [
@@ -1460,8 +1436,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                )),
             ],
             if (health['threats'] != null) ...[
               const SizedBox(height: 16),
@@ -1474,8 +1449,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              ...(health['threats'] as List<dynamic>).map((threat) {
-                return Padding(
+              ...(health['threats'] as List<dynamic>).map((threat) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     children: [
@@ -1496,8 +1470,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                )),
             ],
           ],
         ),
@@ -1548,8 +1521,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
               ),
             ),
             const SizedBox(height: 8),
-            ...recommendations.map((rec) {
-              return Container(
+            ...recommendations.map((rec) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -1576,8 +1548,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+              )),
             const SizedBox(height: 16),
             Text(
               'Monitoramento:',
@@ -1588,8 +1559,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
               ),
             ),
             const SizedBox(height: 8),
-            ...monitoring.map((mon) {
-              return Container(
+            ...monitoring.map((mon) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -1616,8 +1586,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+              )),
           ],
         ),
       ),
@@ -1659,8 +1628,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
               ],
             ),
             const SizedBox(height: 16),
-            ...programs.map((program) {
-              return Container(
+            ...programs.map((program) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -1714,16 +1682,14 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     ],
                   ],
                 ),
-              );
-            }).toList(),
+              )),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEducationTab() {
-    return SingleChildScrollView(
+  Widget _buildEducationTab() => SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1736,10 +1702,8 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
         ],
       ),
     );
-  }
 
-  Widget _buildEducationHeader() {
-    return Card(
+  Widget _buildEducationHeader() => Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -1778,7 +1742,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => _loadEducationalContent(),
+              onPressed: _loadEducationalContent,
               icon: const Icon(Icons.auto_awesome),
               label: const Text('Gerar Conteúdo Personalizado'),
               style: ElevatedButton.styleFrom(
@@ -1793,10 +1757,8 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
         ),
       ),
     );
-  }
 
-  Widget _buildEducationModules() {
-    return Card(
+  Widget _buildEducationModules() => Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -1827,8 +1789,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                 ),
               )
             else
-              ...(_educationModules.map((module) {
-                return Container(
+              ...(_educationModules.map((module) => Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey[300]!),
@@ -1898,13 +1859,11 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                       child: const Text('Estudar'),
                     ),
                   ),
-                );
-              }).toList()),
+                )).toList()),
           ],
         ),
       ),
     );
-  }
 
   Widget _buildEducationContent() {
     if (_loadingEducation) {
@@ -2044,7 +2003,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     ],
                   ),
                 ),
-              ).toList(),
+              ),
               const SizedBox(height: 16),
             ],
             
@@ -2094,7 +2053,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     ],
                   ),
                 ),
-              ).toList(),
+              ),
             ],
           ],
         ),
