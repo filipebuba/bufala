@@ -16,7 +16,7 @@ class ContentViewScreen extends StatefulWidget {
 class _ContentViewScreenState extends State<ContentViewScreen> {
   final FlutterTts _flutterTts = FlutterTts();
   bool _isPlaying = false;
-  double _progress = 0.0;
+  double _progress = 0;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -28,8 +28,8 @@ class _ContentViewScreenState extends State<ContentViewScreen> {
   Future<void> _initTts() async {
     await _flutterTts.setLanguage('pt-BR');
     await _flutterTts.setSpeechRate(0.5);
-    await _flutterTts.setVolume(1.0);
-    await _flutterTts.setPitch(1.0);
+    await _flutterTts.setVolume(1);
+    await _flutterTts.setPitch(1);
 
     _flutterTts.setStartHandler(() {
       setState(() {

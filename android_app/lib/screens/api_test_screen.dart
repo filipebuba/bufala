@@ -25,13 +25,12 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       );
 
       setState(() {
-        if (response != null &&
-            response['success'] == true &&
+        if (response['success'] == true &&
             response['data'] != null) {
           _result = 'SUCESSO: ${response['data']}';
         } else {
           _result =
-              'ERRO (mas com fallback): ${response?['error'] ?? 'Sem resposta'}';
+              'ERRO (mas com fallback): ${response['error'] ?? 'Sem resposta'}';
         }
       });
     } catch (e) {
@@ -57,13 +56,12 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       );
 
       setState(() {
-        if (response != null &&
-            response['success'] == true &&
+        if (response['success'] == true &&
             response['data'] != null) {
           _result = 'SUCESSO: ${response['data']}';
         } else {
           _result =
-              'ERRO (mas com fallback): ${response?['error'] ?? 'Sem resposta'}';
+              'ERRO (mas com fallback): ${response['error'] ?? 'Sem resposta'}';
         }
       });
     } catch (e) {
@@ -89,13 +87,12 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       );
 
       setState(() {
-        if (response != null &&
-            response['success'] == true &&
+        if (response['success'] == true &&
             response['data'] != null) {
           _result = 'SUCESSO: ${response['data']}';
         } else {
           _result =
-              'ERRO (mas com fallback): ${response?['error'] ?? 'Sem resposta'}';
+              'ERRO (mas com fallback): ${response['error'] ?? 'Sem resposta'}';
         }
       });
     } catch (e) {

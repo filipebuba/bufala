@@ -36,7 +36,5 @@ class StorageService implements IStorageService {
     await save('local_$key', value);
   }
   
-  Future<dynamic> getLocalSetting(String key) async {
-    return await load('local_$key');
-  }
+  Future<dynamic> getLocalSetting(String key) async => load('local_$key');
 }

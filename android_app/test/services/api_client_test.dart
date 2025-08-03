@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'dart:convert';
 
 // Import the service to test
-import '../../lib/services/api_client.dart';
+import 'package:android_app/services/api_client.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
 // Generate mocks
 @GenerateMocks([http.Client])
@@ -325,7 +325,7 @@ void main() {
           Uri.parse('http://localhost:5000/fast'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async {
-          await Future.delayed(Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 100));
           return http.Response(
             json.encode({'success': true}),
             200,

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../models/mental_health_models.dart';
+import '../services/gemma3_backend_service.dart';
 import '../services/voice_analysis_service.dart';
 import '../services/wellness_coaching_service.dart';
-import '../services/gemma3_backend_service.dart';
-import 'wellness_profile_setup_screen.dart';
 import 'chat_screen.dart';
-import 'voice_guided_breathing_screen.dart';
 import 'mood_tracking_screen.dart';
+import 'voice_guided_breathing_screen.dart';
+import 'wellness_profile_setup_screen.dart';
 
 class WellnessCoachingScreen extends StatefulWidget {
   const WellnessCoachingScreen({super.key});
@@ -33,7 +34,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
   final List<Map<String, dynamic>> _diaryEntries = [];
   bool _isSavingEntry = false;
   String _selectedMood = 'neutro';
-  double _energyLevel = 5.0;
+  double _energyLevel = 5;
   final List<String> _selectedTags = [];
 
   @override
@@ -819,8 +820,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const VoiceGuidedBreathingScreen(
-          sessionType: 'breathing',
-          durationMinutes: 5,
           personalizedPrompt: 'Sessão de respiração para relaxamento e redução do estresse',
         ),
       ),
@@ -944,8 +943,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const ChatScreen(
-          initialContext: 'wellness_coaching',
-          initialLanguage: 'pt-BR',
+          
         ),
       ),
     );
@@ -977,7 +975,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
         message:
             'Gere 5 dicas personalizadas de bem-estar e saúde mental para hoje. $profileInfo',
         context: 'wellness_tips',
-        language: 'pt-BR',
       );
 
       if (mounted) {
@@ -1053,8 +1050,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
 
   // ================= DIÁRIO DE BEM-ESTAR =================
 
-  Widget _buildDiaryTab() {
-    return DefaultTabController(
+  Widget _buildDiaryTab() => DefaultTabController(
       length: 2,
       child: Column(
         children: [
@@ -1095,7 +1091,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
         ],
       ),
     );
-  }
 
   Widget _buildNewEntryTab() {
     final colorScheme = Theme.of(context).colorScheme;
@@ -1230,8 +1225,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
             ),
             const SizedBox(height: 20),
             LayoutBuilder(
-              builder: (context, constraints) {
-                return Wrap(
+              builder: (context, constraints) => Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   alignment: WrapAlignment.spaceEvenly,
@@ -1292,8 +1286,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
                       ),
                     );
                     }).toList(),
-                  );
-                },
+                  ),
               ),
           ],
         ),
@@ -1335,7 +1328,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
                   decoration: BoxDecoration(
                     color: energyColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: energyColor, width: 1),
+                    border: Border.all(color: energyColor),
                   ),
                   child: Text(
                     '${_energyLevel.toInt()}/10',
@@ -1530,7 +1523,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: colorScheme.outline.withOpacity(0.5),
-                  width: 1,
                 ),
               ),
               child: TextField(
@@ -1594,7 +1586,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
       child: ElevatedButton(
         onPressed: (_isSavingEntry || !canSave) ? null : _saveDiaryEntry,
         style: ElevatedButton.styleFrom(
-          backgroundColor: canSave ? Colors.transparent : colorScheme.surfaceVariant,
+          backgroundColor: canSave ? Colors.transparent : colorScheme.surfaceContainerHighest,
           foregroundColor: canSave ? Colors.white : colorScheme.onSurfaceVariant,
           padding: const EdgeInsets.symmetric(vertical: 18),
           elevation: canSave ? 4 : 0,
@@ -1775,8 +1767,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: (entry['tags'] as List<String>).map((tag) {
-                  return Container(
+                children: (entry['tags'] as List<String>).map((tag) => Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
@@ -1786,8 +1777,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
                       tag,
                       style: const TextStyle(fontSize: 12),
                     ),
-                  );
-                }).toList(),
+                  )).toList(),
               ),
               const SizedBox(height: 12),
             ],
@@ -1806,8 +1796,7 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
     );
   }
 
-  Widget _buildMetricChip(String label, String value, Color color) {
-    return Container(
+  Widget _buildMetricChip(String label, String value, Color color) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
@@ -1835,7 +1824,6 @@ class _WellnessCoachingScreenState extends State<WellnessCoachingScreen>
         ],
       ),
     );
-  }
 
   // Métodos auxiliares
   Color _getEnergyColor() {

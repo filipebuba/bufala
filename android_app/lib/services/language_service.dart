@@ -24,9 +24,7 @@ class LanguageService implements ILanguageService {
   };
   
   @override
-  List<String> getAvailableLanguages() {
-    return supportedLanguages.keys.toList();
-  }
+  List<String> getAvailableLanguages() => supportedLanguages.keys.toList();
   
   @override
   Future<String> detectLanguage() async {
@@ -37,7 +35,7 @@ class LanguageService implements ILanguageService {
   @override
   double getLanguageLearningProgress(String language) {
     // Implementação básica - pode ser expandida
-    return 0.0;
+    return 0;
   }
   
   @override

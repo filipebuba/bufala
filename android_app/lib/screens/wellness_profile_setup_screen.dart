@@ -261,7 +261,7 @@ class _WellnessProfileSetupScreenState
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.fitness_center),
               ),
-              value: _activityLevel,
+              initialValue: _activityLevel,
               items: _activityLevels.map((level) => DropdownMenuItem(
                   value: level,
                   child: Text(level),

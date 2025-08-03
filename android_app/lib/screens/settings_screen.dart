@@ -1,23 +1,25 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+import '../config/app_config.dart';
 import '../providers/app_provider.dart';
-import '../services/language_service.dart';
-import '../services/storage_service.dart';
-import '../services/offline_service.dart';
 import '../services/api_service.dart';
 import '../services/environmental_api_service.dart';
-import '../config/app_config.dart';
+import '../services/language_service.dart';
+import '../services/offline_service.dart';
+import '../services/storage_service.dart';
+import 'agriculture_screen.dart';
+import 'education_screen.dart';
+import 'environmental_menu_screen.dart';
+import 'gamification_screen.dart';
 // Imports para navegação
 import 'medical_emergency_unified_screen.dart';
-import 'education_screen.dart';
-import 'agriculture_screen.dart';
-import 'wellness_coaching_screen.dart';
-import 'environmental_menu_screen.dart';
 import 'translate_screen.dart';
 import 'voiceguide_accessibility_screen.dart';
-import 'gamification_screen.dart';
+import 'wellness_coaching_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -36,7 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic> _storageInfo = {};
   Map<String, dynamic> _backendConfig = {};
   Map<String, dynamic> _revolutionaryConfig = {};
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool _isConnected = false;
 
   @override
@@ -50,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadStorageStats() async {
     try {
-      final stats = await _offlineService.getStorageStats();
+      final stats = _offlineService.getStorageStats();
       if (mounted) {
         setState(() {
           _storageStats = stats;
@@ -150,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]);
         },
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               // Status do Sistema
@@ -258,8 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
   
-  Widget _buildStatusIndicator(String label, String status, Color color, IconData icon) {
-    return Container(
+  Widget _buildStatusIndicator(String label, String status, Color color, IconData icon) => Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -290,7 +291,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
-  }
 
   // Seção de Funcionalidades Revolucionárias
   Widget _buildRevolutionaryFeaturesSection(BuildContext context) {
@@ -373,8 +373,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     IconData icon,
     bool value,
     Function(bool) onChanged,
-  ) {
-    return ListTile(
+  ) => ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(
         title,
@@ -390,7 +389,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onChanged: onChanged,
       ),
     );
-  }
 
   Future<void> _updateRevolutionaryFeature(String feature, String key, bool value) async {
     try {
@@ -669,10 +667,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Sincronizar Agora'),
               subtitle: const Text('Forçar sincronização manual'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // Implementar sincronização manual
-                _syncData();
-              },
+              onTap: _syncData,
             ),
           ],
         ),
@@ -715,7 +710,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceVariant.withOpacity(0.3),
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -755,9 +750,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Limpar Cache'),
               subtitle: const Text('Remove dados antigos offline'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                _clearCache();
-              },
+              onTap: _clearCache,
             ),
           ],
         ),
@@ -822,7 +815,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Configurar Idioma Local'),
               subtitle: const Text('Definir idioma preferido da região'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showLanguageSelectionDialog(),
+              onTap: _showLanguageSelectionDialog,
             ),
             ListTile(
               leading: Icon(
@@ -832,7 +825,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Selecionar Região'),
               subtitle: const Text('Configurar sua região na Guiné-Bissau'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showRegionSelectionDialog(),
+              onTap: _showRegionSelectionDialog,
             ),
             ListTile(
                leading: Icon(
@@ -842,7 +835,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                title: const Text('Culturas da Região'),
                subtitle: const Text('Informações sobre cultivos locais'),
                trailing: const Icon(Icons.chevron_right),
-               onTap: () => _navigateToLocalCrops(),
+               onTap: _navigateToLocalCrops,
              ),
             ListTile(
               leading: Icon(
@@ -852,7 +845,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Medicina Tradicional'),
               subtitle: const Text('Guia de plantas medicinais'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _navigateToTraditionalMedicine(),
+              onTap: _navigateToTraditionalMedicine,
             ),
           ],
         ),
@@ -896,49 +889,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Assistência Médica',
               'Emergências e consultas médicas',
               Icons.medical_services,
-              () => _navigateToMedical(),
+              _navigateToMedical,
             ),
             _buildFunctionalityTile(
               'Educação',
               'Sistema educacional inteligente',
               Icons.school,
-              () => _navigateToEducation(),
+              _navigateToEducation,
             ),
             _buildFunctionalityTile(
               'Agricultura',
               'Assistência para cultivos',
               Icons.agriculture,
-              () => _navigateToAgriculture(),
+              _navigateToAgriculture,
             ),
             _buildFunctionalityTile(
               'Bem-estar',
               'Coaching de saúde e bem-estar',
               Icons.favorite,
-              () => _navigateToWellness(),
+              _navigateToWellness,
             ),
             _buildFunctionalityTile(
               'Meio Ambiente',
               'Análise e sustentabilidade ambiental',
               Icons.eco,
-              () => _navigateToEnvironmental(),
+              _navigateToEnvironmental,
             ),
             _buildFunctionalityTile(
               'Tradução',
               'Tradutor inteligente multilíngue',
               Icons.translate,
-              () => _navigateToTranslation(),
+              _navigateToTranslation,
             ),
             _buildFunctionalityTile(
               'Acessibilidade',
               'Guia de voz e recursos de acessibilidade',
               Icons.accessibility,
-              () => _navigateToAccessibility(),
+              _navigateToAccessibility,
             ),
             _buildFunctionalityTile(
               'Gamificação',
               'Sistema de conquistas e recompensas',
               Icons.emoji_events,
-              () => _navigateToGamification(),
+              _navigateToGamification,
             ),
           ],
         ),
@@ -1043,8 +1036,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLanguageSelectionDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
+      builder: (BuildContext context) => AlertDialog(
           title: const Text('Selecionar Idioma Local'),
           content: SizedBox(
             width: double.maxFinite,
@@ -1088,16 +1080,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: const Text('Cancelar'),
             ),
           ],
-        );
-      },
+        ),
     );
   }
 
   void _showRegionSelectionDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
+      builder: (BuildContext context) => AlertDialog(
           title: const Text('Selecionar Região'),
           content: SizedBox(
             width: double.maxFinite,
@@ -1169,12 +1159,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: const Text('Cancelar'),
             ),
           ],
-        );
-      },
+        ),
     );
   }
 
-  void _setLocalLanguage(String language) async {
+  Future<void> _setLocalLanguage(String language) async {
     try {
       await _storageService.saveLocalSetting('local_language', language);
       if (mounted) {
@@ -1197,7 +1186,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _setUserRegion(String region) async {
+  Future<void> _setUserRegion(String region) async {
     try {
       await _storageService.saveLocalSetting('user_region', region);
       if (mounted) {
@@ -1220,7 +1209,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _syncData() async {
+  Future<void> _syncData() async {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1232,7 +1221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Implementar lógica de sincronização
   }
 
-  void _clearCache() async {
+  Future<void> _clearCache() async {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
