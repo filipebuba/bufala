@@ -431,7 +431,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  (alert['title']?.toString() ?? ''),
+                                  alert['title']?.toString() ?? '',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -442,7 +442,7 @@ class _AgricultureScreenState extends State<AgricultureScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            (alert['message']?.toString() ?? ''),
+                            alert['message']?.toString() ?? '',
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[700],

@@ -7,10 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import '../config/app_config.dart';
 import '../models/offline_learning_models.dart';
 import '../screens/content_view_screen.dart';
-import '../services/gemma3_backend_service.dart';
-import '../services/offline_learning_service.dart';
-import '../services/integrated_api_service.dart';
 import '../services/environmental_api_service.dart';
+import '../services/gemma3_backend_service.dart';
+import '../services/integrated_api_service.dart';
+import '../services/offline_learning_service.dart';
 import '../utils/app_colors.dart';
 
 class EducationScreen extends StatefulWidget {
