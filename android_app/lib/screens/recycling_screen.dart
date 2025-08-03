@@ -129,7 +129,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
     if (text.isEmpty) return text;
 
     // Remove caracteres especiais e formatação markdown
-    String cleaned = text
+    var cleaned = text
         .replaceAll(RegExp(r'\*+'), '') // Remove asteriscos
         .replaceAll(RegExp(r'#+'), '') // Remove hashtags
         .replaceAll(RegExp(r'`+'), '') // Remove backticks

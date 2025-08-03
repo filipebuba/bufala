@@ -1,6 +1,6 @@
 import 'package:android_app/main.dart' as app;
-import 'package:android_app/widgets/quick_action_button.dart';
 import 'package:android_app/widgets/connection_status.dart';
+import 'package:android_app/widgets/quick_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';

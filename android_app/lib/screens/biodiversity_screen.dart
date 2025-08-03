@@ -475,8 +475,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
-                  items: _ecosystems.map((ecosystem) {
-                    return DropdownMenuItem<String>(
+                  items: _ecosystems.map((ecosystem) => DropdownMenuItem<String>(
                       value: ecosystem['value'],
                       child: Row(
                         children: [
@@ -500,8 +499,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    )).toList(),
                   onChanged: (value) {
                     setState(() {
                       _selectedEcosystem = value!;
@@ -543,8 +541,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
-                  items: _locations.map((location) {
-                    return DropdownMenuItem<String>(
+                  items: _locations.map((location) => DropdownMenuItem<String>(
                       value: location,
                       child: Row(
                         children: [
@@ -569,8 +566,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    )).toList(),
                   onChanged: (value) {
                     setState(() {
                       _selectedLocation = value!;
@@ -765,8 +761,6 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
@@ -810,13 +804,9 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
             gradient: _image != null && !_loading
                 ? const LinearGradient(
                     colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
                   )
                 : LinearGradient(
                     colors: [Colors.grey[400]!, Colors.grey[500]!],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
                   ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: _image != null && !_loading
@@ -862,8 +852,6 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFFFF7043), Color(0xFFFF8A65)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
@@ -1754,7 +1742,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => _loadEducationalContent(),
+              onPressed: _loadEducationalContent,
               icon: const Icon(Icons.auto_awesome),
               label: const Text('Gerar Conteúdo Personalizado'),
               style: ElevatedButton.styleFrom(
@@ -1801,8 +1789,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                 ),
               )
             else
-              ...(_educationModules.map((module) {
-                return Container(
+              ...(_educationModules.map((module) => Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey[300]!),
@@ -1872,8 +1859,7 @@ class _BiodiversityScreenState extends State<BiodiversityScreen>
                       child: const Text('Estudar'),
                     ),
                   ),
-                );
-              }).toList()),
+                )).toList()),
           ],
         ),
       ),

@@ -203,23 +203,23 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   Widget build(BuildContext context) => Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           '🌱 Diagnóstico de Plantas',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        backgroundColor: Color(0xFF2E7D32),
+        backgroundColor: const Color(0xFF2E7D32),
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Identifique problemas em suas plantas',
               style: TextStyle(
                 fontSize: 24,
@@ -227,7 +227,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 color: Color(0xFF2E7D32),
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Use imagem ou descrição por áudio para diagnóstico preciso',
               style: TextStyle(
@@ -235,7 +235,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 color: Colors.grey[600],
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             
             _buildModeSelector(),
             _buildPlantTypeInput(),
@@ -251,7 +251,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
     );
 
   Widget _buildModeSelector() => Container(
-      margin: EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
         color: Colors.grey[100],
@@ -262,10 +262,10 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
             child: GestureDetector(
               onTap: () => setState(() => _analysisMode = 'image'),
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: _analysisMode == 'image' ? Color(0xFF2E7D32) : Colors.transparent,
+                  color: _analysisMode == 'image' ? const Color(0xFF2E7D32) : Colors.transparent,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -274,7 +274,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       Icons.camera_alt,
                       color: _analysisMode == 'image' ? Colors.white : Colors.grey[600],
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
                       'Imagem',
                       style: TextStyle(
@@ -291,10 +291,10 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
             child: GestureDetector(
               onTap: () => setState(() => _analysisMode = 'audio'),
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: _analysisMode == 'audio' ? Color(0xFF2E7D32) : Colors.transparent,
+                  color: _analysisMode == 'audio' ? const Color(0xFF2E7D32) : Colors.transparent,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -303,7 +303,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       Icons.mic,
                       color: _analysisMode == 'audio' ? Colors.white : Colors.grey[600],
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
                       'Áudio',
                       style: TextStyle(
@@ -346,7 +346,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       size: 64,
                       color: Colors.grey[400],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       'Adicione uma foto da planta',
                       style: TextStyle(
@@ -358,33 +358,33 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                   ],
                 ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () => getImage(ImageSource.camera),
-                icon: Icon(Icons.camera_alt, color: Colors.white),
-                label: Text('Câmera', style: TextStyle(color: Colors.white)),
+                icon: const Icon(Icons.camera_alt, color: Colors.white),
+                label: const Text('Câmera', style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF2E7D32),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFF2E7D32),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () => getImage(ImageSource.gallery),
-                icon: Icon(Icons.photo_library, color: Color(0xFF2E7D32)),
-                label: Text('Galeria', style: TextStyle(color: Color(0xFF2E7D32))),
+                icon: const Icon(Icons.photo_library, color: Color(0xFF2E7D32)),
+                label: const Text('Galeria', style: TextStyle(color: Color(0xFF2E7D32))),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  side: BorderSide(color: Color(0xFF2E7D32)),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(color: Color(0xFF2E7D32)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -394,9 +394,16 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
           ],
         ),
         if (_image != null) ...[
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _isLoading ? null : _analyzeImage,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: _isLoading
                 ? Row(
                     mainAxisSize: MainAxisSize.min,
@@ -421,13 +428,6 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       Text('Analisar Imagem', style: TextStyle(color: Colors.white)),
                     ],
                   ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2E7D32),
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
           ),
         ],
       ],
@@ -444,7 +444,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: _isRecording
-                  ? [Color(0xFFE8F5E8), Color(0xFFC8E6C9)]
+                  ? [const Color(0xFFE8F5E8), const Color(0xFFC8E6C9)]
                   : [Colors.grey[50]!, Colors.grey[100]!],
             ),
           ),
@@ -453,8 +453,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
             children: [
               AnimatedBuilder(
                 animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
+                builder: (context, child) => Transform.scale(
                     scale: _isRecording ? _pulseAnimation.value : 1.0,
                     child: Container(
                       width: 80,
@@ -478,10 +477,9 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                         color: _isRecording ? Colors.white : Colors.grey[600],
                       ),
                     ),
-                  );
-                },
+                  ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 _isRecording
                     ? 'Gravando... Descreva os problemas da planta'
@@ -489,7 +487,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                         ? 'Gravação concluída'
                         : 'Toque para gravar descrição',
                 style: TextStyle(
-                  color: _isRecording ? Color(0xFF2E7D32) : Colors.grey[600],
+                  color: _isRecording ? const Color(0xFF2E7D32) : Colors.grey[600],
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -498,9 +496,16 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
             ],
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         ElevatedButton(
           onPressed: _isRecording ? _stopRecording : _startRecording,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _isRecording ? Colors.red[600] : const Color(0xFF2E7D32),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -515,18 +520,18 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ],
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _isRecording ? Colors.red[600] : Color(0xFF2E7D32),
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
         ),
         if (_hasRecording && !_isRecording) ...[
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _isLoading ? null : _analyzeAudio,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: _isLoading
                 ? Row(
                     mainAxisSize: MainAxisSize.min,
@@ -551,33 +556,26 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                       Text('Analisar Áudio', style: TextStyle(color: Colors.white)),
                     ],
                   ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2E7D32),
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
           ),
         ],
       ],
     );
 
   Widget _buildPlantTypeInput() => Container(
-      margin: EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       child: TextField(
         controller: _plantTypeController,
         decoration: InputDecoration(
           labelText: 'Tipo de planta (opcional)',
           hintText: 'Ex: tomate, milho, arroz, mandioca...',
-          prefixIcon: Icon(Icons.eco, color: Color(0xFF2E7D32)),
+          prefixIcon: const Icon(Icons.eco, color: Color(0xFF2E7D32)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.grey[300]!),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF2E7D32), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -586,8 +584,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
     );
 
   Widget _buildErrorMessage() => Container(
-      margin: EdgeInsets.only(top: 16),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.red[50],
         borderRadius: BorderRadius.circular(12),
@@ -596,7 +594,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
       child: Row(
         children: [
           Icon(Icons.error_outline, color: Colors.red[600]),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               _error!,
@@ -692,7 +690,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   }
 
   Widget _buildResultSection(String title, IconData icon, String content) => Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -700,7 +698,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -709,11 +707,11 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
         children: [
           Row(
             children: [
-              Icon(icon, color: Color(0xFF2E7D32), size: 20),
-              SizedBox(width: 8),
+              Icon(icon, color: const Color(0xFF2E7D32), size: 20),
+              const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: Color(0xFF2E7D32),
@@ -721,7 +719,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             content,
             style: TextStyle(
@@ -804,7 +802,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                     LinearProgressIndicator(
                       value: score / 100,
                       backgroundColor: Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation<Color>(
+                      valueColor: const AlwaysStoppedAnimation<Color>(
                         score >= 70 ? Colors.green : score >= 40 ? Colors.orange : Colors.red,
                       ),
                     ),
@@ -864,7 +862,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   }
 
   Widget _buildSymptomsIdentified(List<dynamic> symptoms) => Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -872,7 +870,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -882,8 +880,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
           Row(
             children: [
               Icon(Icons.warning_amber, color: Colors.orange[600], size: 20),
-              SizedBox(width: 8),
-              Text(
+              const SizedBox(width: 8),
+              const Text(
                 'Sintomas Identificados',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -893,14 +891,14 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           ...symptoms.map((symptom) => Padding(
-            padding: EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.fiber_manual_record, size: 8, color: Colors.orange[600]),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     symptom.toString(),
@@ -913,22 +911,22 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 ),
               ],
             ),
-          )).toList(),
+          )),
         ],
       ),
     );
 
   Widget _buildProbableDiagnosis(Map<String, dynamic> diagnosis) => Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red[200]!, width: 1),
+        border: Border.all(color: Colors.red[200]!),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -938,8 +936,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
           Row(
             children: [
               Icon(Icons.medical_services, color: Colors.red[600], size: 20),
-              SizedBox(width: 8),
-              Text(
+              const SizedBox(width: 8),
+              const Text(
                 'Diagnóstico Provável',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -949,7 +947,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
             diagnosis['condition'] ?? 'Não determinado',
             style: TextStyle(
@@ -959,7 +957,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
             ),
           ),
           if (diagnosis['description'] != null) ...[
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               diagnosis['description'],
               style: TextStyle(
@@ -970,9 +968,9 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
             ),
           ],
           if (diagnosis['severity'] != null) ...[
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: _getSeverityColor(diagnosis['severity']).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
@@ -992,16 +990,16 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
     );
 
   Widget _buildRecommendations(Map<String, dynamic> recommendations) => Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!, width: 1),
+        border: Border.all(color: Colors.blue[200]!),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -1011,8 +1009,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
           Row(
             children: [
               Icon(Icons.lightbulb, color: Colors.blue[600], size: 20),
-              SizedBox(width: 8),
-              Text(
+              const SizedBox(width: 8),
+              const Text(
                 'Recomendações',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -1022,7 +1020,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           if (recommendations['immediate_actions'] != null) ...[
             Text(
               'Ações Imediatas:',
@@ -1032,14 +1030,14 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 color: Colors.blue[700],
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             ...(recommendations['immediate_actions'] as List).map((action) => Padding(
-              padding: EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.arrow_right, size: 16, color: Colors.blue[600]),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       action.toString(),
@@ -1052,8 +1050,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                   ),
                 ],
               ),
-            )).toList(),
-            SizedBox(height: 12),
+            )),
+            const SizedBox(height: 12),
           ],
           if (recommendations['preventive_measures'] != null) ...[
             Text(
@@ -1064,14 +1062,14 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 color: Colors.blue[700],
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             ...(recommendations['preventive_measures'] as List).map((care) => Padding(
-              padding: EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.arrow_right, size: 16, color: Colors.blue[600]),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       care.toString(),
@@ -1084,23 +1082,23 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                   ),
                 ],
               ),
-            )).toList(),
+            )),
           ],
         ],
       ),
     );
 
   Widget _buildLocalResources(Map<String, dynamic> resources) => Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[200]!, width: 1),
+        border: Border.all(color: Colors.green[200]!),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -1110,8 +1108,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
           Row(
             children: [
               Icon(Icons.location_on, color: Colors.green[600], size: 20),
-              SizedBox(width: 8),
-              Text(
+              const SizedBox(width: 8),
+              const Text(
                 'Recursos Locais',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -1121,7 +1119,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           if (resources['available_treatments'] != null) ...[
             Text(
               'Tratamentos Disponíveis na Região:',
@@ -1131,14 +1129,14 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 color: Colors.green[700],
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             ...(resources['available_treatments'] as List).map((treatment) => Padding(
-              padding: EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.eco, size: 16, color: Colors.green[600]),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       treatment.toString(),
@@ -1151,8 +1149,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                   ),
                 ],
               ),
-            )).toList(),
-            SizedBox(height: 12),
+            )),
+            const SizedBox(height: 12),
           ],
           if (resources['local_contacts'] != null) ...[
             Text(
@@ -1163,14 +1161,14 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 color: Colors.green[700],
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             ...(resources['local_contacts'] as List).map((contact) => Padding(
-              padding: EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.contact_phone, size: 16, color: Colors.green[600]),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       contact.toString(),
@@ -1183,7 +1181,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                   ),
                 ],
               ),
-            )).toList(),
+            )),
           ],
         ],
       ),
