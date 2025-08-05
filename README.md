@@ -6,6 +6,9 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
+> **⚠️ IMPORTANTE - PROJETO EM DESENVOLVIMENTO:**
+> Este projeto encontra-se atualmente em fase de desenvolvimento ativo. Devido a limitações de saúde e financeiras, não foi possível realizar testes presenciais com as comunidades na Guiné-Bissau neste momento. As funcionalidades e o impacto descritos neste documento serão demonstrados através de vídeos técnicos que mostram o sistema em operação. O objetivo é validar o conceito e a arquitetura antes da implementação em campo, que será realizada assim que as condições permitirem.
+
 ## 🌍 Sobre o Projeto
 
 O **Moransa** é um sistema revolucionário de inteligência artificial comunitária que utiliza o **Gemma 3n offline** para fornecer assistência especializada a comunidades rurais. Atualmente especializado na **Guiné-Bissau**, o sistema está sendo desenvolvido para se adaptar a **qualquer comunidade do mundo**, onde a localização define o conhecimento e a especialização do sistema.

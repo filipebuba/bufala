@@ -1,4 +1,5 @@
 {
     "cmake.sourceDirectory": "C:/Users/fbg67/Desktop/bufala/android_app/windows",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "liveServer.settings.port": 5501
 }

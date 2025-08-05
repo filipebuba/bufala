@@ -1,4 +1,8 @@
 Moransa: Esperança em Código para a Guiné-Bissau com Gemma 3n
+
+> **⚠️ IMPORTANTE - PROJETO EM DESENVOLVIMENTO:**
+> Este projeto encontra-se atualmente em fase de desenvolvimento ativo. Devido a limitações de saúde e financeiras, não foi possível realizar testes presenciais com as comunidades na Guiné-Bissau neste momento. As funcionalidades e o impacto descritos neste documento serão demonstrados através de vídeos técnicos que mostram o sistema em operação. O objetivo é validar o conceito e a arquitetura antes da implementação em campo, que será realizada assim que as condições permitirem.
+
 1. A Centelha: Uma Promessa Nascida da Perda
 Este projeto não nasceu de um desafio técnico, mas de uma tragédia que ecoa até hoje. Numa aldeia isolada na minha Guiné-Bissau, uma mulher e o seu filho por nascer perderam a vida durante o parto. A causa não foi uma complicação médica intratável, mas uma estrada de terra que a chuva tornara intransitável. Padres tentaram ajudar, mas o carro não passou. Chegaram de moto tarde demais e, sem conhecimento médico, tudo o que puderam fazer foi rezar ao lado dela por oito horas.
 Eu ouvi esta história, contada por um padre em lágrimas durante a missa de domingo. Desde aquele dia, a impotência que senti transformou-se numa busca incessante por uma solução. Como poderíamos levar conhecimento vital para onde as estradas não chegam? Como poderíamos colocar o poder de um especialista nas mãos de um agente comunitário, de uma parteira, de um agricultor?
