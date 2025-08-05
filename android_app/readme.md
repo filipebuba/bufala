@@ -1,5 +1,8 @@
 # GuinéApp - Aplicativo Comunitário para Guiné-Bissau
 
+> **⚠️ IMPORTANTE - PROJETO EM DESENVOLVIMENTO:**
+> Este projeto encontra-se atualmente em fase de desenvolvimento ativo. Devido a limitações de saúde e financeiras, não foi possível realizar testes presenciais com as comunidades na Guiné-Bissau neste momento. As funcionalidades e o impacto descritos neste documento serão demonstrados através de vídeos técnicos que mostram o sistema em operação. O objetivo é validar o conceito e a arquitetura antes da implementação em campo, que será realizada assim que as condições permitirem.
+
 ## Visão Geral
 
 O GuinéApp é um aplicativo Android desenvolvido especialmente para comunidades rurais da Guiné-Bissau, focando em três áreas críticas:
