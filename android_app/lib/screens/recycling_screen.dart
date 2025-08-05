@@ -345,7 +345,7 @@ class _RecyclingScreenState extends State<RecyclingScreen>
           lines.where((line) => line.trim().length > 20).toList();
       if (meaningfulLines.isNotEmpty) {
         instructions.addAll(
-            meaningfulLines.take(3).map((line) => _cleanGemmaText(line)));
+            meaningfulLines.take(3).map(_cleanGemmaText));
       } else {
         instructions.add(
             'Resposta do Gemma3n: ${text.substring(0, text.length > 100 ? 100 : text.length)}...');
