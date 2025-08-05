@@ -5294,20 +5294,18 @@ def _generate_alerts_with_gemma3(location, alert_types, language='pt'):
 
 Responda APENAS com o JSON acima, sem texto adicional."""
         
-        # Gerar resposta com Gemma3 usando parâmetros mais restritivos
+        # Gerar resposta com Gemma3
         response = gemma_service.generate_response(
             prompt=prompt,
             context="environmental_alerts",
-            max_tokens=600,
-            temperature=0.1,
-            top_p=0.8
+            max_tokens=1000
         )
         
         # Log da resposta bruta para debug
         logger.info(f"Resposta bruta do Gemma3: {response}")
         
-        # Processar resposta do Gemma3 com parsing simplificado
-        alerts = _parse_gemma3_alerts_simple(response, location)
+        # Processar resposta do Gemma3
+        alerts = _parse_gemma3_alerts_response(response, location)
         
         # Salvar no cache para evitar repetições
         if alerts:
@@ -5322,122 +5320,7 @@ Responda APENAS com o JSON acima, sem texto adicional."""
         # Fallback para alertas estáticos
         return _get_fallback_alerts(location, alert_types)
 
-def _parse_gemma3_alerts_simple(response, location):
-    """
-    Parsing simplificado e robusto para respostas do Gemma3
-    """
-    import json
-    import uuid
-    
-    try:
-        # Extrair texto da resposta
-        response_text = ""
-        if isinstance(response, dict):
-            if 'message' in response and 'content' in response['message']:
-                response_text = response['message']['content']
-            elif 'response' in response:
-                response_text = str(response['response'])
-            else:
-                response_text = str(response)
-        else:
-            response_text = str(response)
-        
-        logger.info(f"Texto extraído: {response_text[:300]}...")
-        
-        # Tentar encontrar JSON válido
-        start_idx = response_text.find('[')
-        end_idx = response_text.rfind(']')
-        
-        if start_idx != -1 and end_idx > start_idx:
-            json_text = response_text[start_idx:end_idx + 1]
-            
-            # Limpeza básica
-            json_text = json_text.replace('\\n', ' ').replace('\\"', '"')
-            
-            try:
-                alerts_data = json.loads(json_text)
-                
-                # Processar alertas com fallback para dados corrompidos
-                processed_alerts = []
-                for i, alert in enumerate(alerts_data[:4]):
-                    if isinstance(alert, dict):
-                        processed_alert = {
-                            'id': f"gemma3_{uuid.uuid4().hex[:8]}",
-                            'title': str(alert.get('title', f'Alerta Ambiental {i+1}')).strip()[:100],
-                            'message': str(alert.get('message', 'Condições ambientais requerem atenção')).strip()[:200],
-                            'description': str(alert.get('description', 'Monitorar condições locais')).strip()[:300],
-                            'severity': alert.get('severity', 'medium') if alert.get('severity') in ['low', 'medium', 'high'] else 'medium',
-                            'type': alert.get('type', 'weather') if alert.get('type') in ['weather', 'agriculture', 'air_quality', 'emergency'] else 'weather',
-                            'category': str(alert.get('category', 'environmental')).strip(),
-                            'recommendations': alert.get('recommendations', ['Manter-se informado', 'Seguir orientações locais'])[:5],
-                            'location': location,
-                            'timestamp': datetime.now().isoformat(),
-                            'expires_at': (datetime.now() + timedelta(hours=24)).isoformat(),
-                            'generated_by': 'Gemma3',
-                            'icon': 'warning',
-                            'color': '#FF9800'
-                        }
-                        processed_alerts.append(processed_alert)
-                
-                if processed_alerts:
-                    logger.info(f"Processados {len(processed_alerts)} alertas com sucesso")
-                    return processed_alerts
-                    
-            except json.JSONDecodeError as e:
-                logger.error(f"Erro JSON: {e}")
-        
-        # Fallback: criar alertas básicos se parsing falhar
-        logger.warning("Usando alertas de fallback devido a erro de parsing")
-        return _create_fallback_alerts(location)
-        
-    except Exception as e:
-        logger.error(f"Erro no parsing simplificado: {e}")
-        return _create_fallback_alerts(location)
-
-def _create_fallback_alerts(location):
-    """
-    Criar alertas básicos quando o Gemma3 falha
-    """
-    import uuid
-    
-    alerts = [
-        {
-            'id': f"fallback_{uuid.uuid4().hex[:8]}",
-            'title': 'Alerta Meteorológico',
-            'message': f'Condições climáticas em {location} requerem atenção',
-            'description': 'Monitorar mudanças nas condições meteorológicas locais',
-            'severity': 'medium',
-            'type': 'weather',
-            'category': 'meteorology',
-            'recommendations': ['Verificar previsão do tempo', 'Preparar-se para mudanças climáticas'],
-            'location': location,
-            'timestamp': datetime.now().isoformat(),
-            'expires_at': (datetime.now() + timedelta(hours=12)).isoformat(),
-            'generated_by': 'Sistema',
-            'icon': 'cloud',
-            'color': '#2196F3'
-        },
-        {
-            'id': f"fallback_{uuid.uuid4().hex[:8]}",
-            'title': 'Alerta Agrícola',
-            'message': f'Condições para agricultura em {location}',
-            'description': 'Verificar condições do solo e irrigação das culturas',
-            'severity': 'low',
-            'type': 'agriculture',
-            'category': 'farming',
-            'recommendations': ['Verificar irrigação', 'Monitorar culturas', 'Proteger plantas'],
-            'location': location,
-            'timestamp': datetime.now().isoformat(),
-            'expires_at': (datetime.now() + timedelta(hours=24)).isoformat(),
-            'generated_by': 'Sistema',
-            'icon': 'agriculture',
-            'color': '#4CAF50'
-        }
-    ]
-    
-    return alerts
-
-def _parse_gemma3_alerts_response_old(response, location):
+def _parse_gemma3_alerts_response(response, location):
     """
     Processar resposta do Gemma3 e converter em formato de alertas
     """
