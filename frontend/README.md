@@ -6,6 +6,9 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
+> **⚠️ IMPORTANTE - PROJETO EM DESENVOLVIMENTO:**
+> Este projeto encontra-se atualmente em fase de desenvolvimento ativo. Devido a limitações de saúde e financeiras, não foi possível realizar testes presenciais com as comunidades na Guiné-Bissau neste momento. As funcionalidades e o impacto descritos neste documento serão demonstrados através de vídeos técnicos que mostram o sistema em operação. O objetivo é validar o conceito e a arquitetura antes da implementação em campo, que será realizada assim que as condições permitirem.
+
 ## 🌍 Sobre
 
 Landing page moderna e responsiva para o **Projeto Moransa** - Sistema revolucionário de IA comunitária que transforma vidas na Guiné-Bissau através de tecnologia offline.

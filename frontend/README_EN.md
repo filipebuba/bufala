@@ -6,6 +6,9 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
+> **⚠️ IMPORTANT - PROJECT IN DEVELOPMENT:**
+> This project is currently in active development phase. Due to health and financial limitations, it has not been possible to conduct in-person testing with communities in Guinea-Bissau at this time. The functionalities and impact described in this document will be demonstrated through technical videos showing the system in operation. The goal is to validate the concept and architecture before field implementation, which will be carried out as soon as conditions allow.
+
 ## 🌍 About
 
 Modern and responsive landing page for the **Moransa Project** - Revolutionary community AI system that transforms lives in Guinea-Bissau through offline technology.

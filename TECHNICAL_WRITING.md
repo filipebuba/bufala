@@ -1,5 +1,8 @@
 Moransa: Hope in Code for Guinea-Bissau with Gemma 3n
 
+> **⚠️ IMPORTANT - PROJECT IN DEVELOPMENT:**
+> This project is currently in active development phase. Due to health and financial limitations, it has not been possible to conduct in-person testing with communities in Guinea-Bissau at this time. The functionalities and impact described in this document will be demonstrated through technical videos showing the system in operation. The goal is to validate the concept and architecture before field implementation, which will be carried out as soon as conditions allow.
+
 1. The Spark: A Promise Born from Loss
 
 This project was not born from a technical challenge, but from a tragedy that echoes to this day. In an isolated village in my Guinea-Bissau, a woman and her unborn child lost their lives during childbirth. The cause was not an untreatable medical complication, but a dirt road that the rain had made impassable. Priests tried to help, but the car couldn't get through. They arrived by motorcycle too late and, without medical knowledge, all they could do was pray beside her for eight hours.

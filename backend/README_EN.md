@@ -1,5 +1,8 @@
 # Moransa Backend - Offline AI System for Community Assistance
 
+> **⚠️ IMPORTANT - PROJECT IN DEVELOPMENT:**
+> This project is currently in active development phase. Due to health and financial limitations, it has not been possible to conduct in-person testing with communities in Guinea-Bissau at this time. The functionalities and impact described in this document will be demonstrated through technical videos showing the system in operation. The goal is to validate the concept and architecture before field implementation, which will be carried out as soon as conditions allow.
+
 ## Overview
 
 The Moransa backend is a robust FastAPI system that serves as a bridge between the Flutter application and the Gemma 3n model executed via Ollama. Designed to function 100% offline, it offers specialized APIs for health, education, agriculture, accessibility, environmental sustainability, and community validation.
