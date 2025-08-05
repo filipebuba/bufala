@@ -1,5 +1,8 @@
 # Documentação Técnica Completa - Projeto Moransa
 
+> **⚠️ IMPORTANTE - PROJETO EM DESENVOLVIMENTO:**
+> Este projeto encontra-se atualmente em fase de desenvolvimento ativo. Devido a limitações de saúde e financeiras, não foi possível realizar testes presenciais com as comunidades na Guiné-Bissau neste momento. As funcionalidades e o impacto descritos nesta documentação serão demonstrados através de vídeos técnicos que mostram o sistema em operação. O objetivo é validar o conceito e a arquitetura antes da implementação em campo, que será realizada assim que as condições permitirem.
+
 ## 📋 Índice da Documentação
 
 Esta pasta contém a documentação técnica completa do **Projeto Moransa**, um sistema revolucionário de assistência comunitária para a Guiné-Bissau que utiliza inteligência artificial (Gemma-3n) funcionando 100% offline.
