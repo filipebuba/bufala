@@ -423,9 +423,7 @@ moransa/
 - **Educational impact**: 100,000+ students
 - **Agricultural impact**: 500,000+ farmers
 
-## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 

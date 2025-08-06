@@ -423,9 +423,6 @@ moransa/
 - **Impacto educacional**: 100.000+ estudantes
 - **Impacto agrícola**: 500.000+ agricultores
 
-## 📄 Licença
-
-Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ## 🙏 Agradecimentos
 
