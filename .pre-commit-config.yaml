@@ -1,0 +1,251 @@
+# Configuração de Pre-commit Hooks para Moransa
+# Este arquivo define hooks que são executados antes de cada commit
+# para garantir qualidade e consistência do código
+
+repos:
+  # Hooks gerais
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Verificações básicas de arquivos
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        description: Remove espaços em branco no final das linhas
+        
+      - id: end-of-file-fixer
+        name: Fix end of files
+        description: Garante que arquivos terminem com uma nova linha
+        
+      - id: check-yaml
+        name: Check YAML
+        description: Verifica sintaxe de arquivos YAML
+        
+      - id: check-json
+        name: Check JSON
+        description: Verifica sintaxe de arquivos JSON
+        
+      - id: check-toml
+        name: Check TOML
+        description: Verifica sintaxe de arquivos TOML
+        
+      - id: check-xml
+        name: Check XML
+        description: Verifica sintaxe de arquivos XML
+        
+      - id: check-added-large-files
+        name: Check for large files
+        description: Previne commit de arquivos muito grandes
+        args: ['--maxkb=1000']
+        
+      - id: check-case-conflict
+        name: Check case conflict
+        description: Verifica conflitos de case em nomes de arquivos
+        
+      - id: check-merge-conflict
+        name: Check merge conflict
+        description: Verifica marcadores de conflito de merge
+        
+      - id: debug-statements
+        name: Debug statements (Python)
+        description: Verifica statements de debug em Python
+        
+      - id: detect-private-key
+        name: Detect private keys
+        description: Detecta chaves privadas no código
+        
+      - id: fix-byte-order-marker
+        name: Fix byte order marker
+        description: Remove ou corrige BOM
+        
+      - id: mixed-line-ending
+        name: Mixed line ending
+        description: Verifica terminações de linha mistas
+        
+      - id: check-executables-have-shebangs
+        name: Check executables have shebangs
+        description: Verifica se executáveis têm shebangs
+
+  # Hooks específicos para Python
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        name: Black (Python formatter)
+        description: Formata código Python com Black
+        language_version: python3
+        files: ^backend/.*\.py$
+        args: [--line-length=127]
+        
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (Python import sorter)
+        description: Organiza imports Python
+        files: ^backend/.*\.py$
+        args: [--profile=black, --line-length=127]
+        
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        name: Flake8 (Python linter)
+        description: Verifica qualidade do código Python
+        files: ^backend/.*\.py$
+        args: [--max-line-length=127, --extend-ignore=E203,W503]
+        additional_dependencies:
+          - flake8-docstrings
+          - flake8-import-order
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-simplify
+          
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        name: MyPy (Python type checker)
+        description: Verifica tipos Python
+        files: ^backend/.*\.py$
+        additional_dependencies: [types-all]
+        args: [--ignore-missing-imports]
+        
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        name: Bandit (Python security linter)
+        description: Verifica vulnerabilidades de segurança
+        files: ^backend/.*\.py$
+        args: [-r, --format, json, --severity-level, medium]
+        exclude: ^backend/tests/.*
+
+  # Hooks específicos para Dart/Flutter
+  - repo: local
+    hooks:
+      - id: dart-format
+        name: Dart Format
+        description: Formata código Dart
+        entry: dart format
+        language: system
+        files: ^android_app/.*\.dart$
+        pass_filenames: true
+        
+      - id: dart-analyze
+        name: Dart Analyze
+        description: Analisa código Dart
+        entry: bash -c 'cd android_app && dart analyze'
+        language: system
+        files: ^android_app/.*\.dart$
+        pass_filenames: false
+        
+      - id: flutter-test
+        name: Flutter Test
+        description: Executa testes Flutter
+        entry: bash -c 'cd android_app && flutter test'
+        language: system
+        files: ^android_app/(lib|test)/.*\.dart$
+        pass_filenames: false
+
+  # Hooks para documentação
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        name: mdformat (Markdown formatter)
+        description: Formata arquivos Markdown
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-black
+        args: [--wrap=80]
+
+  # Hooks para segurança
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        name: Detect secrets
+        description: Detecta segredos no código
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # Hooks para commits
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        name: Commitizen check
+        description: Verifica formato de mensagens de commit
+        stages: [commit-msg]
+
+  # Hooks específicos para Moransa
+  - repo: local
+    hooks:
+      - id: moransa-module-check
+        name: Moransa Module Check
+        description: Verifica estrutura dos módulos Moransa
+        entry: python scripts/check_modules.py
+        language: system
+        files: ^(backend|android_app)/.*\.(py|dart)$
+        pass_filenames: false
+        
+      - id: moransa-language-check
+        name: Moransa Language Check
+        description: Verifica suporte a idiomas locais
+        entry: python scripts/check_languages.py
+        language: system
+        files: ^(backend|android_app)/.*\.(py|dart|json)$
+        pass_filenames: false
+        
+      - id: moransa-offline-check
+        name: Moransa Offline Check
+        description: Verifica funcionalidade offline
+        entry: python scripts/check_offline.py
+        language: system
+        files: ^(backend|android_app)/.*\.(py|dart)$
+        pass_filenames: false
+        
+      - id: moransa-security-check
+        name: Moransa Security Check
+        description: Verifica configurações de segurança específicas
+        entry: python scripts/check_security.py
+        language: system
+        files: ^(backend|android_app)/.*\.(py|dart|yaml|json)$
+        pass_filenames: false
+
+  # Hooks para frontend
+  - repo: local
+    hooks:
+      - id: html-validate
+        name: HTML Validate
+        description: Valida arquivos HTML
+        entry: python scripts/validate_html.py
+        language: system
+        files: ^frontend/.*\.html$
+        pass_filenames: true
+        
+      - id: css-validate
+        name: CSS Validate
+        description: Valida CSS inline
+        entry: python scripts/validate_css.py
+        language: system
+        files: ^frontend/.*\.html$
+        pass_filenames: true
+
+# Configurações globais
+default_stages: [commit]
+fail_fast: false
+minimum_pre_commit_version: '3.0.0'
+
+# Configurações de CI
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+    
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

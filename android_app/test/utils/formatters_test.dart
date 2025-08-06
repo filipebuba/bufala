@@ -1,7 +1,6 @@
 import 'package:android_app/utils/formatters.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-
 void main() {
   group('Formatters Tests', () {
     group('Severity Formatting', () {

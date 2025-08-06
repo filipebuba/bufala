@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'dart:convert';
+
+const String testBaseUrl = testBaseUrl;
 
 // Import the service to test
 import 'package:android_app/services/api_client.dart';
@@ -19,7 +22,7 @@ void main() {
     setUp(() {
       mockHttpClient = MockClient();
       apiClient = ApiClient(
-        baseUrl: 'http://localhost:5000',
+        baseUrl: '',
         client: mockHttpClient,
       );
     });
@@ -47,7 +50,7 @@ void main() {
         // Arrange
         final responseData = {'success': true, 'data': 'test'};
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/test'),
+          Uri.parse('/test'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async => http.Response(
           json.encode(responseData),
@@ -66,7 +69,7 @@ void main() {
       test('should handle GET request errors', () async {
         // Arrange
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/error'),
+          Uri.parse('/error'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async => http.Response(
           json.encode({'error': 'Not found'}),
@@ -83,7 +86,7 @@ void main() {
       test('should handle network timeout', () async {
         // Arrange
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/timeout'),
+          Uri.parse('/timeout'),
           headers: anyNamed('headers'),
         )).thenThrow(Exception('Connection timeout'));
         
@@ -102,7 +105,7 @@ void main() {
         final responseData = {'success': true, 'echo': 'Hello'};
         
         when(mockHttpClient.post(
-          Uri.parse('http://localhost:5000/echo'),
+          Uri.parse('/echo'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         )).thenAnswer((_) async => http.Response(
@@ -124,7 +127,7 @@ void main() {
         final responseData = {'success': true};
         
         when(mockHttpClient.post(
-          Uri.parse('http://localhost:5000/empty'),
+          Uri.parse('/empty'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         )).thenAnswer((_) async => http.Response(
@@ -143,7 +146,7 @@ void main() {
       test('should handle POST request server errors', () async {
         // Arrange
         when(mockHttpClient.post(
-          Uri.parse('http://localhost:5000/server-error'),
+          Uri.parse('/server-error'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         )).thenAnswer((_) async => http.Response(
@@ -166,7 +169,7 @@ void main() {
         final responseData = {'success': true, 'updated': true};
         
         when(mockHttpClient.put(
-          Uri.parse('http://localhost:5000/update/1'),
+          Uri.parse('/update/1'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         )).thenAnswer((_) async => http.Response(
@@ -190,7 +193,7 @@ void main() {
         final responseData = {'success': true, 'deleted': true};
         
         when(mockHttpClient.delete(
-          Uri.parse('http://localhost:5000/delete/1'),
+          Uri.parse('/delete/1'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async => http.Response(
           json.encode(responseData),
@@ -211,7 +214,7 @@ void main() {
       test('should include default headers', () async {
         // Arrange
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/test'),
+          Uri.parse('/test'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async => http.Response(
           json.encode({'success': true}),
@@ -223,7 +226,7 @@ void main() {
         
         // Assert
         verify(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/test'),
+          Uri.parse('/test'),
           headers: argThat(
             containsPair('Content-Type', 'application/json'),
             named: 'headers',
@@ -236,7 +239,7 @@ void main() {
         final customHeaders = {'Authorization': 'Bearer token123'};
         
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/protected'),
+          Uri.parse('/protected'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async => http.Response(
           json.encode({'success': true}),
@@ -248,7 +251,7 @@ void main() {
         
         // Assert
         verify(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/protected'),
+          Uri.parse('/protected'),
           headers: argThat(
             allOf([
               containsPair('Content-Type', 'application/json'),
@@ -285,7 +288,7 @@ void main() {
       test('should handle malformed JSON response', () async {
         // Arrange
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/malformed'),
+          Uri.parse('/malformed'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async => http.Response(
           'Invalid JSON{',
@@ -303,7 +306,7 @@ void main() {
       test('should handle empty response', () async {
         // Arrange
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/empty'),
+          Uri.parse('/empty'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async => http.Response(
           '',
@@ -322,7 +325,7 @@ void main() {
       test('should complete requests within reasonable time', () async {
         // Arrange
         when(mockHttpClient.get(
-          Uri.parse('http://localhost:5000/fast'),
+          Uri.parse('/fast'),
           headers: anyNamed('headers'),
         )).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 100));

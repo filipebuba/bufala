@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import '../config/test_config.dart';
 
 // Mock HTTP client for testing
 class MockHttpClient extends http.BaseClient {
@@ -33,7 +35,7 @@ class TestApiClient {
   
   Future<bool> checkConnectivity() async {
     try {
-      final response = await _client.get(Uri.parse('http://localhost:5000/health'));
+      final response = await _client.get(Uri.parse('/health'));
       return response.statusCode == 200;
     } catch (e) {
       return false;
@@ -43,7 +45,7 @@ class TestApiClient {
   Future<Map<String, dynamic>> makeRequest(String endpoint, Map<String, dynamic> data) async {
     try {
       final response = await _client.post(
-        Uri.parse('http://localhost:5000$endpoint'),
+        Uri.parse('$endpoint'),
         headers: {'Content-Type': 'application/json'},
         body: data.toString(),
       );

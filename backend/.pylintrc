@@ -1,0 +1,225 @@
+[MASTER]
+# Especifica uma lista de plugins a serem carregados
+load-plugins=
+
+# Usa múltiplos processos para acelerar o Pylint
+jobs=1
+
+# Controla a quantidade de informações potenciais ou de ruído
+confidence=
+
+# Adiciona arquivos ou diretórios ao blacklist
+ignore=CVS,migrations,venv,env,.env
+
+# Adiciona padrões de arquivos ou diretórios ao blacklist
+ignore-patterns=
+
+# Arquivos Python com extensão a serem verificados
+py-version=3.10
+
+[MESSAGES CONTROL]
+# Apenas mostra avisos com as IDs ou categorias mencionadas
+enable=C,R,W,E,F
+
+# Desabilita mensagens específicas
+disable=
+    C0103,  # invalid-name
+    C0111,  # missing-docstring
+    R0903,  # too-few-public-methods
+    R0913,  # too-many-arguments
+    W0613,  # unused-argument
+    W0622,  # redefined-builtin
+    C0301,  # line-too-long (handled by black)
+    C0330,  # wrong-hanging-indentation (handled by black)
+    C0326,  # bad-whitespace (handled by black)
+
+[REPORTS]
+# Define o formato da saída
+output-format=text
+
+# Inclui IDs de mensagem na saída
+include-ids=yes
+
+# Inclui símbolos de mensagem na saída
+include-symbols=no
+
+# Coloca uma pontuação completa no final das mensagens
+reports=no
+
+# Avalia uma expressão Python para ser usada como pontuação
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+[REFACTORING]
+# Número máximo de argumentos para função/método
+max-args=7
+
+# Número máximo de atributos para uma classe
+max-attributes=10
+
+# Número máximo de branches para função/método
+max-branches=15
+
+# Número máximo de locals para função/método
+max-locals=20
+
+# Número máximo de returns para função/método
+max-returns=8
+
+# Número máximo de statements em função/método
+max-statements=60
+
+# Número mínimo de métodos públicos para uma classe
+min-public-methods=1
+
+[BASIC]
+# Convenções de nomenclatura
+argument-naming-style=snake_case
+attr-naming-style=snake_case
+class-naming-style=PascalCase
+class-attribute-naming-style=any
+const-naming-style=UPPER_CASE
+function-naming-style=snake_case
+inlinevar-naming-style=any
+method-naming-style=snake_case
+module-naming-style=snake_case
+variable-naming-style=snake_case
+
+# Expressões regulares para nomes válidos
+argument-rgx=[a-z_][a-z0-9_]{2,30}$
+attr-rgx=[a-z_][a-z0-9_]{2,30}$
+class-rgx=[A-Z_][a-zA-Z0-9]+$
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+function-rgx=[a-z_][a-z0-9_]{2,30}$
+method-rgx=[a-z_][a-z0-9_]{2,30}$
+module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+variable-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Nomes bons padrão
+good-names=i,j,k,ex,Run,_,id,db,pk,ui
+
+# Nomes ruins padrão
+bad-names=foo,bar,baz,toto,tutu,tata
+
+# Docstrings são necessárias para módulos, classes e funções
+no-docstring-rgx=^_
+
+[FORMAT]
+# Número máximo de caracteres em uma linha
+max-line-length=127
+
+# Regexp para uma linha que é permitida ser mais longa que o limite
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
+# Número de espaços de indentação
+indent-string='    '
+
+# Número máximo de linhas em um módulo
+max-module-lines=1000
+
+[LOGGING]
+# Formato de string de logging que é usado no código
+logging-format-style=old
+
+[MISCELLANEOUS]
+# Lista de tags de nota a serem consideradas
+notes=FIXME,XXX,TODO,BUG,HACK
+
+[SIMILARITIES]
+# Número mínimo de linhas de código similar
+min-similarity-lines=4
+
+# Ignora comentários ao computar similaridades
+ignore-comments=yes
+
+# Ignora docstrings ao computar similaridades
+ignore-docstrings=yes
+
+# Ignora imports ao computar similaridades
+ignore-imports=no
+
+[SPELLING]
+# Dicionário de ortografia a ser usado
+spelling-dict=
+
+# Lista de palavras separadas por vírgula que não devem ser verificadas
+spelling-ignore-words=
+
+# Arquivo contendo uma lista de palavras que não devem ser verificadas
+spelling-private-dict-file=
+
+[TYPECHECK]
+# Lista de decoradores que produzem propriedades
+property-classes=abc.abstractproperty
+
+# Lista de nomes de membros que são definidos dinamicamente
+generated-members=
+
+# Lista de classes cujos membros são ignorados
+ignored-classes=optparse.Values,thread._local,_thread._local
+
+# Lista de módulos cujos membros são ignorados
+ignored-modules=
+
+[VARIABLES]
+# Lista de strings que podem identificar um callback
+callbacks=cb_,_cb
+
+# Lista de nomes de variáveis dummy
+dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_
+
+# Argumentos de função adicionais que são ignorados
+additional-builtins=
+
+# Lista de nomes de variáveis que são sempre definidas
+defining-attr-methods=__init__,__new__,setUp,__post_init__
+
+[CLASSES]
+# Lista de nomes de métodos que são válidos como primeiro argumento
+valid-classmethod-first-arg=cls
+
+# Lista de nomes de métodos que são válidos como primeiro argumento
+valid-metaclass-classmethod-first-arg=cls
+
+[DESIGN]
+# Número máximo de argumentos para função/método
+max-args=7
+
+# Número máximo de atributos para uma classe
+max-attributes=10
+
+# Número máximo de branches para função/método
+max-branches=15
+
+# Número máximo de locals para função/método
+max-locals=20
+
+# Número máximo de parents para uma classe
+max-parents=7
+
+# Número máximo de métodos públicos para uma classe
+max-public-methods=25
+
+# Número máximo de returns para função/método
+max-returns=8
+
+# Número máximo de statements em função/método
+max-statements=60
+
+# Número mínimo de métodos públicos para uma classe
+min-public-methods=1
+
+[IMPORTS]
+# Lista de módulos que podem ser importados em qualquer nível
+allow-wildcard-with-all=no
+
+# Analisa import fallback blocks
+analyse-fallback-blocks=no
+
+# Força import order para seguir PEP8
+known-standard-library=
+known-third-party=
+known-first-party=
+
+[EXCEPTIONS]
+# Exceções que irão emitir uma violação quando sendo capturadas
+overgeneral-exceptions=Exception

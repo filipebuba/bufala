@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import '../config/test_config.dart';
 
 // Simplified Mock HTTP client for comprehensive testing
 class SimplifiedMockHttpClient extends http.BaseClient {
@@ -30,7 +32,7 @@ class SimplifiedApiClient {
   
   SimplifiedApiClient({
     http.Client? client,
-    this.baseUrl = 'http://localhost:5000'
+    this.baseUrl = ''
   }) : _client = client ?? SimplifiedMockHttpClient();
   final http.Client _client;
   final String baseUrl;
