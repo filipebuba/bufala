@@ -136,7 +136,7 @@ def medical_consultation():
             response = gemma_service.generate_response(
                 medical_context,
                 SystemPrompts.MEDICAL,
-                temperature=0.3,  # Baixa temperatura para respostas mais precisas
+                temperature=0.3,  # Temperatura entre 1-3 para contextos de saúde com gemma3n:e4b
                 max_new_tokens=400
             )
             
@@ -199,7 +199,7 @@ def emergency_guidance():
             response = gemma_service.generate_response(
                 emergency_context,
                 SystemPrompts.MEDICAL,
-                temperature=0.2,  # Baixa temperatura para emergências
+                temperature=2.0,  # Temperatura entre 1-3 para emergências médicas com gemma3n:e4b
                 max_new_tokens=300
             )
             

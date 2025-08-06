@@ -153,7 +153,7 @@ class IntelligentModelSelector:
             criticality_threshold=CriticalityLevel.CRITICAL,
             contexts=[ContextType.EMERGENCY, ContextType.HEALTH, ContextType.ENVIRONMENTAL, ContextType.EDUCATION, ContextType.AGRICULTURE],
             device_quality_threshold=DeviceQuality.HIGH,
-            temperature=0.2,
+            temperature=2.0,  # Temperatura entre 1-3 para contextos de saúde com gemma3n:e4b
             top_p=0.7,
             max_tokens=8192,
             ram_requirement_gb=3.0,  # Conforme especificação oficial (não 4GB)
@@ -167,7 +167,7 @@ class IntelligentModelSelector:
             criticality_threshold=CriticalityLevel.HIGH,
             contexts=[ContextType.EMERGENCY, ContextType.HEALTH, ContextType.ENVIRONMENTAL],
             device_quality_threshold=DeviceQuality.MEDIUM,
-            temperature=0.3,
+            temperature=1.8,  # Temperatura entre 1-3 para contextos de saúde com gemma3n:e4b
             top_p=0.8,
             max_tokens=4096,
             ram_requirement_gb=2.0,  # Conforme especificação oficial
@@ -181,7 +181,7 @@ class IntelligentModelSelector:
             criticality_threshold=CriticalityLevel.MEDIUM,
             contexts=[ContextType.GENERAL, ContextType.HEALTH, ContextType.EDUCATION, ContextType.AGRICULTURE],
             device_quality_threshold=DeviceQuality.MEDIUM,
-            temperature=0.5,
+            temperature=1.6,  # Temperatura entre 1-3 para contextos de saúde com gemma3n:e4b
             top_p=0.85,
             max_tokens=4096,
             ram_requirement_gb=2.5,  # Valor intermediário já que aponta para E4B
@@ -427,13 +427,14 @@ class IntelligentModelSelector:
             criticality = cls.CONTEXT_CRITICALITY.get(context, CriticalityLevel.LOW)
         
         # Lista de modelos candidatos baseados na criticidade (em ordem de preferência)
-        # PRIORIZA sempre e2b/e4b em vez de latest para maior precisão
+        # PRIORIZA sempre e4b para contextos de saúde (HIGH/CRITICAL) conforme solicitado
         candidate_models = []
         
         if criticality == CriticalityLevel.CRITICAL:
             candidate_models = ["gemma3n:e4b", "gemma3n:e2b", "gemma3n:lite"]
         elif criticality == CriticalityLevel.HIGH:
-            candidate_models = ["gemma3n:e2b", "gemma3n:e4b", "gemma3n:lite"]
+            # Para contextos de saúde, priorizar e4b sobre e2b
+            candidate_models = ["gemma3n:e4b", "gemma3n:e2b", "gemma3n:lite"]
         elif criticality == CriticalityLevel.MEDIUM:
             candidate_models = ["gemma3n:e2b", "gemma3n:e4b", "gemma3n:lite"]
         else:

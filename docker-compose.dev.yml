@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Backend API para desenvolvimento
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: moransa-backend-dev
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONPATH=/app
+      - OLLAMA_HOST=host.docker.internal:11434
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+    networks:
+      - moransa-dev-network
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  backend_logs:
+    driver: local
+
+networks:
+  moransa-dev-network:
+    driver: bridge

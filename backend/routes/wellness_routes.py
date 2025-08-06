@@ -130,7 +130,7 @@ def wellness_content():
             response = gemma_service.generate_response(
                 wellness_context,
                 SystemPrompts.WELLNESS,
-                temperature=0.7,
+                temperature=1.6,  # Temperatura entre 1-3 para contextos de bem-estar com gemma3n:e4b
                 max_new_tokens=500
             )
             
@@ -355,7 +355,7 @@ Seja empático, profissional e focado em soluções práticas. Considere o conte
             response = gemma_service.generate_response(
                 analysis_prompt,
                 SystemPrompts.WELLNESS,
-                temperature=0.7,
+                temperature=1.8,  # Temperatura entre 1-3 para contextos de saúde/bem-estar com gemma3n:e4b
                 max_new_tokens=800
             )
             
@@ -541,7 +541,7 @@ def wellness_coaching():
             response = gemma_service.generate_response(
                 wellness_context,
                 SystemPrompts.WELLNESS,
-                temperature=0.7,  # Temperatura moderada para conselhos empáticos
+                temperature=1.7,  # Temperatura entre 1-3 para conselhos de saúde/bem-estar com gemma3n:e4b
                 max_new_tokens=400
             )
             
@@ -1377,7 +1377,7 @@ def voice_analysis():
             response = gemma_service.generate_response(
                 voice_analysis_prompt,
                 SystemPrompts.WELLNESS,
-                temperature=0.6,  # Temperatura moderada para análise consistente
+                temperature=1.5,  # Temperatura entre 1-3 para análise de saúde/bem-estar com gemma3n:e4b
                 max_new_tokens=400
             )
             
@@ -1553,7 +1553,7 @@ def chat_generic():
             response = gemma_service.generate_response(
                 prompt,
                 system_prompt,
-                temperature=0.7,
+                temperature=1.4,  # Temperatura entre 1-3 para contextos de bem-estar com gemma3n:e4b
                 max_new_tokens=300
             )
             
@@ -1864,7 +1864,7 @@ def _generate_guided_session_with_gemma_audio(gemma_service, session_type, durat
         response = gemma_service.generate_response(
             audio_prompt,
             SystemPrompts.WELLNESS,
-            temperature=0.6,
+            temperature=1.3,  # Temperatura entre 1-3 para contextos de bem-estar com gemma3n:e4b
             max_new_tokens=1200
         )
         
@@ -1915,7 +1915,7 @@ def _generate_guided_session_with_text(gemma_service, session_type, duration_min
             response = gemma_service.generate_response(
                 text_prompt,
                 SystemPrompts.WELLNESS,
-                temperature=0.7,
+                temperature=1.5,  # Temperatura entre 1-3 para contextos de bem-estar com gemma3n:e4b
                 max_new_tokens=600
             )
             
