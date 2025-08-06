@@ -1,3 +1,6 @@
+ **[English Version](README_EN.md)** | **Português** 🇧🇷
+
+
 # Moransa - Sistema de IA Comunitária Adaptativa
 
 ![Moransa](https://img.shields.io/badge/Moransa-Community%20AI-green?style=for-the-badge)

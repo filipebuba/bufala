@@ -1,5 +1,7 @@
 # Moransa Backend - Sistema de IA Offline para Assistência Comunitária
 
+> 🌍 **[English Version](README_EN.md)** | **Português** 🇧🇷
+
 > **⚠️ IMPORTANTE - PROJETO EM DESENVOLVIMENTO:**
 > Este projeto encontra-se atualmente em fase de desenvolvimento ativo. Devido a limitações de saúde e financeiras, não foi possível realizar testes presenciais com as comunidades na Guiné-Bissau neste momento. As funcionalidades e o impacto descritos neste documento serão demonstrados através de vídeos técnicos que mostram o sistema em operação. O objetivo é validar o conceito e a arquitetura antes da implementação em campo, que será realizada assim que as condições permitirem.
 

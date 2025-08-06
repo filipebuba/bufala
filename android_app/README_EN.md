@@ -1,3 +1,5 @@
+**English** 🇺🇸 | **[Versão em Português](README.md)** 🇧🇷
+
 # GuinéApp - Community Application for Guinea-Bissau
 
 > **⚠️ IMPORTANT - PROJECT IN DEVELOPMENT:**
