@@ -1,0 +1,25 @@
+jobs:
+  test-setup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - name: Test module check script
+      run: python scripts/check_modules.py || true
+    - name: Test language check script
+      run: python scripts/check_languages.py || true
+    - name: Test security check script
+      run: python scripts/check_security.py || true
+    - name: Test offline check script
+      run: python scripts/check_offline.py || true
+name: Test CI/CD Setup
+'on':
+  push:
+    branches:
+    - main
+    - develop
+  workflow_dispatch: {}

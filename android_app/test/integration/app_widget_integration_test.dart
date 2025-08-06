@@ -2,6 +2,7 @@ import 'package:android_app/widgets/connection_status.dart';
 import 'package:android_app/widgets/quick_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../config/test_config.dart';
 
 // Simple test app without external dependencies
 class TestMoranaApp extends StatelessWidget {

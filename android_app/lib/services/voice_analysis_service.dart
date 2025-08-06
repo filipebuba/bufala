@@ -15,7 +15,7 @@ class VoiceAnalysisService {
   VoiceAnalysisService._internal() {
     // Configurar Dio para comunicação com backend Gemma-3n
     _dio = Dio(BaseOptions(
-      baseUrl: AppConfig.backendHost == 'localhost' ? 'http://localhost:5000' : 'http://10.0.2.2:5000',
+      baseUrl: AppConfig.backendHost == 'localhost' ? '' : '',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 60),
       headers: {

@@ -1,3 +1,4 @@
+import 'dart:io';
 /// Configurações de Conexão Backend-Flutter
 /// Otimizado para o backend modular Bu Fala
 library;
@@ -7,10 +8,10 @@ import '../config/app_config.dart';
 class BackendConnectionConfig {
   // URLs para diferentes ambientes
   static String get _localUrl => AppConfig.backendHost == 'localhost' 
-      ? 'http://localhost:5000' 
-      : 'http://10.0.2.2:5000';
-  static const String _productionUrl = 'https://bufala-api.herokuapp.com';
-  static const String _developmentUrl = 'http://localhost:5000';
+      ? '' 
+      : '';
+  static 
+  static const String _developmentUrl = '';
   
   // URL ativa (pode ser alterada dinamicamente)
   static String get baseUrl => _localUrl;

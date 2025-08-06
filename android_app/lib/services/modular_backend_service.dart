@@ -264,7 +264,6 @@ class ModularBackendService {
     );
   }
 
-  
   Future<void> _checkConnectivity() async {
     try {
       final response = await _dio.get(AppConfig.buildUrl('health'), 
