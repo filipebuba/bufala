@@ -13,17 +13,17 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Create virtual environment venv_gemma
-RUN python -m venv venv_gemma
+# Create virtual environment venv_docker
+RUN python -m venv venv_docker
 
 # Activate virtual environment and upgrade pip
-RUN /app/venv_gemma/bin/pip install --upgrade pip
+RUN /app/venv_docker/bin/pip install --upgrade pip
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies in virtual environment
-RUN /app/venv_gemma/bin/pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies in virtual environment with increased timeout
+RUN /app/venv_docker/bin/pip install --no-cache-dir --timeout=300 -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -38,7 +38,7 @@ EXPOSE 5000
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV PYTHONPATH=/app
-ENV PATH="/app/venv_gemma/bin:$PATH"
+ENV PATH="/app/venv_docker/bin:$PATH"
 ENV OLLAMA_HOST=http://localhost:11434
 
 # Health check
@@ -46,4 +46,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
 # Run the application using the virtual environment
-CMD ["/app/venv_gemma/bin/python", "app.py"]
+CMD ["/app/venv_docker/bin/python", "app.py"]

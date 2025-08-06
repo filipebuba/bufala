@@ -66,6 +66,10 @@ class _VoiceGuideAccessibilityScreenState
     'modo acessibilidade': 'Muda para o modo de acessibilidade',
     'repetir instruções': 'Repete as últimas instruções',
     'ajuda': 'Lista todos os comandos disponíveis',
+    'mostrar ajuda': 'Mostra a tela de ajuda completa',
+    'como usar': 'Explica como usar o aplicativo',
+    'comandos': 'Lista todos os comandos de voz',
+    'tutorial': 'Inicia tutorial do aplicativo',
     'parar fala': 'Para a síntese de voz atual'
   };
 
@@ -260,6 +264,9 @@ class _VoiceGuideAccessibilityScreenState
             });
 
             _fadeController.forward();
+            
+            // Processar comandos de voz
+            _processVoiceCommand(transcription.originalText);
           }
         }
       }
@@ -507,6 +514,247 @@ class _VoiceGuideAccessibilityScreenState
     }
   }
 
+  Future<void> _showHelpDialog() async {
+    await _speak('Abrindo ajuda completa do aplicativo.');
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.help, color: Colors.deepPurple),
+              SizedBox(width: 8),
+              Text('Ajuda - VoiceGuide AI'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHelpSection(
+                  'Comandos de Voz Disponíveis:',
+                  [
+                    '• "Analisar ambiente" - Descreve o que a câmera vê',
+                    '• "Descrever ambiente" - Análise detalhada do local',
+                    '• "Navegar para [destino]" - Orientações de navegação',
+                    '• "Emergência" - Ativa modo de emergência',
+                    '• "Traduzir texto" - Traduz texto falado',
+                    '• "Ajuda" - Mostra esta tela de ajuda',
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildHelpSection(
+                  'Funcionalidades de Acessibilidade:',
+                  [
+                    '• Descrição visual automática por câmera',
+                    '• Feedback sonoro em tempo real',
+                    '• Navegação por comando de voz',
+                    '• Transcrição e tradução simultânea',
+                    '• Funcionamento 100% offline',
+                    '• Suporte para idiomas locais (Crioulo)',
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildHelpSection(
+                  'Modo Emergência:',
+                  [
+                    '• Ativação por comando "Emergência"',
+                    '• Orientações de segurança imediatas',
+                    '• Números de emergência: 190 (Polícia), 192 (Médica)',
+                    '• Desativação automática ou manual',
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildHelpSection(
+                  'Navegação:',
+                  [
+                    '• Use "Navegar para [local]" por voz',
+                    '• Orientações passo a passo faladas',
+                    '• Funciona mesmo sem internet',
+                    '• Adaptado para áreas rurais',
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info, color: Colors.blue, size: 16),
+                          SizedBox(width: 4),
+                          Text(
+                            'Dica Importante:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Este aplicativo foi desenvolvido especialmente para comunidades rurais da Guiné-Bissau, funcionando offline e com suporte ao Crioulo.',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _speak('Ajuda fechada. Como posso ajudá-lo?');
+              },
+              child: const Text('Fechar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _speak('Iniciando demonstração dos comandos de voz.');
+                await _demonstrateVoiceCommands();
+              },
+              child: const Text('Demonstração'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHelpSection(String title, List<String> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.deepPurple,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                item,
+                style: const TextStyle(fontSize: 14, height: 1.4),
+              ),
+            )),
+      ],
+    );
+  }
+
+  Future<void> _processVoiceCommand(String command) async {
+    final commandLower = command.toLowerCase().trim();
+    
+    // Verificar comandos de ajuda
+    if (commandLower.contains('ajuda') || 
+        commandLower.contains('mostrar ajuda') ||
+        commandLower.contains('como usar') ||
+        commandLower.contains('comandos') ||
+        commandLower.contains('tutorial')) {
+      await _showHelpDialog();
+      return;
+    }
+    
+    // Verificar outros comandos
+    if (commandLower.contains('analisar ambiente') || 
+        commandLower.contains('descrever ambiente')) {
+      await _speak('Ativando análise do ambiente...');
+      await _pickImage();
+      return;
+    }
+    
+    if (commandLower.contains('emergência') || commandLower.contains('emergencia')) {
+      await _speak('Ativando modo de emergência!');
+      setState(() {
+        _isEmergencyMode = true;
+      });
+      await _handleEmergency();
+      return;
+    }
+    
+    if (commandLower.contains('navegar para')) {
+      final destination = commandLower.replaceAll('navegar para', '').trim();
+      if (destination.isNotEmpty) {
+        _destinationController.text = destination;
+        await _speak('Iniciando navegação para $destination');
+        await _generateNavigation();
+      } else {
+        await _speak('Por favor, especifique o destino após "navegar para"');
+      }
+      return;
+    }
+    
+    if (commandLower.contains('traduzir texto') || commandLower.contains('traduzir')) {
+      await _speak('Modo de tradução ativado. Fale o texto que deseja traduzir.');
+      // Aqui poderia ativar um modo especial de tradução
+      return;
+    }
+    
+    if (commandLower.contains('parar fala')) {
+      await _flutterTts.stop();
+      return;
+    }
+    
+    // Se chegou até aqui, comando não reconhecido
+    if (commandLower.length > 3) { // Evitar processar ruídos muito curtos
+      await _speak('Comando não reconhecido. Diga "ajuda" para ver os comandos disponíveis.');
+    }
+  }
+
+  Future<void> _demonstrateVoiceCommands() async {
+    final commands = [
+      'Para analisar o ambiente, diga: "Analisar ambiente"',
+      'Para navegar, diga: "Navegar para" seguido do destino',
+      'Para emergência, diga: "Emergência"',
+      'Para traduzir, diga: "Traduzir texto"',
+      'Para ajuda, diga: "Ajuda"',
+    ];
+
+    for (int i = 0; i < commands.length; i++) {
+      await _speak(commands[i]);
+      if (i < commands.length - 1) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    }
+    
+    await _speak('Demonstração concluída. Experimente usar os comandos!');
+  }
+
+  Future<void> _handleEmergency() async {
+    try {
+      await _speak('Modo de emergência ativado! Preparando recursos de emergência.');
+      
+      // Mostrar snackbar com informações de emergência
+      _showSnackBar('Modo de emergência ativado - Recursos especiais disponíveis', isError: false);
+      
+      // Aqui você pode adicionar funcionalidades específicas de emergência como:
+      // - Enviar localização
+      // - Contatar serviços de emergência
+      // - Ativar sinais visuais/sonoros
+      // - Preparar mensagens pré-definidas
+      
+      await _speak('Diga "ajuda" para ver comandos de emergência disponíveis.');
+    } catch (e) {
+      print('Erro ao ativar modo de emergência: $e');
+      await _speak('Erro ao ativar modo de emergência.');
+    }
+  }
+
   Future<void> _pickImage() async {
     try {
       final image = await _imagePicker.pickImage(
@@ -561,8 +809,7 @@ class _VoiceGuideAccessibilityScreenState
                     });
                     await _speak('Modo emergência desativado.');
                   } else {
-                    await _speak(
-                        'Comandos disponíveis: analisar ambiente, navegar para destino, emergência, descrever ambiente, traduzir texto.');
+                    await _showHelpDialog();
                   }
                 },
                 tooltip: _isEmergencyMode ? 'Desativar emergência' : 'Ajuda',

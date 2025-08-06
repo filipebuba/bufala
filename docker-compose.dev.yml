@@ -12,11 +12,12 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
-      - PYTHONPATH=/app
+      - PYTHONPATH=/app/src
       - OLLAMA_HOST=host.docker.internal:11434
     volumes:
-      - ./backend:/app
+      - ./backend:/app/src
       - backend_logs:/app/logs
+    command: ["/app/venv_docker/bin/python", "/app/src/app.py"]
     networks:
       - moransa-dev-network
     restart: unless-stopped

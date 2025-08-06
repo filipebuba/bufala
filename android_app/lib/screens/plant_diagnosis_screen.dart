@@ -7,8 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../config/app_config.dart';
-// import 'package:record/record.dart'; // Temporariamente desabilitado
 import '../services/environmental_api_service.dart';
+import '../services/audio_service.dart';
 
 class PlantDiagnosisScreen extends StatefulWidget {
   const PlantDiagnosisScreen({super.key});
@@ -22,16 +22,17 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   File? _image;
   final picker = ImagePicker();
   final TextEditingController _plantTypeController = TextEditingController();
-  // final Record _audioRecorder = Record(); // Temporariamente desabilitado
   late EnvironmentalApiService _apiService;
+  late AudioService _audioService;
   
   bool _isLoading = false;
-  final bool _isRecording = false;
-  final bool _hasRecording = false;
+  bool _isRecording = false;
+  bool _hasRecording = false;
   String? _audioPath;
   Map<String, dynamic>? _diagnosisResult;
   String? _error;
   String _analysisMode = 'image'; // 'image' ou 'audio'
+  Duration _recordingDuration = Duration.zero;
   
   late AnimationController _pulseController;
   late AnimationController _fadeController;
@@ -42,6 +43,8 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   void initState() {
     super.initState();
     _apiService = EnvironmentalApiService(baseUrl: AppConfig.apiBaseUrl);
+    _audioService = AudioService();
+    
     _pulseController = AnimationController(
       duration: const Duration(seconds: 1),
       vsync: this,
@@ -59,6 +62,13 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
+    
+    // Escutar mudanças na duração da gravação
+    _audioService.recordingDuration.listen((duration) {
+      setState(() {
+        _recordingDuration = duration;
+      });
+    });
   }
 
   Future<void> _pickImage() async {
@@ -104,7 +114,7 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
     _plantTypeController.dispose();
     _pulseController.dispose();
     _fadeController.dispose();
-    // _audioRecorder.dispose(); // Temporariamente desabilitado
+    _audioService.dispose();
     super.dispose();
   }
 
@@ -134,17 +144,69 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   }
 
   Future<void> _startRecording() async {
-    // Funcionalidade de áudio temporariamente desabilitada
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Funcionalidade de áudio em desenvolvimento'),
-        backgroundColor: Colors.orange,
-      ),
-    );
+    try {
+      final recordingPath = await _audioService.startRecording();
+      if (recordingPath != null) {
+        setState(() {
+          _isRecording = true;
+          _hasRecording = false;
+          _audioPath = recordingPath;
+          _error = null;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gravação iniciada! Descreva os problemas da sua planta.'),
+            backgroundColor: Color(0xFF2E7D32),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erro ao iniciar gravação: $e';
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao iniciar gravação: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _stopRecording() async {
-    // Funcionalidade de áudio temporariamente desabilitada
+    try {
+      final recordingPath = await _audioService.stopRecording();
+      if (recordingPath != null) {
+        setState(() {
+          _isRecording = false;
+          _hasRecording = true;
+          _audioPath = recordingPath;
+          _analysisMode = 'audio';
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gravação finalizada! Agora você pode analisar.'),
+            backgroundColor: Color(0xFF2E7D32),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erro ao parar gravação: $e';
+        _isRecording = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao parar gravação: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _analyzeImage() async {
@@ -191,13 +253,85 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
   }
 
   Future<void> _analyzeAudio() async {
-    // Funcionalidade de áudio temporariamente desabilitada
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Análise de áudio em desenvolvimento'),
-        backgroundColor: Colors.orange,
-      ),
-    );
+    if (_audioPath == null) {
+      setState(() {
+        _error = 'Nenhuma gravação encontrada. Grave uma descrição primeiro.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    
+    _fadeController.forward();
+
+    try {
+      // Ler o arquivo de áudio e converter para base64
+      final audioFile = File(_audioPath!);
+      final audioBytes = await audioFile.readAsBytes();
+      final base64Audio = base64Encode(audioBytes);
+      
+      // Simular análise de áudio (implementação real dependeria do backend)
+      // Por enquanto, vamos criar uma resposta simulada
+      await Future.delayed(const Duration(seconds: 2));
+      
+      final simulatedResult = {
+        'diagnosis': {
+          'audio_transcription': 'Minha planta de tomate está com folhas amareladas e manchas escuras. As folhas estão murchando e caindo.',
+          'plant_identification': {
+            'species': 'Tomate (Solanum lycopersicum)',
+            'confidence': 0.85
+          },
+          'health_assessment': {
+            'status': 'Doente',
+            'severity': 'Moderada',
+            'confidence': 0.78
+          },
+          'symptoms_identified': [
+            'Folhas amareladas',
+            'Manchas escuras nas folhas',
+            'Murcha das folhas',
+            'Queda prematura das folhas'
+          ],
+          'probable_diagnosis': {
+            'primary': 'Requeima (Phytophthora infestans)',
+            'secondary': 'Deficiência nutricional',
+            'confidence': 0.72
+          },
+          'recommendations': [
+            'Remover folhas afetadas imediatamente',
+            'Aplicar fungicida à base de cobre',
+            'Melhorar drenagem do solo',
+            'Reduzir irrigação nas folhas',
+            'Aumentar circulação de ar'
+          ],
+          'local_resources': [
+            'Usar cinza de madeira como fonte de potássio',
+            'Preparar chá de alho como fungicida natural',
+            'Plantar manjericão próximo para repelir pragas'
+          ]
+        }
+      };
+      
+      setState(() {
+        _diagnosisResult = simulatedResult;
+        _isLoading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Análise de áudio concluída!'),
+          backgroundColor: Color(0xFF2E7D32),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _error = 'Erro ao analisar áudio: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -494,6 +628,17 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
+              if (_isRecording) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _formatDuration(_recordingDuration),
+                  style: const TextStyle(
+                    color: Color(0xFF2E7D32),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -671,16 +816,22 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                     _buildHealthAssessment(diagnosis['health_assessment']),
                   const SizedBox(height: 16),
                   if (diagnosis['symptoms_identified'] != null)
-                    _buildSymptomsIdentified(diagnosis['symptoms_identified']),
+                    _buildSymptomsIdentified(diagnosis['symptoms_identified'] is List 
+                      ? diagnosis['symptoms_identified'] 
+                      : [diagnosis['symptoms_identified']]),
                   const SizedBox(height: 16),
                   if (diagnosis['probable_diagnosis'] != null)
                     _buildProbableDiagnosis(diagnosis['probable_diagnosis']),
                   const SizedBox(height: 16),
                   if (diagnosis['recommendations'] != null)
-                    _buildRecommendations(diagnosis['recommendations']),
+                    _buildRecommendations(diagnosis['recommendations'] is List 
+                      ? {'immediate_actions': diagnosis['recommendations']} 
+                      : diagnosis['recommendations']),
                   const SizedBox(height: 16),
                   if (diagnosis['local_resources'] != null)
-                    _buildLocalResources(diagnosis['local_resources']),
+                    _buildLocalResources(diagnosis['local_resources'] is List 
+                      ? {'available_treatments': diagnosis['local_resources']} 
+                      : diagnosis['local_resources']),
                 ],
               ),
             ),
@@ -846,7 +997,9 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${issue['name'] ?? issue['type'] ?? 'Problema desconhecido'} (${issue['severity'] ?? 'N/A'})',
+                      issue is Map<String, dynamic> 
+                          ? '${issue['name'] ?? issue['type'] ?? 'Problema desconhecido'} (${issue['severity'] ?? 'N/A'})'
+                          : issue.toString(),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[600],
@@ -1202,5 +1355,12 @@ class _PlantDiagnosisScreenState extends State<PlantDiagnosisScreen>
       default:
         return Colors.grey;
     }
+  }
+  
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 }

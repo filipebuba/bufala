@@ -385,26 +385,165 @@ moransa/
 
 ## 🤝 How to Contribute
 
-### For Developers
-1. Fork the project
-2. Create a branch for your feature (`git checkout -b feature/NewFeature`)
-3. Commit your changes (`git commit -m 'Add new feature'`)
-4. Push to the branch (`git push origin feature/NewFeature`)
-5. Open a Pull Request
+**Moransa** is a community project that grows with everyone's participation. Your contribution is essential to bring AI technology to communities that need it most.
 
-### For Communities
-1. **Content Validation**: Participate in the community validation system
-2. **Translation**: Help translate to local languages
-3. **Local Knowledge**: Share traditional wisdom
-4. **Field Testing**: Use the system and provide feedback
-5. **Documentation**: Contribute with real use cases
+### 👨‍💻 For Developers
 
-### For Specialists
-1. **Medicine**: Validation of medical protocols
-2. **Education**: Adapted pedagogical methodologies
-3. **Agriculture**: Local sustainable techniques
-4. **Linguistics**: Language preservation
-5. **Anthropology**: Cultural adaptation
+#### Environment Setup
+```bash
+# Clone the repository
+git clone https://github.com/filipebuba/bufala.git
+cd bufala
+
+# Set up the environment
+docker-compose up -d
+```
+
+#### Contribution Flow
+1. **Fork** the project on GitHub
+2. **Clone** your fork locally
+3. **Create a branch** for your feature:
+   ```bash
+   git checkout -b feature/feature-name
+   ```
+4. **Develop** following our standards:
+   - Clean and documented code
+   - Unit tests when applicable
+   - Semantic commits
+5. **Test** your changes:
+   ```bash
+   # Backend
+   cd backend && python -m pytest
+   
+   # Frontend
+   cd android_app && flutter test
+   ```
+6. **Commit** your changes:
+   ```bash
+   git commit -m "feat: add new functionality X"
+   ```
+7. **Push** to your branch:
+   ```bash
+   git push origin feature/feature-name
+   ```
+8. **Open a Pull Request** with:
+   - Clear description of changes
+   - Screenshots/videos if applicable
+   - Reference to related issues
+
+#### Technical Contribution Areas
+- **🔧 Backend**: REST APIs, Gemma 3n integration
+- **📱 Mobile**: Flutter interface, UX/UI
+- **🤖 AI**: Prompts, fine-tuning, optimizations
+- **🐳 DevOps**: Docker, CI/CD, deployment
+- **📚 Documentation**: Guides, tutorials, examples
+- **🧪 Testing**: Unit, integration, E2E
+
+### 🌍 For Communities
+
+#### Validation and Feedback
+- **📝 Test the System**: Use the app and report bugs/suggestions
+- **✅ Content Validation**: Participate in the gamified validation system
+- **🗣️ Cultural Feedback**: Help adapt the system to your culture
+- **📖 Use Cases**: Document how the system helps your community
+
+#### Linguistic Preservation
+- **🌐 Translation**: Translate interfaces and content
+- **🎤 Audio Recordings**: Contribute with native pronunciations
+- **📚 Local Knowledge**: Share traditional wisdom
+- **🔤 Dictionaries**: Help expand local dictionaries
+
+#### How to Participate
+1. **Download the App**: Install Moransa on your device
+2. **Create an Account**: Register as a community validator
+3. **Participate**: Use the gamified scoring system
+4. **Share**: Teach other community members
+
+### 🎓 For Specialists
+
+#### Medicine
+- **🏥 Medical Protocols**: Validation of emergency procedures
+- **💊 Traditional Medicine**: Integration of local practices
+- **🤱 Obstetrics**: Protocols for emergency births
+- **🩺 Diagnosis**: Improvement of triage algorithms
+
+#### Education
+- **📖 Methodologies**: Cultural pedagogical adaptation
+- **🎯 Curriculum**: Local content development
+- **🧠 Psychopedagogy**: Learning strategies
+- **📊 Assessment**: Educational progress metrics
+
+#### Agriculture
+- **🌾 Sustainable Techniques**: Local agricultural practices
+- **🌡️ Climate**: Climate change adaptation
+- **🐛 Pests**: Natural identification and control
+- **💧 Irrigation**: Efficient resource management
+
+#### Linguistics and Anthropology
+- **🗣️ Preservation**: Documentation of endangered languages
+- **🎭 Culture**: Cultural adaptation of interfaces
+- **📜 History**: Preservation of oral traditions
+- **🤝 Ethnography**: Community impact studies
+
+### 📞 Contact and Support
+
+#### Communication Channels
+- **📧 Email**: [nhadafilipe@gmail.com](mailto:nhadafilipe@gmail.com)
+- **🐙 GitHub**: [Issues and Discussions](https://github.com/filipebuba/bufala/issues)
+- **📱 WhatsApp**: +245 966 123 456 (Guinea-Bissau)
+- **💬 Discord**: [Community Server](https://discord.gg/moransa)
+
+#### Technical Documentation
+- **📚 Guides**: Check the `/docs` folder for detailed documentation
+- **🎥 Tutorials**: Videos on [YouTube](https://youtube.com/@moransa)
+- **📖 Wiki**: [Project Wiki](https://github.com/filipebuba/bufala/wiki)
+- **🔧 API**: Swagger documentation at `/swagger`
+
+#### Developer Support
+- **🆘 Issues**: Report bugs and request features
+- **💡 Discussions**: Participate in technical discussions
+- **👥 Mentorship**: Mentorship program for new contributors
+- **🎯 Roadmap**: Follow future development
+
+### 🏆 Contributor Recognition
+
+#### Badge System
+- **🥇 Gold Contributor**: 50+ accepted commits
+- **🥈 Silver Contributor**: 20+ accepted commits
+- **🥉 Bronze Contributor**: 5+ accepted commits
+- **🌟 Specialist**: Contributions in specific area
+- **🌍 Community Ambassador**: Regional representative
+- **🎓 Mentor**: Helps new contributors
+
+#### Hall of Fame
+All contributors are recognized in:
+- **Main README**: Contributors list
+- **Project Website**: Acknowledgments page
+- **Mobile App**: "About" section with credits
+- **Certificates**: Digital contribution certificates
+
+### 📋 Contribution Guidelines
+
+#### Code of Conduct
+- **🤝 Respect**: Treat everyone with dignity and respect
+- **🌍 Inclusion**: Promote diversity and inclusion
+- **📚 Learning**: Share knowledge generously
+- **🎯 Focus**: Keep discussions productive and relevant
+- **🔒 Privacy**: Respect community privacy
+
+#### Quality Standards
+- **✅ Tests**: Code must have adequate test coverage
+- **📝 Documentation**: Features must be documented
+- **🎨 UI/UX**: Interfaces must be accessible and intuitive
+- **🔒 Security**: Follow security best practices
+- **⚡ Performance**: Optimize for resource-limited devices
+
+#### Review Process
+1. **🔍 Automated Review**: CI/CD checks tests and quality
+2. **👥 Peer Review**: At least 2 approvals required
+3. **🧪 Manual Testing**: Validation on real devices
+4. **📋 Checklist**: Verification of all criteria
+5. **🚀 Deploy**: Merge after all approvals
 
 ## 📊 Current and Projected Impact
 

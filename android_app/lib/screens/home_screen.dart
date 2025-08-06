@@ -55,37 +55,22 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'image': 'assets/images/village_community.svg',
       'title': 'Nossa Moransa',
-      'description': 'Moransa é mais que uma casa; é o nosso refúgio, onde a nossa alma descansa'
-    },
-    {
-      'image': 'assets/images/river_life.svg',
-      'title': 'Rios da Vida',
-      'description': 'Como poderíamos levar conhecimento vital para onde as estradas não chegam?'
-    },
-    {
-      'image': 'assets/images/farmer_plowing.svg',
-      'title': 'Homens da Bolanha',
-      'description': 'A tecnologia que poderia cumprir a promessa: construir algo que trouxesse ajuda real'
+      'description': 'Nosso refúgio, onde a alma descansa'
     },
     {
       'image': 'assets/images/pregnant_woman.svg',
       'title': 'Esperança Maternal',
-      'description': 'Este projeto nasceu da minha dor, para servir como refúgio de esperança'
+      'description': 'Tecnologia que salva vidas'
     },
     {
       'image': 'assets/images/children_playing.svg',
-      'title': 'Futuro Brincando',
-      'description': 'A materialização da esperança em código para as nossas crianças'
-    },
-    {
-      'image': 'assets/images/community_gathering.svg',
-      'title': 'Sabedoria Coletiva',
-      'description': 'A comunidade traduz e valida: falantes nativos constroem o conhecimento'
+      'title': 'Futuro das Crianças',
+      'description': 'Educação que chega a todos'
     },
     {
       'image': 'assets/images/helping_hands.svg',
       'title': 'Mãos que Ajudam',
-      'description': 'Garantir que a esperança chegue a todos, não importa quão distante seja a estrada'
+      'description': 'Ajuda real para nossa comunidade'
     },
   ];
 
@@ -128,109 +113,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primary,
-                  AppColors.primaryDark,
-                  Color(0xFF1565C0),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              centerTitle: true,
-              title: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.eco,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            AppStrings.appName,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              letterSpacing: 0.5,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            'Nha Moransa',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w400,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  child: ConnectionStatus(isConnected: _isConnected),
-                ),
-                Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                    onPressed: _checkConnection,
-                    tooltip: 'Atualizar conexão',
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
+        appBar: AppBar(
+          title: const Text(
+            'Moransa',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
             ),
           ),
+          backgroundColor: AppColors.primary,
+          centerTitle: true,
+          elevation: 2,
+          actions: [
+            ConnectionStatus(isConnected: _isConnected),
+            IconButton(
+              onPressed: _checkConnection,
+              icon: const Icon(
+                Icons.refresh,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         body: RefreshIndicator(
           onRefresh: _checkConnection,
@@ -430,90 +334,74 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWelcomeHeader() => Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [AppColors.primary, AppColors.primaryDark],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '🌍 Bem-vindo ao Moransa',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+            const Row(
+              children: [
+                Icon(Icons.eco, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Moransa AI - Nha Comunidade',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 8),
-            Text(
-              'Sistema de IA para comunidades da Guiné-Bissau',
+            const SizedBox(height: 8),
+            const Text(
+              'IA que fala Crioulo e ajuda nossa gente',
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 16,
+                fontSize: 14,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Flexible(
-                  child: Row(
-                    children: [
-                      Icon(Icons.health_and_safety,
-                          color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'Primeiros Socorros',
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 16),
-                Flexible(
-                  child: Row(
-                    children: [
-                      Icon(Icons.school, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'Educação',
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildFeatureChip(Icons.health_and_safety, 'Saúde'),
+                _buildFeatureChip(Icons.school, 'Educação'),
+                _buildFeatureChip(Icons.agriculture, 'Agricultura'),
               ],
             ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Flexible(
-                  child: Row(
-                    children: [
-                      Icon(Icons.translate, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'Crioulo',
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          ],
+        ),
+      );
+
+  Widget _buildFeatureChip(IconData icon, String label) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -635,12 +523,12 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(16),
               child: PageView.builder(
                 controller: _morancaPageController,
-                 onPageChanged: (index) {
-                   setState(() {
-                     _currentMorancaIndex = index;
-                   });
-                 },
-                 itemCount: _morancaImages.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentMorancaIndex = index;
+                  });
+                },
+                itemCount: _morancaImages.length,
                 itemBuilder: (context, index) {
                   final item = _morancaImages[index];
                   return Container(
@@ -704,10 +592,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 item['description']!,
                                 style: const TextStyle(
-                                   color: Colors.white70,
-                                   fontSize: 15,
-                                   height: 1.4,
-                                 ),
+                                  color: Colors.white70,
+                                  fontSize: 15,
+                                  height: 1.4,
+                                ),
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -749,28 +637,28 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
-               _morancaImages.length,
-               (index) => GestureDetector(
-                 onTap: () {
-                   _morancaPageController.animateToPage(
-                     index,
-                     duration: const Duration(milliseconds: 300),
-                     curve: Curves.easeInOut,
-                   );
-                 },
-                 child: Container(
-                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                   width: _currentMorancaIndex == index ? 24 : 8,
-                   height: 8,
-                   decoration: BoxDecoration(
-                     color: _currentMorancaIndex == index
-                         ? AppColors.primary
-                         : Colors.grey.withOpacity(0.4),
-                     borderRadius: BorderRadius.circular(4),
-                   ),
-                 ),
-               ),
-             ),
+              _morancaImages.length,
+              (index) => GestureDetector(
+                onTap: () {
+                  _morancaPageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _currentMorancaIndex == index ? 24 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _currentMorancaIndex == index
+                        ? AppColors.primary
+                        : Colors.grey.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           // Inspirational quote

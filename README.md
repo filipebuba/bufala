@@ -1,4 +1,4 @@
- **[English Version](README_EN.md)** | **Português** 🇧🇷
+**[English Version](README_EN.md)** | **Português** 🇧🇷
 
 
 # Moransa - Sistema de IA Comunitária Adaptativa
@@ -385,26 +385,165 @@ moransa/
 
 ## 🤝 Como Contribuir
 
-### Para Desenvolvedores
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/NovaFuncionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
-5. Abra um Pull Request
+O **Moransa** é um projeto comunitário que cresce com a participação de todos. Sua contribuição é fundamental para levar tecnologia de IA para comunidades que mais precisam.
 
-### Para Comunidades
-1. **Validação de Conteúdo**: Participe do sistema de validação comunitária
-2. **Tradução**: Ajude a traduzir para idiomas locais
-3. **Conhecimento Local**: Compartilhe sabedoria tradicional
-4. **Testes de Campo**: Use o sistema e forneça feedback
-5. **Documentação**: Contribua com casos de uso reais
+### 👨‍💻 Para Desenvolvedores
 
-### Para Especialistas
-1. **Medicina**: Validação de protocolos médicos
-2. **Educação**: Metodologias pedagógicas adaptadas
-3. **Agricultura**: Técnicas sustentáveis locais
-4. **Linguística**: Preservação de idiomas
-5. **Antropologia**: Adaptação cultural
+#### Configuração do Ambiente
+```bash
+# Clone o repositório
+git clone https://github.com/filipebuba/bufala.git
+cd bufala
+
+# Configure o ambiente
+docker-compose up -d
+```
+
+#### Fluxo de Contribuição
+1. **Fork** o projeto no GitHub
+2. **Clone** seu fork localmente
+3. **Crie uma branch** para sua feature:
+   ```bash
+   git checkout -b feature/nome-da-funcionalidade
+   ```
+4. **Desenvolva** seguindo nossos padrões:
+   - Código limpo e documentado
+   - Testes unitários quando aplicável
+   - Commits semânticos
+5. **Teste** suas alterações:
+   ```bash
+   # Backend
+   cd backend && python -m pytest
+   
+   # Frontend
+   cd android_app && flutter test
+   ```
+6. **Commit** suas mudanças:
+   ```bash
+   git commit -m "feat: adiciona nova funcionalidade X"
+   ```
+7. **Push** para sua branch:
+   ```bash
+   git push origin feature/nome-da-funcionalidade
+   ```
+8. **Abra um Pull Request** com:
+   - Descrição clara das mudanças
+   - Screenshots/vídeos se aplicável
+   - Referência a issues relacionadas
+
+#### Áreas de Contribuição Técnica
+- **🔧 Backend**: APIs REST, integração com Gemma 3n
+- **📱 Mobile**: Interface Flutter, UX/UI
+- **🤖 IA**: Prompts, fine-tuning, otimizações
+- **🐳 DevOps**: Docker, CI/CD, deployment
+- **📚 Documentação**: Guias, tutoriais, exemplos
+- **🧪 Testes**: Unitários, integração, E2E
+
+### 🌍 Para Comunidades
+
+#### Validação e Feedback
+- **📝 Teste o Sistema**: Use o app e reporte bugs/sugestões
+- **✅ Validação de Conteúdo**: Participe do sistema gamificado de validação
+- **🗣️ Feedback Cultural**: Ajude a adaptar o sistema à sua cultura
+- **📖 Casos de Uso**: Documente como o sistema ajuda sua comunidade
+
+#### Preservação Linguística
+- **🌐 Tradução**: Traduza interfaces e conteúdos
+- **🎤 Gravações de Áudio**: Contribua com pronúncias nativas
+- **📚 Conhecimento Local**: Compartilhe sabedoria tradicional
+- **🔤 Dicionários**: Ajude a expandir dicionários locais
+
+#### Como Participar
+1. **Baixe o App**: Instale o Moransa em seu dispositivo
+2. **Crie uma Conta**: Registre-se como validador comunitário
+3. **Participe**: Use o sistema de pontuação gamificado
+4. **Compartilhe**: Ensine outros membros da comunidade
+
+### 🎓 Para Especialistas
+
+#### Medicina
+- **🏥 Protocolos Médicos**: Validação de procedimentos de emergência
+- **💊 Medicina Tradicional**: Integração de práticas locais
+- **🤱 Obstetrícia**: Protocolos para partos de emergência
+- **🩺 Diagnóstico**: Melhoria de algoritmos de triagem
+
+#### Educação
+- **📖 Metodologias**: Adaptação pedagógica cultural
+- **🎯 Currículo**: Desenvolvimento de conteúdo local
+- **🧠 Psicopedagogia**: Estratégias de aprendizagem
+- **📊 Avaliação**: Métricas de progresso educacional
+
+#### Agricultura
+- **🌾 Técnicas Sustentáveis**: Práticas agrícolas locais
+- **🌡️ Clima**: Adaptação às mudanças climáticas
+- **🐛 Pragas**: Identificação e controle natural
+- **💧 Irrigação**: Gestão eficiente de recursos hídricos
+
+#### Linguística e Antropologia
+- **🗣️ Preservação**: Documentação de idiomas em extinção
+- **🎭 Cultura**: Adaptação cultural de interfaces
+- **📜 História**: Preservação de tradições orais
+- **🤝 Etnografia**: Estudos de impacto comunitário
+
+### 📞 Contato e Suporte
+
+#### Canais de Comunicação
+- **📧 Email**: [nhadafilipe@gmail.com](mailto:nhadafilipe@gmail.com)
+- **🐙 GitHub**: [Issues e Discussões](https://github.com/filipebuba/bufala/issues)
+- **📱 WhatsApp**: +245 966 123 456 (Guiné-Bissau)
+- **💬 Discord**: [Servidor da Comunidade](https://discord.gg/moransa)
+
+#### Documentação Técnica
+- **📚 Guias**: Consulte a pasta `/docs` para documentação detalhada
+- **🎥 Tutoriais**: Vídeos no [YouTube](https://youtube.com/@moransa)
+- **📖 Wiki**: [Wiki do Projeto](https://github.com/filipebuba/bufala/wiki)
+- **🔧 API**: Documentação Swagger em `/swagger`
+
+#### Suporte para Desenvolvedores
+- **🆘 Issues**: Reporte bugs e solicite features
+- **💡 Discussões**: Participe de discussões técnicas
+- **👥 Mentoria**: Programa de mentoria para novos contribuidores
+- **🎯 Roadmap**: Acompanhe o desenvolvimento futuro
+
+### 🏆 Reconhecimento de Contribuidores
+
+#### Sistema de Badges
+- **🥇 Contribuidor Ouro**: 50+ commits aceitos
+- **🥈 Contribuidor Prata**: 20+ commits aceitos
+- **🥉 Contribuidor Bronze**: 5+ commits aceitos
+- **🌟 Especialista**: Contribuições em área específica
+- **🌍 Embaixador Comunitário**: Representante regional
+- **🎓 Mentor**: Ajuda novos contribuidores
+
+#### Hall da Fama
+Todos os contribuidores são reconhecidos em:
+- **README Principal**: Lista de contribuidores
+- **Site do Projeto**: Página de agradecimentos
+- **App Mobile**: Seção "Sobre" com créditos
+- **Certificados**: Certificados digitais de contribuição
+
+### 📋 Diretrizes de Contribuição
+
+#### Código de Conduta
+- **🤝 Respeito**: Trate todos com dignidade e respeito
+- **🌍 Inclusão**: Promova diversidade e inclusão
+- **📚 Aprendizado**: Compartilhe conhecimento generosamente
+- **🎯 Foco**: Mantenha discussões produtivas e relevantes
+- **🔒 Privacidade**: Respeite a privacidade das comunidades
+
+#### Padrões de Qualidade
+- **✅ Testes**: Código deve ter cobertura de testes adequada
+- **📝 Documentação**: Funcionalidades devem ser documentadas
+- **🎨 UI/UX**: Interfaces devem ser acessíveis e intuitivas
+- **🔒 Segurança**: Seguir melhores práticas de segurança
+- **⚡ Performance**: Otimizar para dispositivos com recursos limitados
+
+#### Processo de Review
+1. **🔍 Review Automático**: CI/CD verifica testes e qualidade
+2. **👥 Review por Pares**: Pelo menos 2 aprovações necessárias
+3. **🧪 Testes Manuais**: Validação em dispositivos reais
+4. **📋 Checklist**: Verificação de todos os critérios
+5. **🚀 Deploy**: Merge após todas as aprovações
 
 ## 📊 Impacto Atual e Projetado
 
