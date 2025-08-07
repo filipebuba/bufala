@@ -8,13 +8,15 @@ Sistema de monitoramento e análise ambiental
 para sustentabilidade e conservação.
 """
 
-import logging
-import json
 import base64
-from flask import Blueprint, request, jsonify, current_app
+import json
+import logging
 from datetime import datetime, timedelta
+
 from config.settings import SystemPrompts
+from flask import Blueprint, current_app, jsonify, request
 from utils.error_handler import create_error_response, log_error
+from utils.json_parser import safe_parse_llm_json
 
 # Criar blueprint
 environmental_bp = Blueprint('environmental', __name__)
@@ -132,11 +134,11 @@ def environmental_health():
             'biodiversity_tracking': _check_biodiversity_tracking(),
             'climate_data': _check_climate_data()
         }
-        
+
         # Determinar status geral
         all_healthy = all(comp['status'] == 'healthy' for comp in environmental_components.values())
         overall_status = 'healthy' if all_healthy else 'degraded'
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -160,7 +162,7 @@ def environmental_health():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "verificação de saúde ambiental")
         return jsonify(create_error_response(
@@ -318,26 +320,26 @@ def get_weather_data():
         include_historical = request.args.get('include_historical', 'false').lower() == 'true'
         data_type = request.args.get('data_type', 'comprehensive')  # basic, comprehensive, agricultural
         language = request.args.get('language', 'pt')
-        
+
         # Validar parâmetros
         if forecast_days > 14:
             forecast_days = 14
         elif forecast_days < 1:
             forecast_days = 1
-        
+
         # Obter dados meteorológicos
         weather_data = _get_weather_information(
             location, forecast_days, include_historical, data_type
         )
-        
+
         # Análise específica para agricultura
         agricultural_insights = None
         if data_type in ['comprehensive', 'agricultural']:
             agricultural_insights = _generate_agricultural_weather_insights(weather_data)
-        
+
         # Alertas meteorológicos
         weather_alerts = _check_weather_alerts(weather_data, location)
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -355,7 +357,7 @@ def get_weather_data():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "consulta de dados meteorológicos")
         return jsonify(create_error_response(
@@ -539,22 +541,22 @@ def get_air_quality():
         pollutants = request.args.get('pollutants', 'all')  # all, pm25, pm10, no2, so2, co, o3
         time_range = request.args.get('time_range', '24h')  # 1h, 24h, 7d, 30d
         health_focus = request.args.get('health_focus', 'general')  # general, respiratory, cardiovascular, children, elderly
-        
+
         # Obter dados de qualidade do ar
         air_quality_data = _get_air_quality_data(
             location, radius_km, pollutants, time_range
         )
-        
+
         # Análise de impacto na saúde
         health_impact = _analyze_air_quality_health_impact(
             air_quality_data, health_focus
         )
-        
+
         # Recomendações de proteção
         protection_recommendations = _generate_air_quality_recommendations(
             air_quality_data, health_focus
         )
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -574,7 +576,7 @@ def get_air_quality():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "consulta de qualidade do ar")
         return jsonify(create_error_response(
@@ -686,7 +688,7 @@ def environmental_consultation():
                 'Dados JSON são obrigatórios',
                 400
             )), 400
-        
+
         prompt = data.get('prompt')
         if not prompt:
             return jsonify(create_error_response(
@@ -694,24 +696,24 @@ def environmental_consultation():
                 'Campo prompt é obrigatório',
                 400
             )), 400
-        
+
         # Extrair parâmetros opcionais
         analysis_type = data.get('analysis_type', 'sustainability')
         location = data.get('location', 'Guiné-Bissau')
         urgency = data.get('urgency', 'normal')
         data_available = data.get('data_available', [])
-        
+
         # Construir prompt contextualizado
         context_prompt = f"""
         {SystemPrompts.ENVIRONMENTAL_EXPERT}
-        
+
         Localização: {location}
         Tipo de análise: {analysis_type}
         Urgência: {urgency}
         Dados disponíveis: {', '.join(data_available) if data_available else 'Nenhum'}
-        
+
         Pergunta do usuário: {prompt}
-        
+
         Por favor, forneça:
         1. Análise detalhada da situação ambiental
         2. Recomendações específicas e práticas
@@ -719,10 +721,10 @@ def environmental_consultation():
         4. Impacto ambiental
         5. Próximos passos
         6. Sugestões de monitoramento
-        
+
         Responda em português, considerando o contexto da Guiné-Bissau.
         """
-        
+
         # Obter resposta do modelo
         gemma_service = current_app.config.get('gemma_service')
         if not gemma_service:
@@ -731,9 +733,9 @@ def environmental_consultation():
                 'Serviço de IA não disponível',
                 503
             )), 503
-        
+
         response = gemma_service.generate_response(context_prompt)
-        
+
         # Processar resposta
         analysis_result = {
             'analysis': response,
@@ -744,13 +746,13 @@ def environmental_consultation():
             'monitoring_suggestions': _get_monitoring_suggestions(analysis_type),
             'timestamp': datetime.now().isoformat()
         }
-        
+
         return jsonify({
             'success': True,
             'message': 'Análise ambiental concluída com sucesso',
             'data': analysis_result
         })
-        
+
     except Exception as e:
         log_error(logger, e, "consulta ambiental")
         return jsonify(create_error_response(
@@ -967,7 +969,7 @@ def analyze_water_quality():
                 'Dados JSON são obrigatórios',
                 400
             )), 400
-        
+
         # Dados de qualidade da água
         water_source = data.get('water_source')  # well, river, lake, tap, rainwater
         location = data.get('location')
@@ -976,30 +978,30 @@ def analyze_water_quality():
         usage_purpose = data.get('usage_purpose', 'drinking')  # drinking, irrigation, livestock, domestic
         sample_date = data.get('sample_date', datetime.now().isoformat())
         community_concerns = data.get('community_concerns', [])
-        
+
         if not water_source:
             return jsonify(create_error_response(
                 'missing_water_source',
                 'Campo "water_source" é obrigatório',
                 400
             )), 400
-        
+
         # Análise de qualidade da água
         water_analysis = _analyze_water_quality_data(
-            water_source, location, test_parameters, visual_assessment, 
+            water_source, location, test_parameters, visual_assessment,
             usage_purpose, sample_date, community_concerns
         )
-        
+
         # Avaliação de segurança
         safety_assessment = _assess_water_safety(
             water_analysis, usage_purpose
         )
-        
+
         # Recomendações de tratamento
         treatment_recommendations = _generate_water_treatment_recommendations(
             water_analysis, usage_purpose
         )
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -1016,7 +1018,7 @@ def analyze_water_quality():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "análise de qualidade da água")
         return jsonify(create_error_response(
@@ -1302,7 +1304,7 @@ def analyze_soil():
                 'Dados JSON são obrigatórios',
                 400
             )), 400
-        
+
         # Dados do solo
         location = data.get('location')
         soil_type = data.get('soil_type')  # clay, sand, loam, silt
@@ -1312,30 +1314,30 @@ def analyze_soil():
         land_use_history = data.get('land_use_history', [])
         environmental_factors = data.get('environmental_factors', {})  # rainfall, temperature, etc.
         farmer_observations = data.get('farmer_observations')
-        
+
         if not location:
             return jsonify(create_error_response(
                 'missing_location',
                 'Campo "location" é obrigatório',
                 400
             )), 400
-        
+
         # Análise de saúde do solo
         soil_analysis = _analyze_soil_health_data(
             location, soil_type, crop_type, soil_tests, visual_indicators,
             land_use_history, environmental_factors, farmer_observations
         )
-        
+
         # Recomendações de manejo
         management_recommendations = _generate_soil_management_recommendations(
             soil_analysis, crop_type
         )
-        
+
         # Plano de melhoria
         improvement_plan = _create_soil_improvement_plan(
             soil_analysis, management_recommendations
         )
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -1353,7 +1355,7 @@ def analyze_soil():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "análise de saúde do solo")
         return jsonify(create_error_response(
@@ -1559,24 +1561,24 @@ def get_biodiversity_data():
         conservation_status = request.args.get('conservation_status', 'all')  # endangered, vulnerable, stable
         data_source = request.args.get('data_source', 'comprehensive')  # local, scientific, community
         include_threats = request.args.get('include_threats', 'true').lower() == 'true'
-        
+
         # Obter dados de biodiversidade
         biodiversity_data = _get_biodiversity_information(
             location, ecosystem_type, species_group, conservation_status, data_source
         )
-        
+
         # Análise de ameaças
         threat_analysis = None
         if include_threats:
             threat_analysis = _analyze_biodiversity_threats(
                 biodiversity_data, location, ecosystem_type
             )
-        
+
         # Recomendações de conservação
         conservation_recommendations = _generate_conservation_recommendations(
             biodiversity_data, threat_analysis
         )
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -1596,7 +1598,7 @@ def get_biodiversity_data():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "consulta de dados de biodiversidade")
         return jsonify(create_error_response(
@@ -1857,7 +1859,7 @@ def analyze_climate_data():
                 'Dados JSON são obrigatórios',
                 400
             )), 400
-        
+
         # Parâmetros de análise climática
         location = data.get('location', 'Guiné-Bissau')
         time_period = data.get('time_period', '10_years')  # 1_year, 5_years, 10_years, 30_years
@@ -1865,28 +1867,28 @@ def analyze_climate_data():
         analysis_type = data.get('analysis_type', 'trends')  # trends, extremes, variability, projections
         sector_focus = data.get('sector_focus', 'general')  # agriculture, health, water, energy, coastal
         include_projections = data.get('include_projections', False)
-        
+
         # Análise climática
         climate_analysis = _perform_climate_analysis(
             location, time_period, climate_variables, analysis_type, sector_focus
         )
-        
+
         # Projeções climáticas
         climate_projections = None
         if include_projections:
             climate_projections = _generate_climate_projections(
                 climate_analysis, location, sector_focus
             )
-        
+
         # Impactos e adaptação
         impact_assessment = _assess_climate_impacts(
             climate_analysis, sector_focus, location
         )
-        
+
         adaptation_strategies = _suggest_climate_adaptation_strategies(
             impact_assessment, sector_focus
         )
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -1905,7 +1907,7 @@ def analyze_climate_data():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "análise climática")
         return jsonify(create_error_response(
@@ -2220,7 +2222,7 @@ def assess_sustainability():
                 'Dados JSON são obrigatórios',
                 400
             )), 400
-        
+
         # Dados para avaliação de sustentabilidade
         project_type = data.get('project_type')  # agriculture, construction, energy, tourism, industry
         location = data.get('location')
@@ -2230,30 +2232,30 @@ def assess_sustainability():
         economic_factors = data.get('economic_factors', {})
         timeframe = data.get('timeframe', 'medium_term')  # short_term, medium_term, long_term
         assessment_scope = data.get('assessment_scope', 'comprehensive')  # basic, comprehensive, detailed
-        
+
         if not project_type or not location:
             return jsonify(create_error_response(
                 'missing_required_fields',
                 'Campos "project_type" e "location" são obrigatórios',
                 400
             )), 400
-        
+
         # Avaliação de sustentabilidade
         sustainability_assessment = _perform_sustainability_assessment(
             project_type, location, project_description, environmental_data,
             social_factors, economic_factors, timeframe, assessment_scope
         )
-        
+
         # Recomendações de melhoria
         improvement_recommendations = _generate_sustainability_improvements(
             sustainability_assessment, project_type
         )
-        
+
         # Plano de monitoramento
         monitoring_plan = _create_sustainability_monitoring_plan(
             sustainability_assessment, timeframe
         )
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -2272,7 +2274,7 @@ def assess_sustainability():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "avaliação de sustentabilidade")
         return jsonify(create_error_response(
@@ -2351,7 +2353,7 @@ def _get_weather_information(location, forecast_days, include_historical, data_t
         'uv_index': 8,
         'conditions': 'Parcialmente nublado'
     }
-    
+
     forecast = []
     for i in range(forecast_days):
         day_forecast = {
@@ -2364,12 +2366,12 @@ def _get_weather_information(location, forecast_days, include_historical, data_t
             'conditions': ['Ensolarado', 'Parcialmente nublado', 'Nublado', 'Chuva leve'][i % 4]
         }
         forecast.append(day_forecast)
-    
+
     weather_data = {
         'current': current_weather,
         'forecast': forecast
     }
-    
+
     if include_historical:
         weather_data['historical'] = [
             {
@@ -2378,14 +2380,14 @@ def _get_weather_information(location, forecast_days, include_historical, data_t
                 'precipitation': (i * 2) % 15
             } for i in range(1, 31)
         ]
-    
+
     return weather_data
 
 def _generate_agricultural_weather_insights(weather_data):
     """Gerar insights meteorológicos para agricultura"""
     current = weather_data.get('current', {})
     forecast = weather_data.get('forecast', [])
-    
+
     insights = {
         'irrigation_recommendation': 'Irrigação recomendada' if current.get('precipitation', 0) < 5 else 'Irrigação não necessária',
         'planting_conditions': 'Favoráveis' if current.get('temperature', 0) > 20 and current.get('humidity', 0) > 60 else 'Desfavoráveis',
@@ -2393,7 +2395,7 @@ def _generate_agricultural_weather_insights(weather_data):
         'harvest_window': _calculate_harvest_window(forecast),
         'crop_stress_indicators': _assess_crop_stress_from_weather(current, forecast)
     }
-    
+
     return insights
 
 def _check_weather_alerts(weather_data, location):
@@ -2401,7 +2403,7 @@ def _check_weather_alerts(weather_data, location):
     alerts = []
     current = weather_data.get('current', {})
     forecast = weather_data.get('forecast', [])
-    
+
     # Verificar temperatura extrema
     if current.get('temperature', 0) > 35:
         alerts.append({
@@ -2409,7 +2411,7 @@ def _check_weather_alerts(weather_data, location):
             'severity': 'medium',
             'message': 'Temperatura elevada - tome precauções contra o calor'
         })
-    
+
     # Verificar chuva intensa
     for day in forecast[:3]:  # Próximos 3 dias
         if day.get('precipitation_probability', 0) > 80:
@@ -2418,7 +2420,7 @@ def _check_weather_alerts(weather_data, location):
                 'severity': 'medium',
                 'message': f'Chuva intensa prevista para {day.get("date")}'
             })
-    
+
     # Verificar vento forte
     if current.get('wind_speed', 0) > 25:
         alerts.append({
@@ -2426,7 +2428,7 @@ def _check_weather_alerts(weather_data, location):
             'severity': 'low',
             'message': 'Ventos fortes - cuidado com atividades ao ar livre'
         })
-    
+
     return alerts
 
 
@@ -2555,7 +2557,7 @@ def generate_environmental_content():
                 'Dados de entrada são obrigatórios',
                 400
             )
-        
+
         # Validar campos obrigatórios
         required_fields = ['topic', 'prompt']
         for field in required_fields:
@@ -2565,7 +2567,7 @@ def generate_environmental_content():
                     f'Campo obrigatório ausente: {field}',
                     400
                 )
-        
+
         topic = data.get('topic')
         custom_prompt = data.get('prompt')
         age_group = data.get('age_group', 'adolescente')
@@ -2574,11 +2576,11 @@ def generate_environmental_content():
         duration = data.get('duration', 20)
         include_activities = data.get('include_activities', True)
         difficulty = data.get('difficulty', 'intermediario')
-        
+
         # Construir prompt especializado para educação ambiental
         system_prompt = f"""
         Você é um educador ambiental especializado em criar conteúdo educativo para comunidades da Guiné-Bissau.
-        
+
         CONTEXTO:
         - Público-alvo: {age_group}
         - Idioma: {language}
@@ -2586,17 +2588,17 @@ def generate_environmental_content():
         - Duração: {duration} minutos
         - Nível: {difficulty}
         - Incluir atividades: {'Sim' if include_activities else 'Não'}
-        
+
         INSTRUÇÕES:
         1. Crie conteúdo educativo sobre: {topic}
         2. Use linguagem adequada para {age_group}
         3. Inclua exemplos específicos da Guiné-Bissau
         4. Conecte com conhecimento tradicional local
         5. Seja prático e aplicável ao contexto local
-        
+
         PROMPT PERSONALIZADO:
         {custom_prompt}
-        
+
         FORMATO DE RESPOSTA (JSON):
         {{
             "title": "Título atrativo do conteúdo",
@@ -2615,10 +2617,10 @@ def generate_environmental_content():
             "cultural_connections": ["conexão cultural 1", "conexão cultural 2"]
         }}
         """
-        
+
         # Tentar usar Gemma-3n para gerar conteúdo
         gemma_service = current_app.gemma_service
-        
+
         if gemma_service and hasattr(gemma_service, 'generate_response'):
             try:
                 response = gemma_service.generate_response(
@@ -2627,10 +2629,11 @@ def generate_environmental_content():
                     max_tokens=2000,
                     temperature=0.7
                 )
-                
+
                 # Tentar parsear resposta JSON
                 try:
                     import re
+
                     # Extrair JSON da resposta
                     json_match = re.search(r'\{.*\}', response, re.DOTALL)
                     if json_match:
@@ -2643,7 +2646,7 @@ def generate_environmental_content():
                     # Fallback se não conseguir parsear JSON
                     content_data = _create_fallback_content(topic, custom_prompt, age_group, ecosystem)
                     content_data['content'] = response
-                
+
                 # Adicionar metadados
                 content_data['generated_by'] = 'Gemma3n AI'
                 content_data['topic'] = topic
@@ -2651,13 +2654,13 @@ def generate_environmental_content():
                 content_data['ecosystem'] = ecosystem
                 content_data['language'] = language
                 content_data['duration'] = duration
-                
+
                 return jsonify({
                     'success': True,
                     'data': content_data,
                     'message': 'Conteúdo educativo gerado com sucesso'
                 })
-                
+
             except Exception as e:
                 current_app.logger.error(f"Erro no Gemma3n: {e}")
                 # Fallback para conteúdo estruturado
@@ -2676,7 +2679,7 @@ def generate_environmental_content():
                 'data': fallback_content,
                 'message': 'Conteúdo educativo gerado (modo fallback)'
             })
-            
+
     except Exception as e:
         current_app.logger.error(f"Erro na geração de conteúdo educativo: {e}")
         log_error(logger, e, "geração de conteúdo educativo ambiental")
@@ -2717,9 +2720,9 @@ def _create_fallback_content(topic, prompt, age_group, ecosystem):
             'cultural_connections': ['Tabus tradicionais', 'Gestão comunitária de recursos', 'Conhecimento dos anciãos']
         }
     }
-    
+
     base_content = topic_content.get(topic, topic_content['biodiversidade'])
-    
+
     # Atividades práticas baseadas no tópico
     activities = [
         {
@@ -2733,7 +2736,7 @@ def _create_fallback_content(topic, prompt, age_group, ecosystem):
             'materials': ['Tempo', 'Respeito', 'Curiosidade']
         }
     ]
-    
+
     return {
         'title': base_content['title'],
         'description': base_content['description'],
@@ -2858,13 +2861,13 @@ def get_education_topics():
                 'gemma_prompt': 'Explique as mudanças climáticas e seus impactos na Guiné-Bissau, incluindo estratégias de adaptação e mitigação'
             }
         ]
-        
+
         return jsonify({
             'success': True,
             'topics': topics,
             'total': len(topics)
         })
-        
+
     except Exception as e:
         current_app.logger.error(f"Erro ao obter tópicos educativos: {e}")
         log_error(logger, e, "obtenção de tópicos educativos")
@@ -3035,10 +3038,10 @@ def environmental_education_full():
                 'success': True,
                 'modules': modules
             })
-        
+
         # POST - Gerar conteúdo educativo personalizado
         data = request.get_json() or {}
-        
+
         topic = data.get('topic', 'biodiversidade')
         age_group = data.get('age_group', 'adolescente')
         education_level = data.get('education_level', 'medio')
@@ -3047,27 +3050,27 @@ def environmental_education_full():
         learning_style = data.get('learning_style', 'pratico')
         duration = data.get('duration', 15)
         include_activities = data.get('include_activities', True)
-        
+
         # Tentar usar Gemma-3n para gerar conteúdo educativo
         gemma_service = current_app.gemma_service
-        
+
         if gemma_service and gemma_service.is_available():
             educational_content = _generate_educational_content_with_gemma(
-                gemma_service, topic, age_group, education_level, 
+                gemma_service, topic, age_group, education_level,
                 language, ecosystem, learning_style, duration, include_activities
             )
         else:
             # Fallback para conteúdo pré-definido
             educational_content = _generate_fallback_educational_content(
-                topic, age_group, education_level, language, ecosystem, 
+                topic, age_group, education_level, language, ecosystem,
                 learning_style, duration, include_activities
             )
-        
+
         return jsonify({
             'success': True,
             'data': educational_content
         })
-        
+
     except Exception as e:
         current_app.logger.error(f"Erro na educação ambiental: {e}")
         return jsonify({
@@ -3139,11 +3142,11 @@ def _get_available_education_modules():
 
 def _generate_educational_content_with_gemma(gemma_service, topic, age_group, education_level, language, ecosystem, learning_style, duration, include_activities):
     """Gerar conteúdo educativo usando Gemma-3n"""
-    
+
     # Construir prompt especializado para educação ambiental
     prompt = f"""
     Você é um educador ambiental especializado em criar conteúdo educativo para comunidades da Guiné-Bissau.
-    
+
     Crie um módulo educativo com as seguintes especificações:
     - Tópico: {topic}
     - Faixa etária: {age_group}
@@ -3153,14 +3156,14 @@ def _generate_educational_content_with_gemma(gemma_service, topic, age_group, ed
     - Estilo de aprendizagem: {learning_style}
     - Duração: {duration} minutos
     - Incluir atividades práticas: {include_activities}
-    
+
     O conteúdo deve:
     1. Ser culturalmente relevante para a Guiné-Bissau
     2. Usar exemplos locais e espécies nativas
     3. Incluir conhecimento tradicional quando apropriado
     4. Ser adequado para o nível educacional especificado
     5. Promover a conservação e sustentabilidade
-    
+
     Responda APENAS com um JSON válido no seguinte formato:
     {{
         "title": "Título do módulo educativo",
@@ -3197,34 +3200,34 @@ def _generate_educational_content_with_gemma(gemma_service, topic, age_group, ed
         }}
     }}
     """
-    
+
     try:
         response = gemma_service.generate_response(prompt)
-        
+
         # Tentar parsear a resposta como JSON
         import json
         educational_content = json.loads(response)
-        
+
         # Validar estrutura básica
         required_fields = ['title', 'content', 'key_concepts', 'learning_objectives']
         for field in required_fields:
             if field not in educational_content:
                 raise ValueError(f"Campo obrigatório '{field}' não encontrado na resposta")
-        
+
         return educational_content
-        
+
     except (json.JSONDecodeError, ValueError) as e:
         current_app.logger.warning(f"Erro ao parsear resposta do Gemma: {e}")
         # Fallback para conteúdo pré-definido
         return _generate_fallback_educational_content(
-            topic, age_group, education_level, language, ecosystem, 
+            topic, age_group, education_level, language, ecosystem,
             learning_style, duration, include_activities
         )
 
 
 def _generate_fallback_educational_content(topic, age_group, education_level, language, ecosystem, learning_style, duration, include_activities):
     """Gerar conteúdo educativo de fallback quando Gemma não está disponível"""
-    
+
     # Conteúdo base por tópico
     content_templates = {
         'biodiversidade': {
@@ -3246,10 +3249,10 @@ def _generate_fallback_educational_content(topic, age_group, education_level, la
             'local_examples': ['Floresta de Cantanhez', 'Mata de Cufada', 'Floresta de Dulombi']
         }
     }
-    
+
     # Selecionar template baseado no tópico
     template = content_templates.get(topic, content_templates['biodiversidade'])
-    
+
     # Atividades práticas baseadas no estilo de aprendizagem
     activities = []
     if include_activities:
@@ -3274,7 +3277,7 @@ def _generate_fallback_educational_content(topic, age_group, education_level, la
                 'materials': ['Gravador', 'Questionário'],
                 'duration': 25
             })
-    
+
     # Perguntas de quiz adaptadas ao nível educacional
     quiz_questions = [
         {
@@ -3298,7 +3301,7 @@ def _generate_fallback_educational_content(topic, age_group, education_level, la
             'correct_answer': 1
         }
     ]
-    
+
     return {
         'title': template['title'],
         'content': template['content'],
@@ -3346,7 +3349,7 @@ def _generate_fallback_educational_content(topic, age_group, education_level, la
 def _simulate_plant_image_diagnosis(image_base64, plant_type):
     """Simular diagnóstico de planta por imagem quando Gemma não está disponível"""
     import random
-    
+
     # Plantas comuns na Guiné-Bissau
     plant_species = {
         'tomate': {'species': 'Solanum lycopersicum', 'common_name': 'Tomate'},
@@ -3357,7 +3360,7 @@ def _simulate_plant_image_diagnosis(image_base64, plant_type):
         'feijão': {'species': 'Phaseolus vulgaris', 'common_name': 'Feijão'},
         'desconhecida': {'species': 'Espécie não identificada', 'common_name': 'Planta desconhecida'}
     }
-    
+
     # Problemas comuns
     common_issues = [
         {
@@ -3379,10 +3382,10 @@ def _simulate_plant_image_diagnosis(image_base64, plant_type):
             'confidence': random.uniform(0.7, 0.9)
         }
     ]
-    
+
     plant_info = plant_species.get(plant_type.lower(), plant_species['desconhecida'])
     detected_issues = random.sample(common_issues, random.randint(0, 2))
-    
+
     health_status = 'Saudável'
     if detected_issues:
         severities = [issue['severity'] for issue in detected_issues]
@@ -3392,7 +3395,7 @@ def _simulate_plant_image_diagnosis(image_base64, plant_type):
             health_status = 'Moderadamente saudável'
         else:
             health_status = 'Levemente afetado'
-    
+
     return {
         'plant_identification': {
             'species': plant_info['species'],
@@ -3432,7 +3435,7 @@ def _simulate_plant_image_diagnosis(image_base64, plant_type):
 def _simulate_plant_audio_diagnosis(audio_base64, plant_type):
     """Simular diagnóstico de planta por áudio quando Gemma não está disponível"""
     import random
-    
+
     # Sintomas comuns descritos em áudio
     common_symptoms = [
         {
@@ -3451,7 +3454,7 @@ def _simulate_plant_audio_diagnosis(audio_base64, plant_type):
             'severity': 'moderada'
         }
     ]
-    
+
     # Simular transcrição
     transcriptions = [
         'As folhas estão amarelando e caindo',
@@ -3460,13 +3463,13 @@ def _simulate_plant_audio_diagnosis(audio_base64, plant_type):
         'As folhas ficaram com bordas queimadas',
         'Apareceram pequenos insetos nas folhas'
     ]
-    
+
     selected_symptoms = random.sample(common_symptoms, random.randint(1, 2))
     transcription = random.choice(transcriptions)
-    
+
     primary_causes = [symptom['possible_causes'][0] for symptom in selected_symptoms]
     primary_cause = primary_causes[0] if primary_causes else 'Estresse ambiental'
-    
+
     return {
         'audio_transcription': transcription,
         'symptoms_identified': selected_symptoms,
@@ -3510,18 +3513,18 @@ def _analyze_plant_image_with_gemma(gemma_service, image_base64, plant_type, lan
     try:
         prompt = f"""
         Você é um especialista em diagnóstico de plantas e agricultura tropical, especialmente familiarizado com as culturas da Guiné-Bissau.
-        
+
         Analise esta imagem de uma planta (tipo: {plant_type}) e forneça um diagnóstico detalhado.
-        
+
         Sua resposta deve incluir:
         1. Identificação da espécie (nome científico e comum)
         2. Avaliação da saúde geral
         3. Problemas identificados (doenças, pragas, deficiências)
         4. Recomendações de tratamento
-        
+
         Considere o clima tropical da Guiné-Bissau e práticas agrícolas locais.
         Responda em {language}.
-        
+
         Formate sua resposta como JSON com a seguinte estrutura:
         {{
             "plant_identification": {{
@@ -3553,14 +3556,14 @@ def _analyze_plant_image_with_gemma(gemma_service, image_base64, plant_type, lan
             }}
         }}
         """
-        
+
         response = gemma_service.analyze_multimodal(
             prompt=prompt,
             image_base64=image_base64
         )
-        
+
         return _process_gemma_plant_response(response)
-        
+
     except Exception as e:
         logger.error(f"Erro na análise com Gemma: {e}")
         # Fallback para simulação
@@ -3571,18 +3574,18 @@ def _analyze_plant_audio_with_gemma(gemma_service, audio_base64, plant_type, lan
     try:
         prompt = f"""
         Você é um especialista em diagnóstico de plantas e agricultura tropical da Guiné-Bissau.
-        
+
         Analise esta descrição em áudio sobre problemas em uma planta (tipo: {plant_type}).
-        
+
         Baseado na descrição, identifique:
         1. Sintomas mencionados
         2. Possíveis causas
         3. Diagnóstico provável
         4. Recomendações de tratamento
-        
+
         Considere práticas agrícolas locais e recursos disponíveis na Guiné-Bissau.
         Responda em {language}.
-        
+
         Formate sua resposta como JSON:
         {{
             "audio_transcription": "transcrição do áudio",
@@ -3611,14 +3614,14 @@ def _analyze_plant_audio_with_gemma(gemma_service, audio_base64, plant_type, lan
             }}
         }}
         """
-        
+
         response = gemma_service.analyze_multimodal(
             prompt=prompt,
             audio_base64=audio_base64
         )
-        
+
         return _process_gemma_plant_response(response)
-        
+
     except Exception as e:
         logger.error(f"Erro na análise de áudio com Gemma: {e}")
         # Fallback para simulação
@@ -3627,81 +3630,17 @@ def _analyze_plant_audio_with_gemma(gemma_service, audio_base64, plant_type, lan
 def _process_gemma_plant_response(response):
     """Processar resposta do Gemma para diagnóstico de plantas"""
     try:
-        import json
-        import re
+        from utils.json_parser import safe_parse_llm_json
         
-        # Limpar caracteres de controle e problemas de encoding
-        cleaned_response = response
-        if isinstance(response, str):
-            # Remover caracteres de controle
-            cleaned_response = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', response)
-            # Normalizar quebras de linha
-            cleaned_response = cleaned_response.replace('\r\n', '\n').replace('\r', '\n')
-            # Remover marcadores de código markdown
-            cleaned_response = re.sub(r'```json\s*', '', cleaned_response)
-            cleaned_response = re.sub(r'```\s*$', '', cleaned_response)
+        # Tentar parsear JSON usando a função robusta
+        parsed_data = safe_parse_llm_json(response)
         
-        # Extrair JSON da resposta limpa
-        json_match = re.search(r'\{.*\}', cleaned_response, re.DOTALL)
-        if json_match:
-            json_str = json_match.group()
-            
-            # Log do JSON antes da limpeza
-            logger.info(f"🔍 JSON antes da limpeza: {json_str[:200]}...")
-            
-            # Corrigir problemas comuns de formatação JSON
-            # Corrigir erros de digitação comuns
-            json_str = json_str.replace('"speciees":', '"species":')
-            
-            # Corrigir espaços em números decimais de forma mais agressiva
-            json_str = re.sub(r'(\d+)\s*\.\s*(\d+)', r'\1.\2', json_str)
-            # Corrigir especificamente qualquer número decimal com espaços
-            json_str = re.sub(r':\s*(\d+)\s*\.\s*(\d+)', r': \1.\2', json_str)
-            # Corrigir especificamente o padrão "0. XX" que continua aparecendo
-            json_str = re.sub(r'0\. (\d+)', r'0.\1', json_str)
-            # Corrigir qualquer padrão "X. Y" onde X e Y são dígitos
-            json_str = re.sub(r'(\d)\. (\d)', r'\1.\2', json_str)
-            # Corrigir espaços extras ao redor de números
-            json_str = re.sub(r'"confidence":\s*([0-9.]+)\s*', r'"confidence": \1', json_str)
-            
-            logger.info(f"🔧 Após corrigir decimais: {json_str[:200]}...")
-            
-            # Corrigir espaços antes de vírgulas
-            json_str = re.sub(r'\s+,', ',', json_str)
-            # Corrigir espaços antes de dois pontos
-            json_str = re.sub(r'\s+:', ':', json_str)
-            # Corrigir espaços após dois pontos
-            json_str = re.sub(r':\s+"', ': "', json_str)
-            # Corrigir múltiplos espaços
-            json_str = re.sub(r'\s+', ' ', json_str)
-            # Corrigir espaços dentro de strings que quebram o JSON
-            json_str = re.sub(r'"\s+([^"]+)\s+"', r'"\1"', json_str)
-            
-            logger.info(f"🔧 JSON após todas as correções: {json_str[:200]}...")
-            
-            # Tentar fazer parse do JSON
-            try:
-                return json.loads(json_str)
-            except json.JSONDecodeError as json_error:
-                logger.error(f"Erro no parse JSON: {json_error}")
-                logger.error(f"JSON problemático: {json_str[:200]}...")
-                
-                # Tentar uma última correção mais agressiva
-                try:
-                    # Remover caracteres problemáticos e tentar novamente
-                    clean_json = re.sub(r'[^\x20-\x7E]', '', json_str)  # Remove caracteres não ASCII
-                    clean_json = re.sub(r'\s+', ' ', clean_json)  # Normaliza espaços
-                    clean_json = clean_json.replace('speciees', 'species')  # Corrige erro de digitação
-                    clean_json = re.sub(r'(\d)\s*\.\s*(\d)', r'\1.\2', clean_json)  # Corrige decimais
-                    
-                    parsed_data = json.loads(clean_json)
-                    logger.info(f"✅ JSON parseado após limpeza agressiva: {list(parsed_data.keys())}")
-                    return parsed_data
-                except Exception as cleanup_error:
-                    logger.error(f"❌ Falha na limpeza agressiva do JSON: {cleanup_error}")
-                
-                # Continuar para fallback
+        if parsed_data:
+            logger.info(f"✅ JSON parseado com sucesso: {list(parsed_data.keys())}")
+            return parsed_data
         
+        logger.warning("❌ Falha no parsing JSON, usando fallback textual")
+
         # Se não conseguir extrair JSON válido, criar resposta estruturada baseada no texto
         return {
             'plant_identification': {
@@ -3720,7 +3659,7 @@ def _process_gemma_plant_response(response):
             },
             'raw_response': cleaned_response[:500] + '...' if len(cleaned_response) > 500 else cleaned_response
         }
-            
+
     except Exception as e:
         logger.error(f"Erro ao processar resposta do Gemma: {e}")
         return {
@@ -3858,12 +3797,12 @@ def scan_recycling():
                     'Imagem é obrigatória para análise de reciclagem',
                     400
                 )), 400
-            
+
             image_base64 = data['image']
             location = data.get('location', 'Bissau')
             language = data.get('language', 'pt')
             user_request = data.get('user_request', '')
-            
+
             # Processar análise com Gemma usando base64
             gemma_service = current_app.gemma_service
             if not gemma_service:
@@ -3882,7 +3821,7 @@ def scan_recycling():
                     'Imagem é obrigatória para análise de reciclagem',
                     400
                 )), 400
-            
+
             image_file = request.files['image']
             if image_file.filename == '':
                 return jsonify(create_error_response(
@@ -3890,11 +3829,11 @@ def scan_recycling():
                     'Nenhuma imagem foi selecionada',
                     400
                 )), 400
-            
+
             # Parâmetros opcionais
             location = request.form.get('location', 'Bissau')
             language = request.form.get('language', 'pt')
-            
+
             # Processar imagem com Gemma
             gemma_service = current_app.gemma_service
             if not gemma_service:
@@ -3905,13 +3844,13 @@ def scan_recycling():
                 analysis_result = _analyze_recycling_with_gemma(
                     gemma_service, image_file, location, language
                 )
-        
+
         return jsonify({
             'success': True,
             'data': analysis_result,
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "análise de reciclagem")
         return jsonify(create_error_response(
@@ -4062,7 +4001,7 @@ def track_biodiversity():
                 'Imagem é obrigatória para rastreamento de biodiversidade',
                 400
             )), 400
-        
+
         image_file = request.files['image']
         if image_file.filename == '':
             return jsonify(create_error_response(
@@ -4070,12 +4009,12 @@ def track_biodiversity():
                 'Nenhuma imagem foi selecionada',
                 400
             )), 400
-        
+
         # Parâmetros opcionais
         location = request.form.get('location', 'Bissau')
         ecosystem_type = request.form.get('ecosystem_type', 'floresta')
         language = request.form.get('language', 'pt')
-        
+
         # Processar imagem com Gemma
         gemma_service = current_app.gemma_service
         if not gemma_service:
@@ -4086,13 +4025,13 @@ def track_biodiversity():
             analysis_result = _analyze_biodiversity_with_gemma(
                 gemma_service, image_file, location, ecosystem_type, language
             )
-        
+
         return jsonify({
             'success': True,
             'data': analysis_result,
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "rastreamento de biodiversidade")
         return jsonify(create_error_response(
@@ -4105,7 +4044,7 @@ def _simulate_recycling_analysis(image_file, location):
     """Simular análise de reciclagem quando Gemma não está disponível"""
     # Análise simulada baseada no nome do arquivo ou outros fatores
     filename = image_file.filename.lower()
-    
+
     # Determinar tipo de material baseado em padrões comuns
     if any(term in filename for term in ['pet', 'garrafa', 'bottle']):
         material_type = "Plástico PET"
@@ -4162,7 +4101,7 @@ def _simulate_recycling_analysis(image_file, location):
         ]
         co2_saved = "0 kg CO2"
         energy_saved = "0 kWh"
-    
+
     # Pontos de coleta simulados para Bissau
     collection_points = [
         {
@@ -4184,7 +4123,7 @@ def _simulate_recycling_analysis(image_file, location):
             "accepts": ["Metal", "Vidro"]
         }
     ]
-    
+
     # Dicas gerais de reciclagem
     tips = [
         "Separe os materiais por tipo antes do descarte",
@@ -4193,7 +4132,7 @@ def _simulate_recycling_analysis(image_file, location):
         "Reduza, reutilize e depois recicle",
         "Participe de programas comunitários de reciclagem"
     ]
-    
+
     return {
         "material_type": material_type,
         "recyclable": recyclable,
@@ -4215,10 +4154,10 @@ def _analyze_recycling_with_gemma(gemma_service, image_file, location, language)
         # Preparar prompt para análise de reciclagem
         recycling_prompt = f"""
         Analise esta imagem de material e forneça informações detalhadas sobre reciclagem.
-        
+
         Localização: {location}
         Idioma de resposta: {language}
-        
+
         Por favor, identifique:
         1. Tipo de material (plástico, papel, metal, vidro, etc.)
         2. Se é reciclável ou não
@@ -4226,19 +4165,19 @@ def _analyze_recycling_with_gemma(gemma_service, image_file, location, language)
         4. Instruções de descarte adequado
         5. Impacto ambiental da reciclagem
         6. Dicas de preparação para reciclagem
-        
+
         Forneça uma resposta estruturada e educativa adequada para a comunidade local.
         """
-        
+
         # Processar imagem com Gemma
         analysis = gemma_service.analyze_image(
             image_file.read(),
             recycling_prompt
         )
-        
+
         # Processar resposta do Gemma e estruturar dados
         return _process_gemma_recycling_response(analysis, location)
-        
+
     except Exception as e:
         logger.warning(f"Erro na análise com Gemma: {e}. Usando análise simulada.")
         return _simulate_recycling_analysis(image_file, location)
@@ -4247,7 +4186,7 @@ def _process_gemma_recycling_response(gemma_response, location):
     """Processar resposta do Gemma e estruturar dados de reciclagem"""
     # Esta função processaria a resposta do Gemma e extrairia informações estruturadas
     # Por enquanto, retornamos uma análise simulada melhorada
-    
+
     return {
         "material_type": "Material identificado por IA",
         "recyclable": True,
@@ -4282,19 +4221,19 @@ def _simulate_recycling_analysis_base64(image_base64, location):
     # Simular análise baseada nos primeiros caracteres da base64
     material_indicators = {
         'iVBORw': 'plástico',  # PNG comum
-        '/9j/': 'papel',       # JPEG comum  
+        '/9j/': 'papel',       # JPEG comum
         'UklGR': 'metal',      # RIFF/WAV (simular metal)
         'R0lGOD': 'vidro',     # GIF (simular vidro)
     }
-    
+
     material_type = 'material_misto'
     for indicator, material in material_indicators.items():
         if image_base64.startswith(indicator):
             material_type = material
             break
-    
+
     recyclable = material_type != 'material_misto'
-    
+
     # Categorias específicas
     categories = {
         'plástico': 'Plástico Tipo 1 (PET)',
@@ -4303,9 +4242,9 @@ def _simulate_recycling_analysis_base64(image_base64, location):
         'vidro': 'Vidro Transparente',
         'material_misto': 'Análise Necessária'
     }
-    
+
     category = categories.get(material_type, 'Geral')
-    
+
     # Instruções específicas para Bissau
     disposal_instructions = [
         f"Identificado como {material_type}",
@@ -4314,7 +4253,7 @@ def _simulate_recycling_analysis_base64(image_base64, location):
         f"Deposite no contentor específico para {category}",
         "Verifique pontos de coleta em Bissau"
     ]
-    
+
     # Pontos de coleta específicos para Bissau
     collection_points = [
         {
@@ -4330,7 +4269,7 @@ def _simulate_recycling_analysis_base64(image_base64, location):
             "accepts": ["Todos os tipos", category]
         }
     ]
-    
+
     # Impacto ambiental estimado
     impact_values = {
         'plástico': {"co2_saved": "2.1 kg CO2", "energy_saved": "12 kWh"},
@@ -4339,10 +4278,10 @@ def _simulate_recycling_analysis_base64(image_base64, location):
         'vidro': {"co2_saved": "0.8 kg CO2", "energy_saved": "5 kWh"},
         'material_misto': {"co2_saved": "1.5 kg CO2", "energy_saved": "7 kWh"}
     }
-    
+
     co2_saved = impact_values[material_type]["co2_saved"]
     energy_saved = impact_values[material_type]["energy_saved"]
-    
+
     # Dicas específicas para o material e localização
     tips = [
         f"Dica para {material_type}: Mantenha sempre limpo e seco",
@@ -4351,7 +4290,7 @@ def _simulate_recycling_analysis_base64(image_base64, location):
         "Reduza, reutilize e depois recicle - nesta ordem de prioridade",
         "Participe dos programas comunitários de reciclagem local"
     ]
-    
+
     return {
         "material_type": material_type,
         "recyclable": recyclable,
@@ -4373,11 +4312,11 @@ def _analyze_recycling_with_gemma_base64(gemma_service, image_base64, location, 
         # Preparar prompt detalhado para análise de reciclagem
         recycling_prompt = f"""
         Analise esta imagem de material para reciclagem e forneça insights detalhados.
-        
+
         Localização: {location}
         Idioma de resposta: {language}
         Solicitação do usuário: {user_request}
-        
+
         Por favor, identifique e explique:
         1. Tipo específico de material (plástico PET, papel cartão, alumínio, etc.)
         2. Se é reciclável ou não e por quê
@@ -4386,11 +4325,11 @@ def _analyze_recycling_with_gemma_base64(gemma_service, image_base64, location, 
         5. Impacto ambiental positivo da reciclagem deste material
         6. Dicas práticas para descarte correto em {location}
         7. Pontos de coleta próximos (se conhecer a região)
-        
+
         Seja educativo e específico para a comunidade local.
         Forneça informações práticas e úteis para cidadãos de {location}.
         """
-        
+
         # Converter base64 para bytes se necessário para análise
         import base64
         try:
@@ -4398,16 +4337,16 @@ def _analyze_recycling_with_gemma_base64(gemma_service, image_base64, location, 
         except:
             # Se falhar na decodificação, usar análise simulada
             return _simulate_recycling_analysis_base64(image_base64, location)
-        
+
         # Processar imagem com Gemma usando bytes
         analysis = gemma_service.analyze_image(
             image_bytes,
             recycling_prompt
         )
-        
+
         # Processar resposta do Gemma e estruturar dados
         return _process_gemma_recycling_response_base64(analysis, location)
-        
+
     except Exception as e:
         logger.warning(f"Erro na análise com Gemma base64: {e}. Usando análise simulada.")
         return _simulate_recycling_analysis_base64(image_base64, location)
@@ -4417,7 +4356,7 @@ def _process_gemma_recycling_response_base64(gemma_response, location):
     try:
         # Extrair informações da resposta do Gemma
         response_text = str(gemma_response).lower()
-        
+
         # Identificar tipo de material
         material_types = {
             'pet': 'Plástico PET',
@@ -4429,19 +4368,19 @@ def _process_gemma_recycling_response_base64(gemma_response, location):
             'vidro': 'Vidro',
             'orgânico': 'Material Orgânico'
         }
-        
+
         material_type = 'Material não identificado'
         for key, value in material_types.items():
             if key in response_text:
                 material_type = value
                 break
-        
+
         # Determinar se é reciclável
         recyclable = any(word in response_text for word in ['reciclável', 'reciclar', 'sim'])
-        
+
         # Extrair categoria (simples heurística)
         category = f"Categoria {material_type}"
-        
+
         # Extrair instruções (procurar por listas ou passos)
         base_instructions = [
             "Limpe o material removendo restos e sujeira",
@@ -4449,7 +4388,7 @@ def _process_gemma_recycling_response_base64(gemma_response, location):
             "Deposite no contentor adequado",
             f"Procure pontos de coleta em {location}"
         ]
-        
+
         # Pontos de coleta para Bissau
         collection_points = [
             {
@@ -4471,7 +4410,7 @@ def _process_gemma_recycling_response_base64(gemma_response, location):
                 "accepts": ["Todos os materiais recicláveis"]
             }
         ]
-        
+
         return {
             "material_type": material_type,
             "recyclable": recyclable,
@@ -4492,7 +4431,7 @@ def _process_gemma_recycling_response_base64(gemma_response, location):
             "analysis_method": "gemma_ai_base64",
             "gemma_insights": str(gemma_response)[:500] + "..." if len(str(gemma_response)) > 500 else str(gemma_response)
         }
-        
+
     except Exception as e:
         logger.warning(f"Erro ao processar resposta do Gemma: {e}")
         # Fallback para análise simulada em caso de erro
@@ -4502,7 +4441,7 @@ def _generate_weather_recommendations(weather_data, data_type):
     """Gerar recomendações baseadas no tempo"""
     recommendations = []
     current = weather_data.get('current', {})
-    
+
     if data_type == 'agricultural':
         if current.get('precipitation', 0) < 2:
             recommendations.append('Considere irrigação para culturas sensíveis')
@@ -4517,7 +4456,7 @@ def _generate_weather_recommendations(weather_data, data_type):
             recommendations.append('Mantenha-se hidratado e procure locais frescos')
         if current.get('precipitation_probability', 0) > 60:
             recommendations.append('Leve guarda-chuva ou capa de chuva')
-    
+
     return recommendations
 
 def _get_air_quality_data(location, radius_km, pollutants, time_range):
@@ -4564,13 +4503,13 @@ def _extract_recommendations(response):
     """Extrair recomendações da resposta"""
     recommendations = []
     lines = response.split('\n')
-    
+
     for line in lines:
         line = line.strip()
         if any(keyword in line.lower() for keyword in ['recomend', 'suger', 'deve', 'precisa', 'importante']):
             if len(line) > 10 and not line.startswith('#'):
                 recommendations.append(line)
-    
+
     # Recomendações padrão se nenhuma for encontrada
     if not recommendations:
         recommendations = [
@@ -4578,13 +4517,13 @@ def _extract_recommendations(response):
             "Implementar práticas sustentáveis",
             "Buscar orientação técnica quando necessário"
         ]
-    
+
     return recommendations[:5]  # Limitar a 5 recomendações
 
 def _calculate_sustainability_score(analysis_type, response):
     """Calcular pontuação de sustentabilidade"""
     base_score = 70
-    
+
     # Ajustar pontuação baseada no tipo de análise
     type_scores = {
         'water': 75,
@@ -4594,33 +4533,33 @@ def _calculate_sustainability_score(analysis_type, response):
         'biodiversity': 85,
         'sustainability': 75
     }
-    
+
     score = type_scores.get(analysis_type, base_score)
-    
+
     # Ajustar baseado em palavras-chave na resposta
     positive_keywords = ['sustentável', 'renovável', 'limpo', 'preservar', 'conservar']
     negative_keywords = ['poluição', 'degradação', 'contaminação', 'destruição']
-    
+
     response_lower = response.lower()
-    
+
     for keyword in positive_keywords:
         if keyword in response_lower:
             score += 2
-    
+
     for keyword in negative_keywords:
         if keyword in response_lower:
             score -= 3
-    
+
     return max(0, min(100, score))
 
 def _assess_environmental_impact(response):
     """Avaliar impacto ambiental"""
     response_lower = response.lower()
-    
+
     high_impact_keywords = ['grave', 'crítico', 'urgente', 'perigoso', 'severo']
     medium_impact_keywords = ['moderado', 'atenção', 'cuidado', 'monitorar']
     low_impact_keywords = ['leve', 'mínimo', 'baixo', 'controlado']
-    
+
     if any(keyword in response_lower for keyword in high_impact_keywords):
         return "Alto impacto - Ação imediata necessária"
     elif any(keyword in response_lower for keyword in medium_impact_keywords):
@@ -4634,13 +4573,13 @@ def _extract_next_steps(response):
     """Extrair próximos passos da resposta"""
     next_steps = []
     lines = response.split('\n')
-    
+
     for line in lines:
         line = line.strip()
         if any(keyword in line.lower() for keyword in ['próximo', 'seguinte', 'depois', 'então', 'em seguida']):
             if len(line) > 10 and not line.startswith('#'):
                 next_steps.append(line)
-    
+
     # Passos padrão se nenhum for encontrado
     if not next_steps:
         next_steps = [
@@ -4648,7 +4587,7 @@ def _extract_next_steps(response):
             "Implementar as recomendações prioritárias",
             "Agendar reavaliação em 30 dias"
         ]
-    
+
     return next_steps[:4]  # Limitar a 4 passos
 
 def _get_monitoring_suggestions(analysis_type):
@@ -4691,7 +4630,7 @@ def _get_monitoring_suggestions(analysis_type):
             "Acompanhar indicadores de sustentabilidade"
         ]
     }
-    
+
     return monitoring_suggestions.get(analysis_type, [
         "Monitorar indicadores ambientais relevantes",
         "Registrar observações regularmente",
@@ -4702,59 +4641,59 @@ def _get_monitoring_suggestions(analysis_type):
 def _analyze_air_quality_health_impact(air_data, health_focus):
     """Analisar impacto da qualidade do ar na saúde"""
     aqi = air_data.get('aqi', 0)
-    
+
     impact = {
         'risk_level': 'low',
         'affected_groups': [],
         'symptoms': [],
         'recommendations': []
     }
-    
+
     if aqi > 100:
         impact['risk_level'] = 'moderate'
         impact['affected_groups'] = ['crianças', 'idosos', 'pessoas com problemas respiratórios']
         impact['symptoms'] = ['irritação nos olhos', 'tosse leve', 'desconforto respiratório']
-    
+
     if aqi > 150:
         impact['risk_level'] = 'high'
         impact['affected_groups'].append('população geral')
         impact['symptoms'].extend(['dificuldade respiratória', 'fadiga', 'dor de cabeça'])
-    
+
     if health_focus == 'respiratory':
         impact['specific_concerns'] = ['agravamento de asma', 'bronquite', 'DPOC']
     elif health_focus == 'cardiovascular':
         impact['specific_concerns'] = ['pressão arterial', 'arritmias', 'infarto']
     elif health_focus == 'children':
         impact['specific_concerns'] = ['desenvolvimento pulmonar', 'infecções respiratórias']
-    
+
     return impact
 
 def _generate_air_quality_recommendations(air_data, health_focus):
     """Gerar recomendações de proteção"""
     aqi = air_data.get('aqi', 0)
     recommendations = []
-    
+
     if aqi > 50:
         recommendations.extend([
             'Limite atividades ao ar livre prolongadas',
             'Mantenha janelas fechadas durante picos de poluição',
             'Use purificadores de ar em ambientes internos'
         ])
-    
+
     if aqi > 100:
         recommendations.extend([
             'Evite exercícios ao ar livre',
             'Use máscara de proteção quando sair',
             'Grupos sensíveis devem permanecer em ambientes internos'
         ])
-    
+
     if aqi > 150:
         recommendations.extend([
             'Evite todas as atividades ao ar livre',
             'Procure atendimento médico se sentir sintomas',
             'Considere deixar a área se possível'
         ])
-    
+
     return recommendations
 
 # Implementações simplificadas para outras funções
@@ -4876,7 +4815,7 @@ def _assess_crop_stress_from_weather(current, forecast):
 def get_environmental_alerts():
     """
     Obter alertas ambientais em tempo real usando Gemma3
-    
+
     Parâmetros suportados:
     - location: Nome da cidade/região (ex: 'São Paulo', 'New York', 'Tokyo')
     - latitude: Coordenada de latitude (ex: -23.5505)
@@ -4884,7 +4823,7 @@ def get_environmental_alerts():
     - types: Tipos de alerta ['weather', 'air_quality', 'agriculture', 'emergency']
     - severity: Filtro de severidade ['low', 'medium', 'high', 'critical', 'all']
     - language: Idioma da resposta ['pt', 'en', 'fr', 'es'] (padrão: 'pt')
-    
+
     Retorna alertas baseados em:
     - Condições meteorológicas locais
     - Qualidade do ar regional
@@ -4894,25 +4833,25 @@ def get_environmental_alerts():
     try:
         # Obter localização do usuário
         location = _get_user_location(request)
-        
+
         # Obter parâmetros opcionais
         alert_types = request.args.getlist('types') or ['weather', 'air_quality', 'agriculture', 'emergency']
         severity_filter = request.args.get('severity', 'all')  # low, medium, high, critical, all
         language = request.args.get('language', 'pt')  # pt, en, fr, es
-        
+
         logger.info(f"Gerando alertas para localização: {location}")
-        
+
         # Usar Gemma3 para gerar alertas dinâmicos baseados na localização
         alerts = _generate_alerts_with_gemma3(location, alert_types, language)
-        
+
         # Filtrar por severidade se especificado
         if severity_filter != 'all':
             alerts = [alert for alert in alerts if alert.get('severity') == severity_filter]
-        
+
         # Ordenar por severidade e timestamp
         severity_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
         alerts.sort(key=lambda x: (severity_order.get(x.get('severity', 'low'), 3), x.get('timestamp', '')))
-        
+
         return jsonify({
             'success': True,
             'alerts': alerts,
@@ -4925,7 +4864,7 @@ def get_environmental_alerts():
             'ai_insights': True,
             'location_based': True
         })
-        
+
     except Exception as e:
         logger.error(f"Erro ao gerar alertas com Gemma3: {str(e)}")
         # Fallback para alertas estáticos em caso de erro
@@ -4954,7 +4893,7 @@ def _get_user_location(request):
     # Prioridade 1: Coordenadas GPS
     latitude = request.args.get('latitude')
     longitude = request.args.get('longitude')
-    
+
     if latitude and longitude:
         try:
             lat = float(latitude)
@@ -4965,13 +4904,13 @@ def _get_user_location(request):
             return location
         except ValueError:
             logger.warning(f"Coordenadas inválidas: lat={latitude}, lon={longitude}")
-    
+
     # Prioridade 2: Nome da localização fornecido
     location = request.args.get('location')
     if location:
         logger.info(f"Localização fornecida pelo usuário: {location}")
         return location.strip()
-    
+
     # Prioridade 3: Detectar por IP (simulado)
     user_ip = request.remote_addr
     if user_ip and user_ip != '127.0.0.1':
@@ -4979,7 +4918,7 @@ def _get_user_location(request):
         if location:
             logger.info(f"Localização detectada por IP: {location}")
             return location
-    
+
     # Fallback: Localização padrão
     default_location = "Localização Global"
     logger.info(f"Usando localização padrão: {default_location}")
@@ -4997,41 +4936,41 @@ def _coordinates_to_location(latitude, longitude):
         {'name': 'Lagos, Nigéria', 'lat': 6.5244, 'lon': 3.3792, 'radius': 1.0},
         {'name': 'Accra, Gana', 'lat': 5.6037, 'lon': -0.1870, 'radius': 1.0},
         {'name': 'Cairo, Egito', 'lat': 30.0444, 'lon': 31.2357, 'radius': 1.0},
-        
+
         # Brasil
         {'name': 'São Paulo, Brasil', 'lat': -23.5505, 'lon': -46.6333, 'radius': 1.0},
         {'name': 'Rio de Janeiro, Brasil', 'lat': -22.9068, 'lon': -43.1729, 'radius': 1.0},
         {'name': 'Brasília, Brasil', 'lat': -15.8267, 'lon': -47.9218, 'radius': 1.0},
         {'name': 'Salvador, Brasil', 'lat': -12.9714, 'lon': -38.5014, 'radius': 1.0},
         {'name': 'Manaus, Brasil', 'lat': -3.1190, 'lon': -60.0217, 'radius': 1.0},
-        
+
         # Europa
         {'name': 'Lisboa, Portugal', 'lat': 38.7223, 'lon': -9.1393, 'radius': 1.0},
         {'name': 'Madrid, Espanha', 'lat': 40.4168, 'lon': -3.7038, 'radius': 1.0},
         {'name': 'Paris, França', 'lat': 48.8566, 'lon': 2.3522, 'radius': 1.0},
         {'name': 'Londres, Reino Unido', 'lat': 51.5074, 'lon': -0.1278, 'radius': 1.0},
         {'name': 'Roma, Itália', 'lat': 41.9028, 'lon': 12.4964, 'radius': 1.0},
-        
+
         # América do Norte
         {'name': 'Nova York, EUA', 'lat': 40.7128, 'lon': -74.0060, 'radius': 1.0},
         {'name': 'Los Angeles, EUA', 'lat': 34.0522, 'lon': -118.2437, 'radius': 1.0},
         {'name': 'Miami, EUA', 'lat': 25.7617, 'lon': -80.1918, 'radius': 1.0},
         {'name': 'Toronto, Canadá', 'lat': 43.6532, 'lon': -79.3832, 'radius': 1.0},
-        
+
         # Ásia
         {'name': 'Tóquio, Japão', 'lat': 35.6762, 'lon': 139.6503, 'radius': 1.0},
         {'name': 'Mumbai, Índia', 'lat': 19.0760, 'lon': 72.8777, 'radius': 1.0},
         {'name': 'Pequim, China', 'lat': 39.9042, 'lon': 116.4074, 'radius': 1.0},
         {'name': 'Singapura', 'lat': 1.3521, 'lon': 103.8198, 'radius': 1.0},
-        
+
         # Oceania
         {'name': 'Sydney, Austrália', 'lat': -33.8688, 'lon': 151.2093, 'radius': 1.0},
         {'name': 'Melbourne, Austrália', 'lat': -37.8136, 'lon': 144.9631, 'radius': 1.0},
     ]
-    
+
     # Encontrar a cidade mais próxima
     import math
-    
+
     def distance(lat1, lon1, lat2, lon2):
         # Fórmula de Haversine para calcular distância
         R = 6371  # Raio da Terra em km
@@ -5040,19 +4979,19 @@ def _coordinates_to_location(latitude, longitude):
         a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
         return R * c
-    
+
     closest_location = None
     min_distance = float('inf')
-    
+
     for loc in locations:
         dist = distance(latitude, longitude, loc['lat'], loc['lon'])
         if dist < min_distance and dist <= loc['radius'] * 100:  # Raio de 100km
             min_distance = dist
             closest_location = loc['name']
-    
+
     if closest_location:
         return closest_location
-    
+
     # Se não encontrou cidade específica, determinar região geral
     if -90 <= latitude <= 90 and -180 <= longitude <= 180:
         if -35 <= latitude <= 37:  # África
@@ -5072,7 +5011,7 @@ def _coordinates_to_location(latitude, longitude):
         elif -50 <= latitude <= -10:  # Oceania
             if 110 <= longitude <= 180:
                 return f"Oceania ({latitude:.2f}, {longitude:.2f})"
-    
+
     return f"Coordenadas ({latitude:.2f}, {longitude:.2f})"
 
 def _ip_to_location(ip_address):
@@ -5088,7 +5027,7 @@ def _get_region_info(location):
     Detectar informações da região baseado na localização
     """
     location_lower = location.lower()
-    
+
     # Base de dados de regiões e características climáticas
     region_data = {
         # África Ocidental
@@ -5117,7 +5056,7 @@ def _get_region_info(location):
             'climate': 'Tropical savana',
             'characteristics': 'Costeiro, duas estações chuvosas, urbanização, agricultura'
         },
-        
+
         # Brasil
         'são paulo': {
             'region': 'Sudeste do Brasil',
@@ -5139,7 +5078,7 @@ def _get_region_info(location):
             'climate': 'Equatorial úmido',
             'characteristics': 'Amazônia, alta umidade, chuvas frequentes, biodiversidade'
         },
-        
+
         # Europa
         'lisboa': {
             'region': 'Europa Ocidental',
@@ -5161,7 +5100,7 @@ def _get_region_info(location):
             'climate': 'Oceânico temperado',
             'characteristics': 'Insular, chuvas frequentes, neblina, poluição urbana'
         },
-        
+
         # América do Norte
         'new york': {
             'region': 'Costa Leste dos EUA',
@@ -5178,7 +5117,7 @@ def _get_region_info(location):
             'climate': 'Tropical',
             'characteristics': 'Costeiro, furacões, alta umidade, nível do mar'
         },
-        
+
         # Ásia
         'tokyo': {
             'region': 'Ásia Oriental',
@@ -5195,7 +5134,7 @@ def _get_region_info(location):
             'climate': 'Continental úmido',
             'characteristics': 'Continental, poluição do ar, tempestades de areia'
         },
-        
+
         # Oceania
         'sydney': {
             'region': 'Oceania',
@@ -5208,12 +5147,12 @@ def _get_region_info(location):
             'characteristics': 'Costeiro, quatro estações, variabilidade climática'
         }
     }
-    
+
     # Buscar informações específicas da localização
     for key, info in region_data.items():
         if key in location_lower:
             return info
-    
+
     # Detectar por país ou região geral
     if any(term in location_lower for term in ['guinea', 'bissau', 'gabú', 'bafatá']):
         return region_data['guinea-bissau']
@@ -5241,7 +5180,7 @@ def _get_region_info(location):
             'climate': 'Tropical/Árido',
             'characteristics': 'Estações secas/chuvosas, agricultura de subsistência, variabilidade climática'
         }
-    
+
     # Fallback para localização desconhecida
     return {
         'region': 'Região Global',
@@ -5255,14 +5194,14 @@ def _generate_alerts_with_gemma3(location, alert_types, language='pt'):
     """
     try:
         from services.gemma_service import GemmaService
-        
+
         gemma_service = current_app.gemma_service
-        
+
         # Verificar cache para evitar repetições
         import uuid
         cache_key = f"{location}_{'-'.join(sorted(alert_types))}"
         current_time = datetime.now()
-        
+
         # Cache temporariamente desabilitado para testes
         # if cache_key in _alert_cache:
         #     cached_time, cached_alerts = _alert_cache[cache_key]
@@ -5273,16 +5212,16 @@ def _generate_alerts_with_gemma3(location, alert_types, language='pt'):
         #             alert['timestamp'] = current_time.isoformat()
         #             alert['id'] = f"gemma3_{uuid.uuid4().hex[:8]}"
         #         return cached_alerts
-        
+
         # Obter dados temporais para gerar alertas dinâmicos
         current_time = datetime.now()
         season = "seca" if current_time.month in [11, 12, 1, 2, 3, 4] else "chuvas"
         hour = current_time.hour
         day_period = "manhã" if 6 <= hour < 12 else "tarde" if 12 <= hour < 18 else "noite"
-        
+
         # Detectar região e características climáticas baseado na localização
         region_info = _get_region_info(location)
-        
+
         # Configurar idioma e contexto cultural
         language_config = {
             'pt': {
@@ -5314,9 +5253,9 @@ def _generate_alerts_with_gemma3(location, alert_types, language='pt'):
                 'response_format': 'RESPONDA SOLO CON ESTE JSON (sin texto adicional):'
             }
         }
-        
+
         lang_config = language_config.get(language, language_config['pt'])
-        
+
         # Prompt simplificado para gerar JSON válido
         prompt = f"""Gere 4 alertas ambientais para {location} em formato JSON:
 [
@@ -5359,28 +5298,28 @@ def _generate_alerts_with_gemma3(location, alert_types, language='pt'):
 ]
 
 Responda APENAS com o JSON acima, sem texto adicional."""
-        
+
         # Gerar resposta com Gemma3
         response = gemma_service.generate_response(
             prompt=prompt,
             context="environmental_alerts",
             max_tokens=1000
         )
-        
+
         # Log da resposta bruta para debug
         logger.info(f"Resposta bruta do Gemma3: {response}")
-        
+
         # Processar resposta do Gemma3
         alerts = _parse_gemma3_alerts_response(response, location)
-        
+
         # Salvar no cache para evitar repetições
         if alerts:
             import uuid
             _alert_cache[cache_key] = (current_time, alerts)
             logger.info(f"Alertas salvos no cache para {location}")
-        
+
         return alerts
-        
+
     except Exception as e:
         logger.error(f"Erro ao usar Gemma3 para alertas: {str(e)}")
         # Fallback para alertas estáticos
@@ -5393,16 +5332,16 @@ def _parse_gemma3_alerts_response(response, location):
     import json
     import re
     import uuid
-    
+
     try:
         # Verificar se a resposta é um dict (resposta do Ollama)
         if isinstance(response, dict):
             response_text = response.get('message', {}).get('content', str(response))
-            
+
             # Verificar se a resposta contém um campo 'response' com JSON
             if 'response' in response and isinstance(response['response'], str):
                 inner_response = response['response']
-                
+
                 # Caso 1: JSON dentro de markdown
                 if '```json' in inner_response:
                     json_start = inner_response.find('```json') + 7
@@ -5416,7 +5355,7 @@ def _parse_gemma3_alerts_response(response, location):
                         response_text = json_match.group().strip()
                     else:
                         response_text = inner_response
-            
+
             # Tentar extrair JSON de diferentes formatos de resposta
             elif isinstance(response_text, str):
                 # Caso 1: JSON dentro de markdown
@@ -5425,7 +5364,7 @@ def _parse_gemma3_alerts_response(response, location):
                     json_end = response_text.find('```', json_start)
                     if json_end > json_start:
                         response_text = response_text[json_start:json_end].strip()
-                
+
                 # Caso 2: JSON dentro de um campo 'response' como string
                 elif "'response':" in response_text or '"response":' in response_text:
                     # Extrair o conteúdo após 'response':
@@ -5440,12 +5379,12 @@ def _parse_gemma3_alerts_response(response, location):
                                 if quote_count == 1:  # Primeira aspa de fechamento
                                     break
                             end += 1
-                        
+
                         if end > start:
                             inner_content = response_text[start:end]
                             # Decodificar escapes
                             inner_content = inner_content.replace("\\\\", "\\").replace("\\n", "\n").replace("\\\"", '"').replace("\\'", "'")
-                            
+
                             if '```json' in inner_content:
                                 json_start = inner_content.find('```json') + 7
                                 json_end = inner_content.find('```', json_start)
@@ -5458,24 +5397,24 @@ def _parse_gemma3_alerts_response(response, location):
                                     response_text = json_match.group().strip()
         else:
             response_text = str(response)
-        
+
         logger.info(f"Processando resposta do Gemma3: {response_text[:200]}...")
         logger.info(f"Resposta completa do Gemma3: {response_text}")
-        
+
         # Múltiplas tentativas de extrair JSON
         alerts_data = None
-        
+
         # Tentativa 1: JSON array completo
         json_match = re.search(r'\[.*?\]', response_text, re.DOTALL)
         if json_match:
             json_text = json_match.group()
             logger.info(f"JSON encontrado: {json_text[:500]}...")
-            
+
             # Limpeza avançada de caracteres especiais e malformações
             json_text = json_text.replace('\\n', ' ')  # Remove quebras de linha escapadas
             json_text = json_text.replace('\\"', '"')  # Remove escapes desnecessários
             json_text = json_text.replace('\\\\', '')  # Remove barras duplas
-            
+
             # Corrigir erros comuns no JSON
             json_text = json_text.replace('"recommendaions":', '"recommendations":')
             json_text = json_text.replace('"recomendaions":', '"recommendations":')
@@ -5483,46 +5422,46 @@ def _parse_gemma3_alerts_response(response, location):
             json_text = json_text.replace('"título":', '"title":')
             json_text = json_text.replace('"mensagem":', '"message":')
             json_text = json_text.replace('"descrição":', '"description":')
-            
+
             # Remover fragmentos de JSON malformado que aparecem nos campos
             json_text = re.sub(r'"[^"]*\\n[^"]*"\s*,\s*"[^"]*"\s*:', '"Alerta Ambiental":', json_text)
             json_text = re.sub(r'"[^"]*severity[^"]*"\s*,\s*"[^"]*"\s*:', '"Alerta":', json_text)
-            
+
             # Remover fragmentos JSON malformados que aparecem como valores de campos
             json_text = re.sub(r'"[^"]*\\"[^"]*severity[^"]*"[^"]*"', '"Alerta Ambiental"', json_text)
             json_text = re.sub(r'"[^"]*\\"[^"]*type[^"]*"[^"]*"', '"Alerta"', json_text)
             json_text = re.sub(r'"[^"]*\\"[^"]*category[^"]*"[^"]*"', '"Alerta"', json_text)
-            
+
             # Limpar campos que contêm fragmentos JSON
             json_text = re.sub(r'"description"\s*:\s*"[^"]*\\"[^"]*"', '"description": "Alerta ambiental importante"', json_text)
             json_text = re.sub(r'"message"\s*:\s*"[^"]*\\"[^"]*"', '"message": "Alerta ambiental"', json_text)
             json_text = re.sub(r'"title"\s*:\s*"[^"]*\\"[^"]*"', '"title": "Alerta"', json_text)
-            
+
             # Garantir que o JSON está completo
             if not json_text.endswith(']'):
                 json_text += ']'
             if not json_text.endswith('}]'):
                 json_text = json_text.rstrip(']') + '}]'
-            
+
             try:
                 # Limpar caracteres problemáticos antes do parsing
                 json_text = json_text.strip()
                 if json_text.startswith('\n'):
                     json_text = json_text.lstrip('\n').strip()
-                
+
                 alerts_data = json.loads(json_text)
                 logger.info(f"JSON extraído com sucesso: {len(alerts_data)} alertas")
                 logger.info(f"Dados dos alertas: {alerts_data}")
             except json.JSONDecodeError as e:
                 logger.warning(f"Erro ao decodificar JSON array: {e}")
                 logger.warning(f"JSON problemático: {json_text[:500]}...")
-                
+
                 # Tentar corrigir problemas comuns de formatação
                 try:
                     # Remover caracteres de controle e espaços problemáticos
                     cleaned_json = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_text)
                     cleaned_json = re.sub(r'\s+', ' ', cleaned_json).strip()
-                    
+
                     # Tentar novamente
                     alerts_data = json.loads(cleaned_json)
                     logger.info(f"JSON corrigido e extraído: {len(alerts_data)} alertas")
@@ -5536,7 +5475,7 @@ def _parse_gemma3_alerts_response(response, location):
                             logger.info(f"Extraído objeto único: 1 alerta")
                     except:
                         pass
-        
+
         # Tentativa 2: Múltiplos objetos JSON
         if not alerts_data:
             json_objects = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response_text)
@@ -5549,22 +5488,22 @@ def _parse_gemma3_alerts_response(response, location):
                     except json.JSONDecodeError:
                         continue
                 logger.info(f"Objetos JSON extraídos: {len(alerts_data)} alertas")
-        
+
         # Tentativa 3: Criar alertas do texto
         if not alerts_data:
             logger.warning("Não foi possível extrair JSON, criando alertas do texto")
             alerts_data = _create_alerts_from_text(response_text)
-        
+
         # Garantir que temos uma lista
         if not isinstance(alerts_data, list):
             alerts_data = [alerts_data] if alerts_data else []
-        
+
         alerts = []
         for i, alert_data in enumerate(alerts_data[:5]):  # Máximo 5 alertas
             # Garantir que alert_data é um dict
             if not isinstance(alert_data, dict):
                 continue
-                
+
             # Função para limpar texto malformado
             def clean_text(text):
                 if not isinstance(text, str):
@@ -5582,39 +5521,39 @@ def _parse_gemma3_alerts_response(response, location):
                 text = text.strip('"\\,}{][')
                 text = text.strip()
                 return text if text and len(text) > 2 else None
-            
+
             # Mapear campos em português para inglês com limpeza
             title = clean_text(alert_data.get('title') or alert_data.get('título') or alert_data.get('titulo'))
             if not title:
                 title = f'Alerta Ambiental {i+1}'
-                
+
             message = clean_text(alert_data.get('message') or alert_data.get('mensagem') or alert_data.get('msg'))
             if not message:
                 message = title
-                
+
             description = clean_text(alert_data.get('description') or alert_data.get('descrição') or alert_data.get('descricao'))
             if not description:
                 description = message
-                
+
             recommendations = alert_data.get('recommendations') or alert_data.get('recomendações') or alert_data.get('recomendacoes')
             if not isinstance(recommendations, list) or not recommendations:
                 recommendations = ['Monitorar situação', 'Seguir orientações locais', 'Manter-se informado']
-            
+
             # Validar severidade
             severity = alert_data.get('severity', 'medium')
             if severity not in ['low', 'medium', 'high', 'critical']:
                 severity = 'medium'
-                
+
             # Validar tipo
             alert_type = alert_data.get('type', 'general')
             if alert_type not in ['weather', 'air_quality', 'agriculture', 'emergency', 'general']:
                 alert_type = 'general'
-                
+
             # Validar categoria
             category = alert_data.get('category', 'environmental')
             if not isinstance(category, str) or len(category) < 2:
                 category = 'environmental'
-            
+
             alert = {
                 'id': f"gemma3_{uuid.uuid4().hex[:8]}",
                 'type': alert_type,
@@ -5632,10 +5571,10 @@ def _parse_gemma3_alerts_response(response, location):
                 'generated_by': 'Gemma3'
             }
             alerts.append(alert)
-        
+
         logger.info(f"Processados {len(alerts)} alertas do Gemma3 com sucesso")
         return alerts if alerts else _get_fallback_alerts(location, ['weather', 'agriculture'])
-        
+
     except Exception as e:
         logger.error(f"Erro ao processar resposta do Gemma3: {str(e)}")
         return _get_fallback_alerts(location, ['weather', 'agriculture'])
@@ -5645,9 +5584,9 @@ def _create_alerts_from_text(text):
     Criar alertas a partir de texto livre do Gemma3
     """
     import re
-    
+
     alerts = []
-    
+
     # Padrões para identificar diferentes tipos de alertas
     alert_patterns = {
         'weather': ['chuva', 'vento', 'tempestade', 'seca', 'temperatura', 'clima'],
@@ -5655,18 +5594,18 @@ def _create_alerts_from_text(text):
         'air_quality': ['poluição', 'ar', 'qualidade', 'fumaça', 'poeira'],
         'emergency': ['emergência', 'perigo', 'risco', 'evacuação', 'socorro']
     }
-    
+
     severity_patterns = {
         'critical': ['crítico', 'grave', 'urgente', 'imediato', 'extremo'],
         'high': ['alto', 'elevado', 'importante', 'significativo'],
         'medium': ['moderado', 'médio', 'atenção'],
         'low': ['baixo', 'leve', 'menor']
     }
-    
+
     # Dividir texto em seções
     sections = re.split(r'\n\s*\n|\.|\!|\?', text)
     sections = [s.strip() for s in sections if len(s.strip()) > 30]
-    
+
     for i, section in enumerate(sections[:5]):  # Máximo 5 alertas
         # Determinar tipo do alerta
         alert_type = 'general'
@@ -5674,20 +5613,20 @@ def _create_alerts_from_text(text):
             if any(keyword in section.lower() for keyword in keywords):
                 alert_type = type_key
                 break
-        
+
         # Determinar severidade
         severity = 'medium'
         for sev_key, keywords in severity_patterns.items():
             if any(keyword in section.lower() for keyword in keywords):
                 severity = sev_key
                 break
-        
+
         # Extrair título (primeira linha ou primeiras palavras)
         lines = section.split('\n')
         title = lines[0][:60] if lines else section[:60]
         if ':' in title:
             title = title.split(':')[0]
-        
+
         # Gerar recomendações baseadas no tipo
         recommendations = {
             'weather': ['Verificar previsão do tempo', 'Proteger cultivos', 'Evitar atividades ao ar livre'],
@@ -5696,7 +5635,7 @@ def _create_alerts_from_text(text):
             'emergency': ['Seguir protocolos de segurança', 'Contactar autoridades', 'Evacuar se necessário'],
             'general': ['Monitorar situação', 'Seguir orientações locais', 'Manter-se informado']
         }.get(alert_type, ['Monitorar situação', 'Seguir orientações locais'])
-        
+
         alert = {
             'title': title.strip(),
             'message': section[:150] + '...' if len(section) > 150 else section,
@@ -5707,7 +5646,7 @@ def _create_alerts_from_text(text):
             'recommendations': recommendations
         }
         alerts.append(alert)
-    
+
     # Se não conseguiu extrair alertas, criar pelo menos um genérico
     if not alerts:
         alerts.append({
@@ -5719,7 +5658,7 @@ def _create_alerts_from_text(text):
             'category': 'environmental',
             'recommendations': ['Monitorar situação', 'Seguir orientações locais', 'Manter-se informado']
         })
-    
+
     return alerts
 
 def _get_alert_icon(category):
@@ -5756,33 +5695,33 @@ def _get_fallback_alerts(location, alert_types):
     Gerar alertas de fallback quando Gemma3 não está disponível
     """
     alerts = []
-    
+
     # Alertas meteorológicos
     if 'weather' in alert_types:
         weather_alerts = _get_weather_alerts(location)
         alerts.extend(weather_alerts)
-    
+
     # Alertas de qualidade do ar
     if 'air_quality' in alert_types:
         air_alerts = _get_air_quality_alerts(location)
         alerts.extend(air_alerts)
-    
+
     # Alertas agrícolas
     if 'agriculture' in alert_types:
         agri_alerts = _get_agriculture_alerts(location)
         alerts.extend(agri_alerts)
-    
+
     # Alertas de emergência
     if 'emergency' in alert_types:
         emergency_alerts = _get_emergency_alerts(location)
         alerts.extend(emergency_alerts)
-    
+
     return alerts
 
 def _get_weather_alerts(location):
     """Gerar alertas meteorológicos"""
     alerts = []
-    
+
     # Simular dados meteorológicos atuais
     current_weather = {
         'temperature': 32,
@@ -5791,7 +5730,7 @@ def _get_weather_alerts(location):
         'precipitation': 15,
         'pressure': 1010
     }
-    
+
     # Alertas de temperatura alta
     if current_weather['temperature'] > 35:
         alerts.append({
@@ -5813,7 +5752,7 @@ def _get_weather_alerts(location):
             'icon': 'temperature_high',
             'color': '#FF6B35'
         })
-    
+
     # Alertas de vento forte
     if current_weather['wind_speed'] > 20:
         alerts.append({
@@ -5835,7 +5774,7 @@ def _get_weather_alerts(location):
             'icon': 'wind',
             'color': '#4A90E2'
         })
-    
+
     # Alertas de chuva intensa
     if current_weather['precipitation'] > 10:
         alerts.append({
@@ -5857,16 +5796,16 @@ def _get_weather_alerts(location):
             'icon': 'rain',
             'color': '#5DADE2'
         })
-    
+
     return alerts
 
 def _get_air_quality_alerts(location):
     """Gerar alertas de qualidade do ar"""
     alerts = []
-    
+
     # Simular dados de qualidade do ar
     aqi = 85  # Índice de qualidade do ar
-    
+
     if aqi > 100:
         severity = 'high' if aqi > 150 else 'medium'
         alerts.append({
@@ -5888,13 +5827,13 @@ def _get_air_quality_alerts(location):
             'icon': 'air_quality',
             'color': '#E74C3C'
         })
-    
+
     return alerts
 
 def _simulate_biodiversity_analysis(image_file, location, ecosystem_type):
     """Simular análise de biodiversidade quando Gemma não está disponível"""
     import random
-    
+
     # Espécies comuns da Guiné-Bissau baseadas no tipo de ecossistema
     species_database = {
         'floresta': [
@@ -5916,28 +5855,28 @@ def _simulate_biodiversity_analysis(image_file, location, ecosystem_type):
             {'name': 'Panthera leo', 'common_name': 'Leão', 'type': 'fauna', 'endemic': False}
         ]
     }
-    
+
     # Selecionar espécies baseadas no ecossistema
     available_species = species_database.get(ecosystem_type, species_database['floresta'])
-    
+
     # Simular identificação de 1-3 espécies
     num_species = random.randint(1, 3)
     identified_species = random.sample(available_species, min(num_species, len(available_species)))
-    
+
     # Adicionar dados de confiança e status de conservação
     for species in identified_species:
         species['confidence'] = round(random.uniform(0.7, 0.95), 2)
         species['conservation_status'] = random.choice([
             'Pouco Preocupante', 'Quase Ameaçada', 'Vulnerável', 'Em Perigo'
         ])
-    
+
     # Calcular índice de biodiversidade
     biodiversity_score = round(random.uniform(6.0, 9.0), 1)
     biodiversity_level = 'Alto' if biodiversity_score >= 8.0 else 'Médio' if biodiversity_score >= 6.0 else 'Baixo'
-    
+
     # Status do ecossistema
     ecosystem_status = random.choice(['Saudável', 'Moderadamente Saudável', 'Degradado'])
-    
+
     return {
         'species_identified': identified_species,
         'biodiversity_index': {
@@ -5999,16 +5938,16 @@ def _analyze_biodiversity_with_gemma(gemma_service, image_file, location, ecosys
         # Converter imagem para base64
         image_data = image_file.read()
         image_base64 = base64.b64encode(image_data).decode('utf-8')
-        
+
         # Prompt para análise de biodiversidade
         prompt = f"""
         Analise esta imagem para identificar espécies de fauna e flora.
-        
+
         Contexto:
         - Localização: {location}
         - Tipo de ecossistema: {ecosystem_type}
         - Idioma da resposta: {language}
-        
+
         Por favor, forneça:
         1. Identificação de espécies visíveis (nome científico e comum)
         2. Nível de confiança na identificação (0-1)
@@ -6016,24 +5955,24 @@ def _analyze_biodiversity_with_gemma(gemma_service, image_file, location, ecosys
         4. Avaliação da biodiversidade local
         5. Recomendações de conservação
         6. Sugestões de monitoramento
-        
+
         Responda em formato JSON estruturado.
         """
-        
+
         # Chamar o serviço Gemma
         response = gemma_service.analyze_image(
             image_base64=image_base64,
             prompt=prompt,
             context={'location': location, 'ecosystem': ecosystem_type}
         )
-        
+
         # Processar resposta do Gemma
         if response and 'analysis' in response:
             return _process_gemma_biodiversity_response(response['analysis'])
         else:
             # Fallback para análise simulada
             return _simulate_biodiversity_analysis(image_file, location, ecosystem_type)
-            
+
     except Exception as e:
         logger.error(f"Erro na análise com Gemma: {e}")
         # Fallback para análise simulada
@@ -6048,7 +5987,7 @@ def _process_gemma_biodiversity_response(gemma_response):
             analysis_data = json.loads(gemma_response)
         else:
             analysis_data = gemma_response
-        
+
         # Estruturar dados conforme esperado pela API
         return {
             'species_identified': analysis_data.get('species_identified', []),
@@ -6070,7 +6009,7 @@ def _process_gemma_biodiversity_response(gemma_response):
             ]),
             'local_programs': analysis_data.get('local_programs', [])
         }
-        
+
     except Exception as e:
         logger.error(f"Erro ao processar resposta do Gemma: {e}")
         # Retornar estrutura básica em caso de erro
@@ -6086,7 +6025,7 @@ def _process_gemma_biodiversity_response(gemma_response):
 def _get_agriculture_alerts(location):
     """Gerar alertas agrícolas"""
     alerts = []
-    
+
     # Alerta de pragas
     alerts.append({
         'id': 'agri_pest_001',
@@ -6107,7 +6046,7 @@ def _get_agriculture_alerts(location):
         'icon': 'bug_report',
         'color': '#FF9800'
     })
-    
+
     # Alerta de janela de colheita
     alerts.append({
         'id': 'agri_harvest_001',
@@ -6128,7 +6067,7 @@ def _get_agriculture_alerts(location):
         'icon': 'agriculture',
         'color': '#4CAF50'
     })
-    
+
     return alerts
 
 @environmental_bp.route('/plant/image-diagnosis', methods=['POST'])
@@ -6246,19 +6185,47 @@ def plant_image_diagnosis():
         description: Erro interno do servidor
     """
     try:
-        data = request.get_json()
-        if not data or 'image' not in data:
-            return jsonify(create_error_response(
-                'missing_image',
-                'Imagem é obrigatória para diagnóstico',
-                400
-            )), 400
-        
-        image_base64 = data['image']
-        plant_type = data.get('plant_type', 'desconhecida')
-        user_id = data.get('user_id')
-        language = data.get('language', 'pt')
-        
+        # Verificar se é multipart/form-data ou JSON
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Processar como multipart/form-data
+            if 'image' not in request.files:
+                return jsonify(create_error_response(
+                    'missing_image',
+                    'Imagem é obrigatória para diagnóstico',
+                    400
+                )), 400
+            
+            image_file = request.files['image']
+            if image_file.filename == '':
+                return jsonify(create_error_response(
+                    'empty_image',
+                    'Arquivo de imagem vazio',
+                    400
+                )), 400
+            
+            # Converter imagem para base64
+            import base64
+            image_data = image_file.read()
+            image_base64 = base64.b64encode(image_data).decode('utf-8')
+            
+            plant_type = request.form.get('plant_type', 'desconhecida')
+            user_id = request.form.get('user_id')
+            language = request.form.get('language', 'pt')
+        else:
+            # Processar como JSON
+            data = request.get_json()
+            if not data or 'image' not in data:
+                return jsonify(create_error_response(
+                    'missing_image',
+                    'Imagem é obrigatória para diagnóstico',
+                    400
+                )), 400
+
+            image_base64 = data['image']
+            plant_type = data.get('plant_type', 'desconhecida')
+            user_id = data.get('user_id')
+            language = data.get('language', 'pt')
+
         # Processar diagnóstico com Gemma
         gemma_service = current_app.gemma_service
         if not gemma_service:
@@ -6269,13 +6236,13 @@ def plant_image_diagnosis():
             diagnosis_result = _analyze_plant_image_with_gemma(
                 gemma_service, image_base64, plant_type, language
             )
-        
+
         return jsonify({
             'success': True,
             'diagnosis': diagnosis_result,
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "diagnóstico de planta por imagem")
         return jsonify(create_error_response(
@@ -6402,12 +6369,12 @@ def plant_audio_diagnosis():
                 'Áudio é obrigatório para diagnóstico',
                 400
             )), 400
-        
+
         audio_base64 = data['audio']
         plant_type = data.get('plant_type', 'desconhecida')
         user_id = data.get('user_id')
         language = data.get('language', 'pt')
-        
+
         # Processar diagnóstico com Gemma
         gemma_service = current_app.gemma_service
         if not gemma_service:
@@ -6418,13 +6385,13 @@ def plant_audio_diagnosis():
             diagnosis_result = _analyze_plant_audio_with_gemma(
                 gemma_service, audio_base64, plant_type, language
             )
-        
+
         return jsonify({
             'success': True,
             'diagnosis': diagnosis_result,
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         log_error(logger, e, "diagnóstico de planta por áudio")
         return jsonify(create_error_response(
@@ -6436,10 +6403,10 @@ def plant_audio_diagnosis():
 def _get_emergency_alerts(location):
     """Gerar alertas de emergência"""
     alerts = []
-    
+
     # Simular alerta de emergência baseado em condições extremas
     # Este seria conectado a sistemas de monitoramento reais
-    
+
     # Exemplo: Alerta de seca
     alerts.append({
         'id': 'emergency_drought_001',
@@ -6464,7 +6431,7 @@ def _get_emergency_alerts(location):
             {'name': 'Ministério da Agricultura', 'phone': '+245-234-5678'}
         ]
     })
-    
+
     return alerts
 
 # =================== ROTAS ESPECÍFICAS DE RECICLAGEM GEMMA 3N ===================
@@ -6484,7 +6451,7 @@ def analyze_recycling_specific():
     """
     try:
         start_time = datetime.now()
-        
+
         # Validar dados de entrada
         if not request.is_json:
             return jsonify({
@@ -6492,9 +6459,9 @@ def analyze_recycling_specific():
                 'error': 'Content-Type deve ser application/json',
                 'timestamp': datetime.now().isoformat()
             }), 400
-        
+
         data = request.get_json()
-        
+
         # Verificar campos obrigatórios
         if 'image' not in data:
             return jsonify({
@@ -6502,20 +6469,20 @@ def analyze_recycling_specific():
                 'error': 'Campo "image" (base64) é obrigatório',
                 'timestamp': datetime.now().isoformat()
             }), 400
-        
+
         # Extrair parâmetros
         image_data = data['image']
         location = data.get('location', 'Bissau')
-        user_request = data.get('user_request', 
+        user_request = data.get('user_request',
             'Analise este material para reciclagem e forneça orientações específicas para Bissau')
-        
+
         # Validar imagem
         try:
             if isinstance(image_data, str):
                 image_bytes = base64.b64decode(image_data)
             else:
                 image_bytes = image_data
-            
+
             # Verificar tamanho (máximo 10MB)
             if len(image_bytes) > 10 * 1024 * 1024:
                 return jsonify({
@@ -6523,14 +6490,14 @@ def analyze_recycling_specific():
                     'error': 'Imagem muito grande. Máximo 10MB.',
                     'timestamp': datetime.now().isoformat()
                 }), 400
-                
+
         except Exception as e:
             return jsonify({
                 'success': False,
                 'error': f'Erro ao processar imagem: {e}',
                 'timestamp': datetime.now().isoformat()
             }), 400
-        
+
         # Criar prompt específico para reciclagem
         prompt = f"""Você é um especialista em reciclagem e sustentabilidade ambiental em {location}, Guiné-Bissau.
 
@@ -6574,7 +6541,7 @@ RESPONDA EM FORMATO ESTRUTURADO:
                 'error': 'Serviço Gemma não disponível',
                 'timestamp': datetime.now().isoformat()
             }), 503
-        
+
         try:
             # Usar análise de imagem diretamente
             analysis_result = gemma_service.analyze_image(image_bytes, prompt)
@@ -6584,10 +6551,10 @@ RESPONDA EM FORMATO ESTRUTURADO:
             analysis_result = gemma_service.generate_response(
                 f"{prompt}\n\nNOTA: Análise baseada em contexto de reciclagem em Bissau."
             )
-        
+
         # Processar resposta
         material_info = _parse_recycling_response(analysis_result)
-        
+
         # Pontos de coleta para Bissau
         collection_points = [
             {
@@ -6615,10 +6582,10 @@ RESPONDA EM FORMATO ESTRUTURADO:
                 'phone': '+245-955-0003'
             }
         ]
-        
+
         # Calcular tempo de processamento
         processing_time = (datetime.now() - start_time).total_seconds()
-        
+
         # Resposta estruturada
         response = {
             'success': True,
@@ -6637,10 +6604,10 @@ RESPONDA EM FORMATO ESTRUTURADO:
             },
             'timestamp': datetime.now().isoformat()
         }
-        
+
         logger.info(f"✅ Análise específica concluída em {processing_time:.2f}s")
         return jsonify(response)
-        
+
     except Exception as e:
         logger.error(f"Erro na análise específica de reciclagem: {e}")
         return jsonify({
@@ -6652,38 +6619,38 @@ RESPONDA EM FORMATO ESTRUTURADO:
 def _parse_recycling_response(text):
     """Parse da resposta específica de reciclagem"""
     import re
-    
+
     result = {
         'material_type': 'Material não identificado',
         'category': 'Geral',
         'recyclable': True,
         'confidence': 0.75
     }
-    
+
     try:
         # Extrair tipo de material
         material_match = re.search(r'Tipo principal:\s*([^\n\*]+)', text, re.IGNORECASE)
         if material_match:
             result['material_type'] = material_match.group(1).strip()
-        
+
         # Extrair categoria
         category_match = re.search(r'Categoria:\s*([^\n\*]+)', text, re.IGNORECASE)
         if category_match:
             result['category'] = category_match.group(1).strip()
-        
+
         # Extrair reciclabilidade
         recyclable_match = re.search(r'Reciclável:\s*(Sim|Não)', text, re.IGNORECASE)
         if recyclable_match:
             result['recyclable'] = recyclable_match.group(1).lower() == 'sim'
-        
+
         # Extrair confiança
         confidence_match = re.search(r'CONFIANÇA.*?(\d+)%', text, re.IGNORECASE)
         if confidence_match:
             result['confidence'] = int(confidence_match.group(1)) / 100
-        
+
     except Exception as e:
         logger.warning(f"Erro no parsing: {e}")
-    
+
     return result
 
 @environmental_bp.route('/recycling/collection-points-bissau', methods=['GET'])
@@ -6722,7 +6689,7 @@ def get_bissau_collection_points():
                 'capacity': 'Alta'
             }
         ]
-        
+
         material_filter = request.args.get('material', '').lower()
         if material_filter:
             filtered_points = []
@@ -6730,7 +6697,7 @@ def get_bissau_collection_points():
                 if any(material_filter in mat.lower() for mat in point['materials']):
                     filtered_points.append(point)
             points = filtered_points
-        
+
         return jsonify({
             'success': True,
             'data': {
@@ -6741,7 +6708,7 @@ def get_bissau_collection_points():
             },
             'timestamp': datetime.now().isoformat()
         })
-        
+
     except Exception as e:
         logger.error(f"Erro ao obter pontos de coleta: {e}")
         return jsonify({

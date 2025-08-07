@@ -131,14 +131,14 @@ class EnvironmentalApiService {
           if (difficulty != null) 'difficulty': difficulty,
         }),
       );
-      
+
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded != null && decoded is Map<String, dynamic>) {
           return decoded;
         }
       }
-      
+
       // Se chegou aqui, houve erro na API
       return {
         'success': false,
