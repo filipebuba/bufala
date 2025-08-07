@@ -490,7 +490,7 @@ docker-compose up -d
 #### Canais de Comunicação
 - **📧 Email**: [nhadafilipe@gmail.com](mailto:nhadafilipe@gmail.com)
 - **🐙 GitHub**: [Issues e Discussões](https://github.com/filipebuba/bufala/issues)
-- **📱 WhatsApp**: +245 966 123 456 (Guiné-Bissau)
+- **📱 WhatsApp**: +55 (11) 98483-7997(Brasil)
 - **💬 Discord**: [Servidor da Comunidade](https://discord.gg/moransa)
 
 #### Documentação Técnica
