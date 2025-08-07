@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,9 @@ import 'services/wellness_coaching_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Carregar variáveis de ambiente do arquivo .env
+  await dotenv.load(fileName: ".env");
+  
   // Inicializar configurações do app
   await AppConfig.initialize();
 

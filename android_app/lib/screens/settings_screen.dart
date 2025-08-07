@@ -79,7 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadBackendConfig() async {
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.apiBaseUrl}/config/backend'),
+        Uri.parse('${AppConfig.apiBaseUrl}/api/config/backend'),
         headers: {'Content-Type': 'application/json'},
       );
       
@@ -98,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _checkConnection() async {
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.apiBaseUrl}/health'),
+        Uri.parse('${AppConfig.apiBaseUrl}/api/health'),
       ).timeout(const Duration(seconds: 5));
       
       if (mounted) {

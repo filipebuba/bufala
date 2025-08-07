@@ -106,7 +106,7 @@ class WellnessCoachingService {
       debugPrint('🔍 Verificando saúde do backend em $_baseUrl...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '$_baseUrl/health',
+        '$_baseUrl/api/health',
       );
 
       _backendAvailable = response.statusCode == 200;

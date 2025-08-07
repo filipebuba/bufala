@@ -305,7 +305,7 @@ class CrisisResponseService implements ICrisisResponseService {
 
       // Chamar backend Gemma-3
       final response = await _dio.post<Map<String, dynamic>>(
-        '$_backendUrl/medical',
+        '$_backendUrl/api/medical',
         data: requestData,
         options: Options(
           sendTimeout: const Duration(seconds: 30),
