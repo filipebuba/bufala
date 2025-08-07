@@ -23,8 +23,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Carregar variáveis de ambiente do arquivo .env
-  await dotenv.load(fileName: ".env");
-  
+  try {
+    await dotenv.load(fileName: ".env");
+    print('🟢 Arquivo .env carregado com sucesso!');
+  } catch (e) {
+    print('🟡 Arquivo .env não encontrado, usando configurações padrão: $e');
+    // Inicializar dotenv com valores padrão se o arquivo não for encontrado
+    dotenv.testLoad(fileInput: '''
+API_BASE_URL=http://192.168.15.15:5000
+API_TIMEOUT=30000
+DEBUG_MODE=true
+''');
+  }
+
   // Inicializar configurações do app
   await AppConfig.initialize();
 

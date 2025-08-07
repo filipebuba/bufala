@@ -7,7 +7,7 @@ class ApiService {
   ApiService() {
     // FORÇAR criação de nova instância Dio com configuração para emulador
     _dio = Dio(BaseOptions(
-      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
+      baseUrl: AppConfig.apiBaseUrl,
       connectTimeout: timeoutDuration,
       receiveTimeout: timeoutDuration,
       headers: {

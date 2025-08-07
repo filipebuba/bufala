@@ -33,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final OfflineService _offlineService = OfflineService();
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
-  
+
   Map<String, int> _storageStats = {};
   Map<String, dynamic> _storageInfo = {};
   Map<String, dynamic> _backendConfig = {};
@@ -82,7 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Uri.parse('${AppConfig.apiBaseUrl}/api/config/backend'),
         headers: {'Content-Type': 'application/json'},
       );
-      
+
       if (response.statusCode == 200 && mounted) {
         final config = json.decode(response.body) as Map<String, dynamic>;
         setState(() {
@@ -98,9 +98,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _checkConnection() async {
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.apiBaseUrl}/api/health'),
+        Uri.parse(AppConfig.buildUrl('health')),
       ).timeout(const Duration(seconds: 5));
-      
+
       if (mounted) {
         setState(() {
           _isConnected = response.statusCode == 200;
@@ -120,7 +120,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final appProvider = Provider.of<AppProvider>(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -158,39 +158,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // Status do Sistema
               _buildSystemStatusCard(context),
               const SizedBox(height: 16),
-              
+
               // Configurações de Idioma e Região
               _buildLanguageSection(context, appProvider),
               const SizedBox(height: 16),
-              
+
               // Configurações de Aparência
               _buildAppearanceSection(context, appProvider),
               const SizedBox(height: 16),
-              
+
               // Modo Offline
               _buildOfflineSection(context, appProvider),
               const SizedBox(height: 16),
-              
+
               // Funcionalidades Revolucionárias
               _buildRevolutionaryFeaturesSection(context),
               const SizedBox(height: 16),
-              
+
               // Conectividade e Sincronização
               _buildConnectivitySection(context, appProvider),
               const SizedBox(height: 16),
-              
+
               // Armazenamento e Dados
               _buildStorageSection(context),
               const SizedBox(height: 16),
-              
+
               // Configurações Regionais da Guiné-Bissau
               _buildGuineaBissauSection(context),
               const SizedBox(height: 16),
-              
+
               // Navegação para Funcionalidades
               _buildFunctionalitiesSection(context),
               const SizedBox(height: 16),
-              
+
               // Informações do App
               _buildInfoSection(context),
               const SizedBox(height: 32),
@@ -205,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSystemStatusCard(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -259,7 +259,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-  
+
   Widget _buildStatusIndicator(String label, String status, Color color, IconData icon) => Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -296,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildRevolutionaryFeaturesSection(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -357,7 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-  
+
   bool _getRevolutionaryFeatureValue(String feature, String key) {
     try {
       final featureConfig = _revolutionaryConfig[feature] as Map<String, dynamic>?;
@@ -366,7 +366,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return false;
     }
   }
-  
+
   Widget _buildRevolutionaryFeatureTile(
     String title,
     String subtitle,
@@ -397,13 +397,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({key: value}),
       );
-      
+
       if (response.statusCode == 200 && mounted) {
         setState(() {
           _revolutionaryConfig[feature] = _revolutionaryConfig[feature] ?? {};
           (_revolutionaryConfig[feature] as Map<String, dynamic>)[key] = value;
         });
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -429,7 +429,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildLanguageSection(BuildContext context, AppProvider appProvider) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -492,7 +492,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildAppearanceSection(BuildContext context, AppProvider appProvider) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -540,7 +540,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildOfflineSection(BuildContext context, AppProvider appProvider) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -571,7 +571,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SwitchListTile(
               title: const Text('Ativar Modo Offline'),
               subtitle: Text(
-                appProvider.isOfflineMode 
+                appProvider.isOfflineMode
                   ? 'IA funcionando localmente com Gemma 3n'
                   : 'Conectar ao servidor quando disponível',
               ),
@@ -619,7 +619,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildConnectivitySection(BuildContext context, AppProvider appProvider) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -679,7 +679,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildStorageSection(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -762,7 +762,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildGuineaBissauSection(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -857,7 +857,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildFunctionalitiesSection(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -946,7 +946,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     VoidCallback onTap,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return ListTile(
       leading: Icon(
         icon,
@@ -970,7 +970,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildInfoSection(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -1316,4 +1316,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

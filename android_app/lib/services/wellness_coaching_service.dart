@@ -55,7 +55,7 @@ class WellnessCoachingService {
       // Inicializar serviços apenas na primeira vez
       _breathingService = VoiceGuidedBreathingService();
       await _breathingService.initialize();
-      
+
       // Verificar backend com retry
       await _checkBackendHealthWithRetry();
 
@@ -106,7 +106,7 @@ class WellnessCoachingService {
       debugPrint('🔍 Verificando saúde do backend em $_baseUrl...');
 
       final response = await _dio.get<Map<String, dynamic>>(
-        '$_baseUrl/api/health',
+        AppConfig.buildUrl('health'),
       );
 
       _backendAvailable = response.statusCode == 200;
@@ -146,7 +146,7 @@ class WellnessCoachingService {
   }) async {
     try {
       debugPrint('🔄 Iniciando criação de perfil para: $name');
-      
+
       _currentProfile = WellnessProfile(
         userId: 'user_${DateTime.now().millisecondsSinceEpoch}',
         name: name,
@@ -159,14 +159,14 @@ class WellnessCoachingService {
       );
 
       debugPrint('📝 Perfil criado em memória: ${_currentProfile?.name}');
-      
+
       await _saveUserProfile();
-      
+
       debugPrint('💾 Perfil salvo no SharedPreferences');
-      
+
       // Verificar se foi salvo corretamente
       await _loadUserProfile();
-      
+
       if (_currentProfile != null) {
         debugPrint('✅ Perfil verificado após salvamento: ${_currentProfile!.name}');
         return true;
@@ -469,10 +469,10 @@ class WellnessCoachingService {
         'exhale': breathingSession.pattern.exhaleSeconds,
       };
       session.sessionData['voice_guided'] = true;
-      
+
       // Aguardar conclusão da sessão ou timeout
       await _waitForBreathingCompletion(breathingSession);
-      
+
     } catch (e) {
       print('❌ Erro na respiração guiada: $e');
       // Fallback para sessão simples
@@ -523,7 +523,7 @@ class WellnessCoachingService {
     try {
       // Usar respiração guiada adaptada para meditação
       final meditationPrompt = _buildMeditationPrompt(selectedType, session);
-      
+
       final breathingSession = await _breathingService.startGuidedBreathingSession(
         durationMinutes: duration,
         personalizedPrompt: meditationPrompt,
@@ -531,10 +531,10 @@ class WellnessCoachingService {
 
       session.sessionData['breathing_session_id'] = breathingSession.id;
       session.sessionData['voice_guided'] = true;
-      
+
       // Aguardar conclusão da sessão
       await _waitForMeditationCompletion(breathingSession, duration);
-      
+
     } catch (e) {
       print('❌ Erro na meditação guiada: $e');
       // Fallback para sessão simples
@@ -691,21 +691,21 @@ class WellnessCoachingService {
   String _buildPersonalizedPrompt(CoachingSession session) {
     final stressLevel = session.sessionData['start_stress'] ?? 0.5;
     final timeOfDay = DateTime.now().hour;
-    
+
     var context = '';
-    
+
     if (stressLevel > 0.7) {
       context = 'O usuário está com alto nível de estresse e precisa de uma abordagem mais calmante.';
     } else if (stressLevel < 0.3) {
       context = 'O usuário está relativamente calmo, pode usar técnicas energizantes.';
     }
-    
+
     if (timeOfDay < 12) {
       context += ' É manhã, foque em energizar para o dia.';
     } else if (timeOfDay > 18) {
       context += ' É noite, foque em relaxamento e preparação para o descanso.';
     }
-    
+
     return context;
   }
 
@@ -713,11 +713,11 @@ class WellnessCoachingService {
    Future<void> _waitForBreathingCompletion(dynamic breathingSession) async {
      // Aguardar até 6 minutos (5 min + buffer)
      final timeout = DateTime.now().add(const Duration(minutes: 6));
-     
+
      while (DateTime.now().isBefore(timeout) && _breathingService.isSessionActive) {
        await Future.delayed(const Duration(seconds: 1));
      }
-     
+
      // Se ainda estiver ativa, parar
      if (_breathingService.isSessionActive) {
        await _breathingService.stopSession();
@@ -728,15 +728,15 @@ class WellnessCoachingService {
    String _buildMeditationPrompt(String meditationType, CoachingSession session) {
      final moodLevel = session.sessionData['start_mood'] ?? 5.0;
      final timeOfDay = DateTime.now().hour;
-     
+
      var context = 'Tipo de meditação: $meditationType. ';
-     
+
      if (moodLevel < 4.0) {
        context += 'O usuário está com humor baixo, use abordagem mais suave e encorajadora. ';
      } else if (moodLevel > 7.0) {
        context += 'O usuário está com bom humor, pode usar técnicas mais dinâmicas. ';
      }
-     
+
      switch (meditationType) {
        case 'Mindfulness básico':
          context += 'Foque na consciência do momento presente e respiração consciente.';
@@ -754,13 +754,13 @@ class WellnessCoachingService {
          context += 'Use técnicas específicas para acalmar a mente ansiosa e reduzir preocupações.';
          break;
      }
-     
+
      if (timeOfDay < 12) {
        context += ' É manhã, prepare a mente para um dia equilibrado.';
      } else if (timeOfDay > 18) {
        context += ' É noite, foque em liberar as tensões do dia.';
      }
-     
+
      return context;
    }
 
@@ -768,11 +768,11 @@ class WellnessCoachingService {
    Future<void> _waitForMeditationCompletion(dynamic breathingSession, int durationMinutes) async {
      // Aguardar duração + buffer
      final timeout = DateTime.now().add(Duration(minutes: durationMinutes + 1));
-     
+
      while (DateTime.now().isBefore(timeout) && _breathingService.isSessionActive) {
        await Future.delayed(const Duration(seconds: 1));
      }
-     
+
      // Se ainda estiver ativa, parar
      if (_breathingService.isSessionActive) {
        await _breathingService.stopSession();
@@ -974,11 +974,11 @@ class WellnessCoachingService {
       final prefs = await SharedPreferences.getInstance();
       final profileJson = prefs.getString('wellness_profile');
       debugPrint('📖 JSON carregado do SharedPreferences: $profileJson');
-      
+
       if (profileJson != null) {
         final profileData = jsonDecode(profileJson) as Map<String, dynamic>;
         debugPrint('📖 Dados decodificados: $profileData');
-        
+
         _currentProfile = WellnessProfile.fromJson(profileData);
         debugPrint('📖 Perfil carregado: ${_currentProfile?.name}');
       } else {
@@ -1001,7 +1001,7 @@ class WellnessCoachingService {
       final prefs = await SharedPreferences.getInstance();
       final profileJson = jsonEncode(_currentProfile!.toJson());
       debugPrint('💾 Salvando perfil JSON: $profileJson');
-      
+
       final success = await prefs.setString('wellness_profile', profileJson);
       debugPrint('💾 Resultado do salvamento: $success');
     } catch (e) {

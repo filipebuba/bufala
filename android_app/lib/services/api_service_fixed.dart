@@ -14,7 +14,7 @@ class ApiService {
   /// Inicializa o serviço
   void initialize() {
     _dio = Dio(BaseOptions(
-      baseUrl: AppConfig.apiBaseUrl.replaceAll('/api', ''),
+      baseUrl: AppConfig.apiBaseUrl,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(minutes: 2),
       sendTimeout: const Duration(minutes: 2),
