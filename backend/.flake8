@@ -1,0 +1,171 @@
+[flake8]
+# Configuração do Flake8 para Moransa Backend
+# Flake8 é um wrapper que combina PyFlakes, pycodestyle e Ned Batchelder's McCabe script
+
+# Comprimento máximo de linha (alinhado com Black)
+max-line-length = 127
+
+# Códigos de erro a serem ignorados
+# E203: whitespace before ':' (conflita com Black)
+# W503: line break before binary operator (conflita com Black)
+# E501: line too long (handled by Black)
+# F401: module imported but unused (comum em __init__.py)
+# E402: module level import not at top of file
+extend-ignore = 
+    E203,
+    W503,
+    E501,
+    E402
+
+# Diretórios e arquivos a serem excluídos
+exclude = 
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .coverage,
+    htmlcov,
+    build,
+    dist,
+    *.egg-info,
+    venv,
+    env,
+    .env,
+    migrations,
+    .venv,
+    node_modules,
+    .tox,
+    .mypy_cache,
+    .DS_Store
+
+# Complexidade ciclomática máxima (McCabe)
+max-complexity = 10
+
+# Configurações por arquivo
+per-file-ignores =
+    # __init__.py files podem ter imports não utilizados
+    __init__.py:F401,F403
+    # Arquivos de teste podem ter imports não utilizados e linhas longas
+    test_*.py:F401,F403,E501
+    tests/*.py:F401,F403,E501
+    # Arquivos de configuração podem ter imports não utilizados
+    settings.py:F401,F403
+    config.py:F401,F403
+    # Arquivos de migração podem ter várias violações
+    migrations/*.py:F401,F403,E501,E402
+    # Arquivos de fixtures podem ter linhas longas
+    conftest.py:E501
+    # Scripts podem ter imports no meio do arquivo
+    scripts/*.py:E402
+
+# Número máximo de argumentos para uma função
+max-args = 7
+
+# Número máximo de variáveis locais em uma função
+max-locals = 20
+
+# Número máximo de returns em uma função
+max-returns = 8
+
+# Número máximo de branches em uma função
+max-branches = 15
+
+# Número máximo de statements em uma função
+max-statements = 60
+
+# Configurações de docstring
+# D100: Missing docstring in public module
+# D101: Missing docstring in public class
+# D102: Missing docstring in public method
+# D103: Missing docstring in public function
+# D104: Missing docstring in public package
+# D105: Missing docstring in magic method
+# D106: Missing docstring in public nested class
+# D107: Missing docstring in __init__
+docstring-convention = google
+
+# Configurações específicas para diferentes tipos de arquivo
+# Arquivos de modelo podem ter linhas mais longas para definições
+# Arquivos de API podem ter mais argumentos
+# Arquivos de teste podem ter mais complexidade
+
+# Configurações de import
+# Verificar imports não utilizados
+# Verificar imports duplicados
+# Verificar ordem dos imports (mas isort cuida disso)
+
+# Configurações de nomenclatura
+# Verificar convenções de nomenclatura Python (PEP 8)
+# snake_case para funções e variáveis
+# PascalCase para classes
+# UPPER_CASE para constantes
+
+# Configurações de espaçamento
+# Verificar espaçamento adequado
+# Verificar indentação (4 espaços)
+# Verificar linhas em branco
+
+# Configurações de comentários
+# Verificar comentários inline
+# Verificar comentários de bloco
+# Verificar TODOs e FIXMEs
+
+# Configurações específicas do Moransa
+# Permitir algumas violações em módulos específicos
+# Módulos médicos podem ter terminologia específica
+# Módulos educacionais podem ter nomes específicos
+# Módulos agrícolas podem ter terminologia técnica
+
+# Configurações de segurança
+# Verificar uso de eval() e exec()
+# Verificar imports perigosos
+# Verificar hardcoded passwords
+
+# Configurações de performance
+# Verificar loops desnecessários
+# Verificar concatenação de strings ineficiente
+# Verificar uso de list comprehensions
+
+# Configurações de compatibilidade
+# Verificar compatibilidade com Python 3.10+
+# Verificar uso de features deprecated
+# Verificar imports de __future__
+
+# Configurações de logging
+# Verificar uso adequado de logging
+# Verificar níveis de log apropriados
+# Verificar formatação de mensagens de log
+
+# Configurações de testes
+# Permitir algumas violações em arquivos de teste
+# Permitir fixtures complexas
+# Permitir mocks complexos
+
+# Configurações de documentação
+# Verificar docstrings em funções públicas
+# Verificar formato de docstrings (Google style)
+# Verificar exemplos em docstrings
+
+# Configurações de tipo hints
+# Verificar uso de type hints
+# Verificar imports de typing
+# Verificar compatibilidade de tipos
+
+# Configurações de async/await
+# Verificar uso adequado de async/await
+# Verificar context managers assíncronos
+# Verificar loops assíncronos
+
+# Configurações de recursos
+# Verificar fechamento de arquivos
+# Verificar fechamento de conexões
+# Verificar uso de context managers
+
+# Configurações de encoding
+# Verificar encoding UTF-8
+# Verificar caracteres especiais
+# Verificar compatibilidade de encoding
+
+# Configurações de paths
+# Verificar uso de pathlib
+# Verificar separadores de path
+# Verificar paths absolutos vs relativos

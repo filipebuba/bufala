@@ -654,3 +654,35 @@ jspm_packages/
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 EOF
+
+
+# Adicionado pelo setup CI/CD
+# Arquivos de ambiente e segurança
+.env.*.local
+*.pem
+config.json
+credentials.json
+# Arquivos de CI/CD
+.bandit
+# Arquivos temporários
+# Arquivos de build
+# IDEs
+.vscode/settings.json
+!.env.example
+# Certificados e chaves
+*.p12
+*.pfx
+*.crt
+*.cer
+# Configurações sensíveis
+# Build artifacts com dados sensíveis
+android_app/build/**/flutter_assets/.env*
+android_app/build/**/assets/.env*
+# Logs com possíveis dados sensíveis
+
+# Coverage reports
+lcov.info
+
+# URLs e configurações temporárias
+config_temp.dart
+url_config.dart

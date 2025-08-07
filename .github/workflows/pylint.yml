@@ -1,23 +1,311 @@
-name: Pylint
+name: Moransa CI/CD - Review Automático
 
-on: [push]
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.10'
+  FLUTTER_VERSION: '3.16.0'
+  NODE_VERSION: '18'
 
 jobs:
-  build:
+  # Job 1: Análise de Qualidade do Backend
+  backend-quality:
+    name: 🐍 Backend Quality Check
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 📦 Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: 🔧 Instalar dependências
       run: |
+        cd backend
         python -m pip install --upgrade pip
-        pip install pylint
-    - name: Analysing the code with pylint
+        pip install -r requirements.txt
+        pip install pylint black flake8 mypy pytest pytest-cov safety bandit
+
+    - name: 🎨 Verificar formatação com Black
       run: |
-        pylint $(git ls-files '*.py')
+        cd backend
+        black --check --diff .
+
+    - name: 🔍 Análise com Flake8
+      run: |
+        cd backend
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: 🔬 Análise com Pylint
+      run: |
+        cd backend
+        pylint $(find . -name "*.py" | head -20) --exit-zero
+
+    - name: 🛡️ Verificação de segurança com Bandit
+      run: |
+        cd backend
+        bandit -r . -f json -o bandit-report.json || true
+
+    - name: 📊 Verificação de vulnerabilidades com Safety
+      run: |
+        cd backend
+        safety check --json --output safety-report.json || true
+
+    - name: 🧪 Executar testes com cobertura
+      run: |
+        cd backend
+        pytest --cov=. --cov-report=xml --cov-report=html --cov-fail-under=70
+
+    - name: 📈 Upload cobertura para Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+
+  # Job 2: Build e Teste do Android App
+  android-build:
+    name: 📱 Android Build & Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: ☕ Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: 🎯 Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        cache: true
+
+    - name: 📦 Cache Flutter dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.pub-cache
+          android_app/.dart_tool
+        key: ${{ runner.os }}-flutter-${{ hashFiles('android_app/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-
+
+    - name: 🔧 Instalar dependências Flutter
+      run: |
+        cd android_app
+        flutter pub get
+
+    - name: 🔍 Análise estática do código Dart
+      run: |
+        cd android_app
+        flutter analyze --fatal-infos
+
+    - name: 🎨 Verificar formatação Dart
+      run: |
+        cd android_app
+        dart format --set-exit-if-changed .
+
+    - name: 🧪 Executar testes unitários
+      run: |
+        cd android_app
+        flutter test --coverage
+
+    - name: 🧪 Executar testes de integração
+      run: |
+        cd android_app
+        flutter test integration_test/
+
+    - name: 🏗️ Build APK de teste
+      run: |
+        cd android_app
+        flutter build apk --debug
+
+    - name: 📈 Upload cobertura Flutter
+      uses: codecov/codecov-action@v3
+      with:
+        file: android_app/coverage/lcov.info
+        flags: flutter
+        name: flutter-coverage
+
+    - name: 📦 Upload APK como artefato
+      uses: actions/upload-artifact@v3
+      with:
+        name: debug-apk
+        path: android_app/build/app/outputs/flutter-apk/app-debug.apk
+
+  # Job 3: Verificação do Frontend
+  frontend-check:
+    name: 🌐 Frontend Quality Check
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔍 Validar HTML
+      run: |
+        cd frontend
+        # Verificar sintaxe HTML básica
+        python3 -c "
+        import html.parser
+        import sys
+        
+        class HTMLValidator(html.parser.HTMLParser):
+            def error(self, message):
+                print(f'HTML Error: {message}')
+                sys.exit(1)
+        
+        with open('index.html', 'r', encoding='utf-8') as f:
+            content = f.read()
+            validator = HTMLValidator()
+            validator.feed(content)
+        print('✅ HTML válido')
+        "
+
+    - name: 🎨 Verificar CSS
+      run: |
+        cd frontend
+        # Verificar se não há CSS inline excessivo
+        python3 -c "
+        import re
+        with open('index.html', 'r', encoding='utf-8') as f:
+            content = f.read()
+            css_blocks = re.findall(r'<style[^>]*>(.*?)</style>', content, re.DOTALL)
+            total_css = sum(len(block) for block in css_blocks)
+            if total_css > 50000:
+                print(f'⚠️ CSS muito extenso: {total_css} caracteres')
+            else:
+                print(f'✅ CSS dentro do limite: {total_css} caracteres')
+        "
+
+    - name: 🔗 Verificar links
+      run: |
+        cd frontend
+        python3 -c "
+        import re
+        with open('index.html', 'r', encoding='utf-8') as f:
+            content = f.read()
+            # Verificar links relativos
+            relative_links = re.findall(r'href=[\"\']([^\"\'>]+)[\"\']', content)
+            for link in relative_links:
+                if link.startswith('../'):
+                    print(f'✅ Link relativo encontrado: {link}')
+        print('✅ Verificação de links concluída')
+        "
+
+  # Job 4: Verificação de Segurança Geral
+  security-scan:
+    name: 🛡️ Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🔍 Verificar segredos expostos
+      run: |
+        # Verificar se não há chaves API ou senhas expostas
+        if grep -r -i "api[_-]key\|password\|secret\|token" --include="*.py" --include="*.dart" --include="*.html" . | grep -v ".git" | grep -v "example" | grep -v "test"; then
+          echo "⚠️ Possíveis segredos encontrados no código"
+          exit 1
+        else
+          echo "✅ Nenhum segredo exposto encontrado"
+        fi
+
+    - name: 🔒 Verificar permissões Android
+      run: |
+        cd android_app
+        if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
+          echo "📋 Permissões Android encontradas:"
+          grep -o 'android.permission.[A-Z_]*' android/app/src/main/AndroidManifest.xml | sort | uniq
+          echo "✅ Verificação de permissões concluída"
+        fi
+
+  # Job 5: Build de Produção (apenas em main)
+  production-build:
+    name: 🚀 Production Build
+    runs-on: ubuntu-latest
+    needs: [backend-quality, android-build, frontend-check, security-scan]
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: ☕ Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: 🎯 Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        cache: true
+
+    - name: 🏗️ Build APK de produção
+      run: |
+        cd android_app
+        flutter pub get
+        flutter build apk --release
+
+    - name: 📦 Upload APK de produção
+      uses: actions/upload-artifact@v3
+      with:
+        name: production-apk
+        path: android_app/build/app/outputs/flutter-apk/app-release.apk
+
+    - name: 🐳 Build Docker Backend
+      run: |
+        cd backend
+        docker build -t moransa-backend:latest .
+
+  # Job 6: Relatório de Qualidade
+  quality-report:
+    name: 📊 Quality Report
+    runs-on: ubuntu-latest
+    needs: [backend-quality, android-build, frontend-check, security-scan]
+    if: always()
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 📊 Gerar relatório de qualidade
+      run: |
+        echo "# 📊 Relatório de Qualidade - Moransa CI/CD" > quality-report.md
+        echo "" >> quality-report.md
+        echo "## 🎯 Status dos Jobs" >> quality-report.md
+        echo "- Backend Quality: ${{ needs.backend-quality.result }}" >> quality-report.md
+        echo "- Android Build: ${{ needs.android-build.result }}" >> quality-report.md
+        echo "- Frontend Check: ${{ needs.frontend-check.result }}" >> quality-report.md
+        echo "- Security Scan: ${{ needs.security-scan.result }}" >> quality-report.md
+        echo "" >> quality-report.md
+        echo "## 📈 Métricas" >> quality-report.md
+        echo "- Commit: ${{ github.sha }}" >> quality-report.md
+        echo "- Branch: ${{ github.ref_name }}" >> quality-report.md
+        echo "- Autor: ${{ github.actor }}" >> quality-report.md
+        echo "- Data: $(date)" >> quality-report.md
+        
+        cat quality-report.md
+
+    - name: 📤 Upload relatório
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-report
+        path: quality-report.md

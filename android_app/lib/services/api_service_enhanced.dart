@@ -30,7 +30,6 @@ class ApiService {
     );
   }
 
-
   static const Duration timeoutDuration = Duration(seconds: 30);
   static const Duration longTimeoutDuration =
       Duration(minutes: 5); // AUMENTADO para Docs Gemma

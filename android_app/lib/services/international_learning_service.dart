@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
@@ -37,7 +38,7 @@ class InternationalLearningService {
       ),
     );
   }
-  static String get baseUrl => AppConfig.backendHost == 'localhost' ? 'http://localhost:5000' : 'http://10.0.2.2:5000';
+  static String get baseUrl => AppConfig.backendHost == 'localhost' ? '' : '';
   late final Dio _dio;
 
   // ========================================

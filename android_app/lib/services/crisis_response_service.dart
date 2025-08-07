@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 
 import '../models/crisis_response_models.dart';
@@ -19,7 +20,7 @@ class CrisisResponseService implements ICrisisResponseService {
   final Gemma3MultimodalService _gemmaService = Gemma3MultimodalService();
   final Dio _dio = Dio();
   static const String _backendUrl =
-      'http://127.0.0.1:5000'; // Backend localhost
+      ''; // Backend localhost
   final Map<String, CrisisResponseData> _emergencyDatabase = {};
   bool _isInitialized = false;
   
