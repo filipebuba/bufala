@@ -819,6 +819,79 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
                 }
             }
     
+    def _generate_with_specific_model(
+        self,
+        prompt: str,
+        model_name: str,
+        system_prompt: Optional[str] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Gerar resposta usando um modelo específico do Ollama"""
+        try:
+            # Preparar mensagens
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+            
+            # Usar configurações padrão
+            temperature = kwargs.get('temperature', self.config.TEMPERATURE)
+            top_p = kwargs.get('top_p', self.config.TOP_P)
+            max_tokens = kwargs.get('max_new_tokens', self.config.MAX_NEW_TOKENS)
+            
+            # Preparar payload
+            payload = {
+                "model": model_name,
+                "messages": messages,
+                "stream": False,
+                "options": {
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "top_k": kwargs.get('top_k', self.config.TOP_K),
+                    "repeat_penalty": kwargs.get('repetition_penalty', self.config.REPETITION_PENALTY),
+                    "num_predict": max_tokens
+                }
+            }
+            
+            self.logger.info(f"🔄 Fazendo requisição para Ollama com modelo específico: {model_name}")
+            
+            # Fazer requisição
+            response = requests.post(
+                f"{self.config.OLLAMA_HOST}/api/chat",
+                json=payload,
+                timeout=self.config.OLLAMA_TIMEOUT
+            )
+            
+            self.logger.info(f"📊 Status da resposta: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                response_text = result['message']['content']
+                self.logger.info(f"✅ Resposta recebida do {model_name} (tamanho: {len(response_text)} chars)")
+                
+                # Processar e limpar o texto da resposta
+                cleaned_response = TextProcessor.clean_response(response_text)
+                self.logger.info(f"🧹 Texto processado (tamanho: {len(cleaned_response)} chars)")
+                
+                return {
+                    'response': cleaned_response,
+                    'original_response': response_text,
+                    'success': True
+                }
+            else:
+                self.logger.error(f"❌ Erro na requisição Ollama: {response.status_code}")
+                return {
+                    'response': f"Erro na comunicação com {model_name}: {response.status_code}",
+                    'success': False
+                }
+                
+        except Exception as e:
+            self.logger.error(f"❌ Erro ao gerar resposta com {model_name}: {e}")
+            return {
+                'response': f"Erro interno ao usar {model_name}: {str(e)}",
+                'success': False
+            }
+
     def _generate_with_ollama(
         self,
         prompt: str,
@@ -1301,18 +1374,18 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
         }
     
     def analyze_image(self, image_data: bytes, prompt: str = "Descreva esta imagem") -> str:
-        """Analisar imagem usando Gemma 3n multimodal através do Ollama"""
+        """Analisar imagem usando modelos multimodais através do Ollama"""
         try:
             import base64
             import requests
             
-            self.logger.info("🖼️ Iniciando análise multimodal com Gemma 3n")
+            self.logger.info("🖼️ Iniciando análise multimodal")
             
             # Converter imagem para base64
             image_b64 = base64.b64encode(image_data).decode('utf-8')
             
-            # Tentar com gemma3n:e4b primeiro (melhor qualidade)
-            models_to_try = ['gemma3n:e4b', 'gemma3n:e2b', 'gemma3n:latest', 'llava', 'llava:7b']
+            # Priorizar LLaVA para análise multimodal (tem capacidades de visão confirmadas)
+            models_to_try = ['llava:latest', 'llava:7b', 'llava', 'gemma3n:e4b', 'gemma3n:e2b']
             
             for model in models_to_try:
                 try:
@@ -1679,9 +1752,67 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
     
     def analyze_multimodal(self, prompt: str, image_base64: Optional[str] = None, 
                           audio_base64: Optional[str] = None, **kwargs) -> str:
-        """Analisar conteúdo multimodal com prompt específico"""
+        """Analisar conteúdo multimodal com abordagem em duas etapas: LLaVA para descrição + Gemma3n para diagnóstico"""
         try:
-            # Construir contexto multimodal
+            self.logger.info("🔍 Iniciando análise multimodal")
+            
+            # Se há imagem, usar abordagem em duas etapas
+            if image_base64:
+                import base64
+                try:
+                    self.logger.info("📸 Processando imagem com abordagem em duas etapas")
+                    
+                    # Etapa 1: Decodificar imagem e usar LLaVA para descrição
+                    image_data = base64.b64decode(image_base64)
+                    description_prompt = "Descreva detalhadamente esta imagem, focando em aspectos visuais relevantes para análise médica ou agrícola. Inclua cores, texturas, formas, padrões e qualquer anomalia visível."
+                    
+                    self.logger.info("🔍 Etapa 1: Obtendo descrição da imagem com LLaVA")
+                    image_description = self.analyze_image(image_data, description_prompt)
+                    self.logger.info(f"✅ Descrição obtida: {image_description[:100]}...")
+                    
+                    # Etapa 2: Usar gemma3n:e4b para diagnóstico baseado na descrição
+                    diagnosis_prompt = f"{prompt}\n\nDescrição da imagem fornecida pelo sistema de visão:\n{image_description}\n\nCom base nesta descrição visual detalhada, forneça sua análise especializada."
+                    
+                    self.logger.info("🧠 Etapa 2: Realizando diagnóstico com gemma3n:e4b")
+                    
+                    # Forçar uso do gemma3n:e4b para o diagnóstico
+                    response = self._generate_with_specific_model(
+                        prompt=diagnosis_prompt,
+                        model_name="gemma3n:e4b"
+                    )
+                    
+                    if response['success']:
+                        self.logger.info("✅ Diagnóstico bem-sucedido com gemma3n:e4b")
+                        # Limpar caracteres de controle da resposta
+                        clean_response = self._sanitize_text_input(response['response'])
+                        self.logger.info(f"🧹 Resposta limpa: {clean_response[:100]}...")
+                        return clean_response
+                    else:
+                        self.logger.warning("⚠️ gemma3n:e4b falhou, tentando fallbacks")
+                        # Fallback para outros modelos gemma3n se e4b não estiver disponível
+                        for model in ["gemma3n:e2b", "gemma3n:latest"]:
+                            try:
+                                self.logger.info(f"🔄 Tentando modelo fallback: {model}")
+                                response = self._generate_with_specific_model(
+                                    prompt=diagnosis_prompt,
+                                    model_name=model
+                                )
+                                if response['success']:
+                                    self.logger.info(f"✅ Diagnóstico bem-sucedido com {model}")
+                                    clean_response = self._sanitize_text_input(response['response'])
+                                    return clean_response
+                            except Exception as e:
+                                self.logger.warning(f"Modelo {model} falhou: {e}")
+                                continue
+                        
+                        self.logger.warning("⚠️ Todos os modelos falharam, usando fallback")
+                        return self._fallback_multimodal_response(prompt)
+                        
+                except Exception as e:
+                    self.logger.error(f"Erro ao processar imagem base64: {e}")
+                    # Continuar com fallback
+            
+            # Para áudio ou outros tipos, usar método existente
             multimodal_context = []
             
             if image_base64:

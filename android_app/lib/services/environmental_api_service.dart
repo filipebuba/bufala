@@ -10,7 +10,7 @@ class EnvironmentalApiService {
     String? userId,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/plant/image-diagnosis'),
+      Uri.parse('$baseUrl/api/plant/image-diagnosis'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'image': imageBase64,
@@ -35,7 +35,7 @@ class EnvironmentalApiService {
     String? userId,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/biodiversity/track'),
+      Uri.parse('$baseUrl/api/biodiversity/track'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'image': imageBase64,
@@ -52,7 +52,7 @@ class EnvironmentalApiService {
     String? userId,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/recycling/scan'),
+      Uri.parse('$baseUrl/api/recycling/scan'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'image': imageBase64,
@@ -65,7 +65,7 @@ class EnvironmentalApiService {
   // Educação ambiental: módulos
   Future<List<dynamic>> getEducationModules() async {
     final response =
-        await http.get(Uri.parse('$baseUrl/environmental/education'));
+        await http.get(Uri.parse('$baseUrl/api/environmental/education'));
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return (data['modules'] as List<dynamic>?) ?? [];
   }
@@ -82,7 +82,7 @@ class EnvironmentalApiService {
     bool? includeActivities,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/environmental/education'),
+      Uri.parse('$baseUrl/api/environmental/education'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         if (topic != null) 'topic': topic,
@@ -100,7 +100,7 @@ class EnvironmentalApiService {
 
   // Alertas ambientais
   Future<List<dynamic>> getEnvironmentalAlerts() async {
-    final response = await http.get(Uri.parse('$baseUrl/environmental/alerts'));
+    final response = await http.get(Uri.parse('$baseUrl/api/environmental/alerts'));
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return (data['alerts'] as List<dynamic>?) ?? [];
   }
@@ -118,7 +118,7 @@ class EnvironmentalApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/environmental/education/generate-content'),
+        Uri.parse('$baseUrl/api/environmental/education/generate-content'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'topic': topic,
@@ -157,7 +157,7 @@ class EnvironmentalApiService {
 
   // Obter lista de tópicos educativos disponíveis
   Future<List<dynamic>> getEducationTopics() async {
-    final response = await http.get(Uri.parse('$baseUrl/environmental/education/topics'));
+    final response = await http.get(Uri.parse('$baseUrl/api/environmental/education/topics'));
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return (data['topics'] as List<dynamic>?) ?? [];
   }
@@ -169,7 +169,7 @@ class EnvironmentalApiService {
     String? userId,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/plant/audio-diagnosis'),
+      Uri.parse('$baseUrl/api/plant/audio-diagnosis'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'audio': audioBase64,

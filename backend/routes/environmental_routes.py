@@ -3630,30 +3630,96 @@ def _process_gemma_plant_response(response):
         import json
         import re
         
-        # Extrair JSON da resposta
-        json_match = re.search(r'\{.*\}', response, re.DOTALL)
+        # Limpar caracteres de controle e problemas de encoding
+        cleaned_response = response
+        if isinstance(response, str):
+            # Remover caracteres de controle
+            cleaned_response = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', response)
+            # Normalizar quebras de linha
+            cleaned_response = cleaned_response.replace('\r\n', '\n').replace('\r', '\n')
+            # Remover marcadores de código markdown
+            cleaned_response = re.sub(r'```json\s*', '', cleaned_response)
+            cleaned_response = re.sub(r'```\s*$', '', cleaned_response)
+        
+        # Extrair JSON da resposta limpa
+        json_match = re.search(r'\{.*\}', cleaned_response, re.DOTALL)
         if json_match:
             json_str = json_match.group()
-            return json.loads(json_str)
-        else:
-            # Se não conseguir extrair JSON, criar resposta estruturada
-            return {
-                'plant_identification': {
-                    'species': 'Análise em processamento',
-                    'common_name': 'Aguarde resultado',
-                    'confidence': 0.5
-                },
-                'health_assessment': {
-                    'overall_health': 'Em análise',
-                    'issues_detected': []
-                },
-                'recommendations': {
-                    'immediate_actions': ['Aguardar análise completa'],
-                    'preventive_measures': ['Monitoramento regular'],
-                    'treatment_options': []
-                },
-                'raw_response': response
-            }
+            
+            # Log do JSON antes da limpeza
+            logger.info(f"🔍 JSON antes da limpeza: {json_str[:200]}...")
+            
+            # Corrigir problemas comuns de formatação JSON
+            # Corrigir erros de digitação comuns
+            json_str = json_str.replace('"speciees":', '"species":')
+            
+            # Corrigir espaços em números decimais de forma mais agressiva
+            json_str = re.sub(r'(\d+)\s*\.\s*(\d+)', r'\1.\2', json_str)
+            # Corrigir especificamente qualquer número decimal com espaços
+            json_str = re.sub(r':\s*(\d+)\s*\.\s*(\d+)', r': \1.\2', json_str)
+            # Corrigir especificamente o padrão "0. XX" que continua aparecendo
+            json_str = re.sub(r'0\. (\d+)', r'0.\1', json_str)
+            # Corrigir qualquer padrão "X. Y" onde X e Y são dígitos
+            json_str = re.sub(r'(\d)\. (\d)', r'\1.\2', json_str)
+            # Corrigir espaços extras ao redor de números
+            json_str = re.sub(r'"confidence":\s*([0-9.]+)\s*', r'"confidence": \1', json_str)
+            
+            logger.info(f"🔧 Após corrigir decimais: {json_str[:200]}...")
+            
+            # Corrigir espaços antes de vírgulas
+            json_str = re.sub(r'\s+,', ',', json_str)
+            # Corrigir espaços antes de dois pontos
+            json_str = re.sub(r'\s+:', ':', json_str)
+            # Corrigir espaços após dois pontos
+            json_str = re.sub(r':\s+"', ': "', json_str)
+            # Corrigir múltiplos espaços
+            json_str = re.sub(r'\s+', ' ', json_str)
+            # Corrigir espaços dentro de strings que quebram o JSON
+            json_str = re.sub(r'"\s+([^"]+)\s+"', r'"\1"', json_str)
+            
+            logger.info(f"🔧 JSON após todas as correções: {json_str[:200]}...")
+            
+            # Tentar fazer parse do JSON
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError as json_error:
+                logger.error(f"Erro no parse JSON: {json_error}")
+                logger.error(f"JSON problemático: {json_str[:200]}...")
+                
+                # Tentar uma última correção mais agressiva
+                try:
+                    # Remover caracteres problemáticos e tentar novamente
+                    clean_json = re.sub(r'[^\x20-\x7E]', '', json_str)  # Remove caracteres não ASCII
+                    clean_json = re.sub(r'\s+', ' ', clean_json)  # Normaliza espaços
+                    clean_json = clean_json.replace('speciees', 'species')  # Corrige erro de digitação
+                    clean_json = re.sub(r'(\d)\s*\.\s*(\d)', r'\1.\2', clean_json)  # Corrige decimais
+                    
+                    parsed_data = json.loads(clean_json)
+                    logger.info(f"✅ JSON parseado após limpeza agressiva: {list(parsed_data.keys())}")
+                    return parsed_data
+                except Exception as cleanup_error:
+                    logger.error(f"❌ Falha na limpeza agressiva do JSON: {cleanup_error}")
+                
+                # Continuar para fallback
+        
+        # Se não conseguir extrair JSON válido, criar resposta estruturada baseada no texto
+        return {
+            'plant_identification': {
+                'species': 'Análise textual processada',
+                'common_name': 'Baseado na descrição fornecida',
+                'confidence': 0.7
+            },
+            'health_assessment': {
+                'overall_health': 'Análise baseada em texto',
+                'issues_detected': []
+            },
+            'recommendations': {
+                'immediate_actions': ['Verificar análise textual'],
+                'preventive_measures': ['Monitoramento regular'],
+                'treatment_options': []
+            },
+            'raw_response': cleaned_response[:500] + '...' if len(cleaned_response) > 500 else cleaned_response
+        }
             
     except Exception as e:
         logger.error(f"Erro ao processar resposta do Gemma: {e}")
