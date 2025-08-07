@@ -3631,14 +3631,14 @@ def _process_gemma_plant_response(response):
     """Processar resposta do Gemma para diagnóstico de plantas"""
     try:
         from utils.json_parser import safe_parse_llm_json
-        
+
         # Tentar parsear JSON usando a função robusta
         parsed_data = safe_parse_llm_json(response)
-        
+
         if parsed_data:
             logger.info(f"✅ JSON parseado com sucesso: {list(parsed_data.keys())}")
             return parsed_data
-        
+
         logger.warning("❌ Falha no parsing JSON, usando fallback textual")
 
         # Se não conseguir extrair JSON válido, criar resposta estruturada baseada no texto
@@ -6194,7 +6194,7 @@ def plant_image_diagnosis():
                     'Imagem é obrigatória para diagnóstico',
                     400
                 )), 400
-            
+
             image_file = request.files['image']
             if image_file.filename == '':
                 return jsonify(create_error_response(
@@ -6202,12 +6202,12 @@ def plant_image_diagnosis():
                     'Arquivo de imagem vazio',
                     400
                 )), 400
-            
+
             # Converter imagem para base64
             import base64
             image_data = image_file.read()
             image_base64 = base64.b64encode(image_data).decode('utf-8')
-            
+
             plant_type = request.form.get('plant_type', 'desconhecida')
             user_id = request.form.get('user_id')
             language = request.form.get('language', 'pt')
