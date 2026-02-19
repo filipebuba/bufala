@@ -522,8 +522,12 @@ Gere exatamente {quantity} frases únicas e culturalmente apropriadas.
         """Configurar credenciais do Kaggle para acesso ao modelo Gemma-3n"""
         try:
             # Configurar variáveis de ambiente do Kaggle
-            os.environ['KAGGLE_USERNAME'] = self.config.KAGGLE_USERNAME
-            os.environ['KAGGLE_KEY'] = self.config.KAGGLE_KEY
+            if self.config.KAGGLE_USERNAME and self.config.KAGGLE_KEY:
+                os.environ['KAGGLE_USERNAME'] = self.config.KAGGLE_USERNAME
+                os.environ['KAGGLE_KEY'] = self.config.KAGGLE_KEY
+            else:
+                self.logger.warning("Credenciais Kaggle não configuradas via ambiente (KAGGLE_USERNAME/KAGGLE_KEY)")
+                return
 
             # Verificar se o arquivo kaggle.json existe
             kaggle_config_path = os.path.join(os.path.dirname(__file__), self.config.KAGGLE_CONFIG_PATH)

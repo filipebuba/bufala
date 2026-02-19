@@ -127,7 +127,7 @@ class BackendConfig:
     
     # Configurações do servidor
     HOST = "0.0.0.0"
-    PORT = 5000
+    PORT = int(os.getenv('PORT', '5000'))
     DEBUG = False
     
     # Configurações de timeout - Aumentados para análises mais detalhadas
@@ -144,8 +144,8 @@ class BackendConfig:
     MODEL_NAME = "google/gemma-3n-E2B-it"
     
     # Configurações do Kaggle para acesso ao Gemma-3n
-    KAGGLE_USERNAME = os.getenv('KAGGLE_USERNAME', 'filipebuba')
-    KAGGLE_KEY = os.getenv('KAGGLE_KEY', 'e69c666d834cafb518be9859257301e3')
+    KAGGLE_USERNAME = os.getenv('KAGGLE_USERNAME')
+    KAGGLE_KEY = os.getenv('KAGGLE_KEY')
     KAGGLE_CONFIG_PATH = os.getenv('KAGGLE_CONFIG_PATH', '../../kaggle.json')
     
     # Diretório de cache dos modelos

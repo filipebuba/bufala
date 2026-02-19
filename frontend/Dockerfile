@@ -1,30 +1,9 @@
-# Frontend Dockerfile para Moransa
-# Hackathon Gemma 3n
+# Frontend Dockerfile para landing page estática
+FROM nginx:alpine
 
-FROM node:18-alpine
+COPY index.html /usr/share/nginx/html/index.html
 
-# Set working directory
-WORKDIR /app
+EXPOSE 80
 
-# Install dependencies
-COPY package*.json ./
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Install serve to run the application
-RUN npm install -g serve
-
-# Expose port
-EXPOSE 3000
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000 || exit 1
-
-# Start the application
-CMD ["serve", "-s", "build", "-l", "3000"]
+  CMD wget -q -O - http://localhost:80/ >/dev/null || exit 1

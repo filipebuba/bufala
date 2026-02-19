@@ -1,35 +1,33 @@
-
-# Dockerfile para demonstração pública do Moransa
+# Dockerfile para demonstraÃ§Ã£o pÃºblica do Moransa
 # Hackathon Gemma 3n
 
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependências do sistema
-RUN apt-get update && apt-get install -y     curl     && rm -rf /var/lib/apt/lists/*
+# DependÃªncias mÃ­nimas de runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copiar requirements (versão simplificada para demo)
-COPY requirements.demo.txt requirements.txt
+# Instalar dependÃªncias Python
+COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código da aplicação
+# Copiar aplicaÃ§Ã£o
 COPY . .
 
-# Configurar variáveis de ambiente para demonstração
+# ConfiguraÃ§Ã£o de demo
 ENV FLASK_ENV=production
 ENV DEMO_MODE=true
 ENV PORT=8080
 ENV PYTHONPATH=/app
 
-# Criar diretório para logs
 RUN mkdir -p /app/logs
 
-# Expor porta
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3     CMD curl -f http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8080/api/health || exit 1
 
-# Comando de inicialização
 CMD ["python", "app.py"]

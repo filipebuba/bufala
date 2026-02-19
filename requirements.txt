@@ -11,7 +11,7 @@ torchvision>=0.15.0
 transformers>=4.35.0
 kagglehub>=0.2.0
 accelerate>=0.24.0
-ollama run gemma3n
+ollama>=0.1.7
 
 # Processamento multimodal (CRÍTICO para hackathon)
 pillow>=10.0.0
@@ -26,9 +26,7 @@ requests>=2.31.0
 
 # Utilitários
 python-dotenv>=1.0.0
-logging>=0.4.9.6
-datetime
-pathlib
+# logging, datetime e pathlib são módulos da biblioteca padrão do Python
 typing-extensions>=4.8.0
 
 # Desenvolvimento (opcional)

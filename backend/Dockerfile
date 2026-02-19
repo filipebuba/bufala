@@ -43,7 +43,7 @@ ENV OLLAMA_HOST=http://localhost:11434
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:5000/api/health || exit 1
 
 # Run the application using the virtual environment
 CMD ["/app/venv_docker/bin/python", "app.py"]

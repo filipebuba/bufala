@@ -209,25 +209,22 @@ languages = [
 ]
 
 # Configurações de qualidade
-quality = {
-    test_coverage_minimum = 70,
-    code_complexity_maximum = 10,
-    line_length_maximum = 127,
-    security_level = "high"
-}
+[tool.moransa.quality]
+test_coverage_minimum = 70
+code_complexity_maximum = 10
+line_length_maximum = 127
+security_level = "high"
 
 # Configurações de desenvolvimento
-development = {
-    debug = true,
-    hot_reload = true,
-    auto_format = true,
-    auto_lint = true
-}
+[tool.moransa.development]
+debug = true
+hot_reload = true
+auto_format = true
+auto_lint = true
 
 # Configurações de produção
-production = {
-    debug = false,
-    optimize = true,
-    minify = true,
-    compress = true
-}
+[tool.moransa.production]
+debug = false
+optimize = true
+minify = true
+compress = true
