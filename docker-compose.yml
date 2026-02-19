@@ -15,7 +15,6 @@ services:
       - PYTHONPATH=/app
       - OLLAMA_HOST=ollama:11434
     volumes:
-      - ./backend:/app
       - backend_logs:/app/logs
     depends_on:
       - ollama
@@ -33,8 +32,6 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: moransa-ollama
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     environment:
@@ -42,13 +39,6 @@ services:
     networks:
       - moransa-network
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 30s
