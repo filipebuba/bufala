@@ -44,63 +44,41 @@ O GuinéApp é um aplicativo Android desenvolvido especialmente para comunidades
 
 ## Tecnologias Utilizadas
 
-- **Frontend**: React Native / Flutter
-- **Backend**: Node.js com Express
-- **IA**: TensorFlow Lite para dispositivos móveis
-- **Banco de Dados**: SQLite (offline) + MongoDB (sincronização)
-- **Reconhecimento de Voz**: Speech-to-Text customizado
-- **Síntese de Voz**: Text-to-Speech em Crioulo
+- **App Mobile**: Flutter (Dart)
+- **Backend**: Python (Flask) com APIs REST
+- **IA Offline**: Gemma 3n via Ollama
+- **Banco Local**: Hive + SharedPreferences
+- **Rede**: Dio/HTTP com suporte a modo offline e fallback
+- **Síntese de Voz**: Flutter TTS
 
 ## Estrutura do Projeto
 
 ```
-guine-app/
-├── mobile/                 # Aplicativo móvel
-│   ├── src/
-│   │   ├── components/     # Componentes reutilizáveis
-│   │   ├── screens/        # Telas do aplicativo
-│   │   ├── services/       # Serviços e APIs
-│   │   ├── utils/          # Utilitários
-│   │   └── assets/         # Recursos (imagens, áudios)
-│   ├── android/            # Configurações Android
-│   └── ios/                # Configurações iOS
-├── backend/                # Servidor backend
-│   ├── api/                # Endpoints da API
-│   ├── models/             # Modelos de dados
-│   ├── services/           # Lógica de negócio
-│   └── ai/                 # Módulos de IA
-├── ai-models/              # Modelos de IA customizados
-│   ├── language/           # Processamento de linguagem
-│   ├── speech/             # Reconhecimento de voz
-│   └── medical/            # Diagnóstico médico
-└── docs/                   # Documentação
+android_app/
+├── lib/                    # Código fonte Flutter
+├── assets/                 # Fontes e recursos locais
+├── test/                   # Testes automatizados
+├── android/                # Configurações Android nativas
+├── ios/                    # Configurações iOS
+├── web/                    # Suporte web para desenvolvimento
+└── windows/                # Suporte Windows para desenvolvimento
 ```
 
 ## Instalação e Configuração
 
 ### Pré-requisitos
-- Node.js 18+
-- React Native CLI
+- Flutter SDK 3.10+
 - Android Studio
-- Python 3.8+ (para IA)
+- SDK Android configurado
+- Backend do projeto em execução (via Docker recomendado)
 
 ### Configuração do Ambiente
 
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/guine-app.git
-cd guine-app
-
-# Instale dependências do backend
-cd backend
-npm install
-
-# Instale dependências do mobile
-cd ../mobile
-npm install
-
-# Configure o ambiente Android
-react-native run-android
+# Na raiz do projeto
+cd android_app
+flutter pub get
+flutter run
 ```
 
 ## Funcionalidades Detalhadas

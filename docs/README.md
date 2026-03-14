@@ -9,6 +9,12 @@ Esta pasta contém a documentação técnica completa do **Projeto Moransa**, um
 
 ### 📖 Documentos Disponíveis
 
+#### 🛠️ [Plano de Melhorias](./PLANO_MELHORIAS.md)
+**Documento de Execução** - Priorização técnica e roadmap de estabilização
+- Onda 1 (P0): estabilidade e confiabilidade
+- Onda 2 (P1): consistência técnica e segurança
+- Onda 3 (P2): escala e governança
+
 #### 🌟 [00 - Visão Geral do Projeto](./00-visao-geral-projeto.md)
 **Documento Principal** - Introdução completa ao Moransa
 - Visão geral da solução

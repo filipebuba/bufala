@@ -135,6 +135,7 @@ class BackendConfig:
     SEND_FILE_MAX_AGE_DEFAULT = 0
     
     # Configurações do modelo - Suporte Ollama + Gemma-3n
+    ENABLE_AI = os.getenv('ENABLE_AI', 'false').lower() == 'true'
     USE_OLLAMA = True
     OLLAMA_HOST = "http://localhost:11434"
     OLLAMA_MODEL = "gemma3n:latest"

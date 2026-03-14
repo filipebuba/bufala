@@ -427,14 +427,33 @@ def _get_local_resources(crop_type):
 
 def _get_agriculture_fallback_response(prompt, crop_type, season):
     """Resposta de fallback para agricultura"""
+    immediate_actions = [
+        "Inspecione a área afetada no início da manhã e no fim da tarde",
+        "Remova folhas ou plantas muito danificadas para reduzir propagação",
+        "Registre o que mudou no solo, clima e irrigação nesta semana"
+    ]
+    materials_needed = [
+        "Balde com água limpa",
+        "Ferramentas manuais básicas",
+        "Matéria orgânica local para cobertura do solo"
+    ]
     return {
-        'response': f"Para questões sobre {crop_type} na estação {season}, recomendo consultar técnicos agrícolas locais ou cooperativas de agricultores. A agricultura sustentável é essencial para a segurança alimentar da comunidade.",
+        'response': f"Plano agrícola de fallback para {crop_type} na estação {season}. Foque em diagnóstico simples, ações imediatas e práticas sustentáveis locais.",
         'success': True,
         'fallback': True,
+        'immediate_actions': immediate_actions,
+        'materials_needed': materials_needed,
+        'seasonal_tips': _get_seasonal_tips(season),
+        'local_resources': _get_local_resources(crop_type),
         'agricultural_info': {
             'crop_type': crop_type,
             'season': season,
-            'recommendation': "Busque orientação de especialistas locais e pratique agricultura sustentável"
+            'recommendation': "Busque orientação de especialistas locais e pratique agricultura sustentável",
+            'best_practices': [
+                "Rotação de culturas",
+                "Cobertura do solo",
+                "Uso racional de água"
+            ]
         }
     }
 

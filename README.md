@@ -107,8 +107,8 @@ O **Moransa** é um sistema revolucionário de inteligência artificial comunit�
 
 ## 🏗️ Arquitetura Técnica Avançada
 
-### Backend (FastAPI + Python)
-- **FastAPI Framework**: API moderna com documentação automática
+### Backend (Flask + Python)
+- **Flask Framework**: API modular com documentação Swagger/OpenAPI
 - **Gemma 3n via Ollama**: Motor de IA offline com seleção inteligente
 - **Arquitetura Modular**: 8 módulos especializados independentes
 - **Sistema de Cache**: Redis para performance e modo offline

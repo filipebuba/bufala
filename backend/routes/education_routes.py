@@ -387,14 +387,30 @@ def _get_additional_resources(subject):
 
 def _get_education_fallback_response(prompt, subject, level):
     """Resposta de fallback para educação"""
+    activities = [
+        f"Peça aos alunos para explicar com suas palavras o tema: {prompt}",
+        "Use exemplos do cotidiano da comunidade para contextualizar o conteúdo",
+        "Faça uma atividade prática curta em duplas ou pequenos grupos"
+    ]
+    materials_needed = [
+        "Caderno ou folhas reutilizadas",
+        "Lápis, carvão ou caneta",
+        "Objetos locais para demonstração prática"
+    ]
     return {
-        'response': f"Para aprender sobre {prompt}, recomendo procurar professores qualificados na sua comunidade ou materiais educacionais locais. A educação é fundamental para o desenvolvimento pessoal e comunitário.",
+        'response': f"Plano educacional de fallback para {prompt}. Use linguagem simples, exemplos locais e revisão em grupo para consolidar o aprendizado.",
         'success': True,
         'fallback': True,
+        'activities': activities,
+        'materials_needed': materials_needed,
+        'estimated_time': "30-45 minutos",
+        'difficulty_level': level,
         'educational_info': {
             'subject': subject,
             'level': level,
-            'recommendation': "Busque recursos educacionais locais e apoio da comunidade"
+            'recommendation': "Busque recursos educacionais locais e apoio da comunidade",
+            'learning_tips': _get_learning_tips(level, 'adulto'),
+            'additional_resources': _get_additional_resources(subject)
         }
     }
 

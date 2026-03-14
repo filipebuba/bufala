@@ -52,55 +52,79 @@ from routes.environmental.recycling_specific import recycling_specific_bp
 def create_app():
     """Factory function para criar a aplicação Flask"""
     app = Flask(__name__)
-    
-    # Configurar CORS
+
+    setup_logger()
+    logger = logging.getLogger(__name__)
+
+    setup_error_handlers(app)
+
+    demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+    is_production = os.getenv('FLASK_ENV', 'development').lower() == 'production'
+    ai_enabled = BackendConfig.ENABLE_AI
+
+    if is_production and not demo_mode:
+        raw_origins = os.getenv('CORS_ALLOWED_ORIGINS', '')
+        allowed_origins = [origin.strip() for origin in raw_origins.split(',') if origin.strip()]
+        if not allowed_origins:
+            raise RuntimeError('CORS_ALLOWED_ORIGINS é obrigatório em produção')
+    else:
+        allowed_origins = ["*"]
+
     CORS(app, resources={
         r"/*": {
-            "origins": ["*"],
+            "origins": allowed_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
     })
     
-    # Configurar logging
-    setup_logger()
-    logger = logging.getLogger(__name__)
-    
-    # Configurar tratamento de erros
-    setup_error_handlers(app)
-    
-    # Verificar modo demonstração
-    demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
-    
-    # Inicializar serviços
     try:
         logger.info("Inicializando serviços...")
-        
+
         if demo_mode:
             logger.info("🎭 Modo demonstração ativado - usando DemoService")
-            # Inicializar serviço de demonstração
             demo_service = DemoService()
             app.demo_service = demo_service
-            app.gemma_service = None  # Não usar Gemma em modo demo
+            app.gemma_service = None
+        elif not ai_enabled:
+            logger.info("🧩 Modo sem IA ativado - usando respostas de fallback")
+            app.demo_service = DemoService()
+            app.gemma_service = None
         else:
             logger.info("🤖 Modo produção - usando GemmaService")
-            # Inicializar serviço Gemma
             gemma_service = GemmaService()
             app.gemma_service = gemma_service
             app.demo_service = None
-        
-        # Inicializar serviço de saúde
+
         health_service = HealthService(app.gemma_service if not demo_mode else None)
         app.health_service = health_service
-        
+
         logger.info("Serviços inicializados com sucesso")
-        
+
     except Exception as e:
         logger.error(f"Erro ao inicializar serviços: {e}")
-        # Continuar sem os serviços para permitir desenvolvimento
+        if is_production and not demo_mode and ai_enabled:
+            raise RuntimeError("Falha na inicialização de serviços críticos") from e
         app.gemma_service = None
         app.health_service = None
         app.demo_service = None
+
+    def _runtime_status():
+        ai_available = False
+        if app.gemma_service:
+            try:
+                health_status = app.gemma_service.get_health_status()
+                ai_available = health_status.get('ollama_available', False) or health_status.get('model_loaded', False)
+            except Exception:
+                ai_available = False
+        fallback_mode = demo_mode or (not ai_enabled) or (not ai_available)
+        return {
+            'demo_mode': demo_mode,
+            'ai_enabled': ai_enabled,
+            'ai_available': ai_available,
+            'fallback_mode': fallback_mode,
+            'timestamp': datetime.now().isoformat()
+        }
     
     # Configurar Swagger
     swagger = setup_swagger(app)
@@ -201,13 +225,8 @@ def create_app():
     def get_backend_config():
         """Retorna configurações do backend para o app Flutter"""
         try:
-            # Verificar status do Gemma Service
-            gemma_active = False
-            if app.gemma_service:
-                health_status = app.gemma_service.get_health_status()
-                gemma_active = health_status.get('ollama_available', False) or health_status.get('model_loaded', False)
-            
-            gemma_status = 'active' if gemma_active else 'inactive'
+            runtime = _runtime_status()
+            gemma_status = 'active' if runtime['ai_available'] else 'inactive'
             
             config = {
                 'status': 'online',
@@ -241,7 +260,8 @@ def create_app():
                     'offline_capable': True,
                     'sync_available': True,
                     'local_processing': True
-                }
+                },
+                'runtime': runtime
             }
             
             return jsonify(config)
@@ -250,6 +270,21 @@ def create_app():
             logger.error(f"Erro ao obter configurações do backend: {e}")
             return jsonify({
                 'error': 'Erro interno do servidor',
+                'message': str(e)
+            }), 500
+
+    @app.route('/api/status/runtime', methods=['GET'])
+    def get_runtime_status():
+        try:
+            return jsonify({
+                'success': True,
+                'data': _runtime_status()
+            })
+        except Exception as e:
+            logger.error(f"Erro ao obter runtime status: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'runtime_status_error',
                 'message': str(e)
             }), 500
     
